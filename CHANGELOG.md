@@ -2,6 +2,19 @@
 
 Every release is a tag `vX.Y.Z` on `main` that matches `<Version>` in `Directory.Build.props`. See [docs/RELEASING.md](docs/RELEASING.md).
 
+## [0.3.0] - 2026-11-27
+
+- **My wealth** is open: keep count of what you hold, tab by tab. Type a count, or import a CSV file that you check row by row before anything is saved. Holdings are valued with the league's prices where there are any.
+- **Campaign guide**, first draft: the start of Act 1, from the Riverbank to the Red Vale, with a zone picker, next and back, skip and undo that survive a restart, and a list of missed rewards. The route isn't checked in game yet and says so.
+- **Build plans**: type or paste your own notes and SSE turns them into gem steps (cut, upgrade, socket, move a support) for the stage you're at; later steps stay hidden until you get there. A build guide link you save only ever opens in your browser.
+- Two optional lines pinned over the game: where you are, and your next gem step. They never take focus and step aside while an item price is showing.
+- Quick price on a **side mouse button** (Mouse 4 or 5). A mouse button doesn't make the game copy the item, so the card shows the last item you copied with `Ctrl+C`. Settings warns when a key may clash with another binding or a game default.
+- **What's new**: after an update, the main window shows this list once.
+- Every control works from the keyboard, with a clear focus ring and a name for screen readers. Faint text and tick boxes have more contrast, and the windows follow the Windows text size setting as far as they fit your screen.
+- Item text copied from a game set to another language now says plainly that SSE reads English only for now.
+- The practice peek no longer pops up when you press `Ctrl+C` in SSE's own text boxes.
+- The installer and updater are now 64-bit, like the app.
+
 ## [0.2.0] - 2026-11-27
 
 - New look from the "UI & overlay" design: cool greys, one blue accent used only for the search, item names in their rarity colours, plain words ("Only 3 for sale — rough price", "Can't tell which stat this is").
