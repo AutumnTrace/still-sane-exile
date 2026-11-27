@@ -4,7 +4,7 @@ Hold `Ctrl+C` over a Path of Exile 2 item to see what items like it sell for, an
 
 [Download for Windows](https://github.com/AutumnTrace/still-sane-exile/releases/latest) · [Changelog](CHANGELOG.md)
 
-Windows 10/11 · x64 · Windowed or borderless
+Windows 10/11 · x64 · Windowed or borderless · Game set to English (other languages get a plain "not supported yet" message)
 
 <img src="docs/screenshots/peek-advanced.png" width="384" alt="Demo card for Doom Thirst: items like it sell for about 1.8 to 2.6 divine, 29 for sale, searched with physical DPS of at least 319 and attack speed of at least 15">
 
