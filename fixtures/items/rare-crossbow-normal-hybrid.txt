@@ -1,0 +1,20 @@
+Item Class: Crossbows
+Rarity: Rare
+Storm Mark
+Expert Bombard Crossbow
+--------
+Physical Damage: 98-210 (augmented)
+Critical Hit Chance: 5.00%
+Attacks per Second: 1.65
+Reload Time: 0.80
+--------
+Requires: Level 79, 89 Str, 89 Dex
+--------
+Item Level: 81
+--------
+Grenade Skills Fire an additional Projectile (implicit)
+--------
+192% increased Physical Damage
++212 to Accuracy Rating
+22% increased Attack Speed
+33% increased Critical Hit Chance

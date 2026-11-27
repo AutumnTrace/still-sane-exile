@@ -1,0 +1,15 @@
+Item Class: Boots
+Rarity: Rare
+Gale Stride
+Expert Leather Boots
+--------
+Evasion Rating: 215 (augmented)
+--------
+Requires: Level 70, 120 Dex
+--------
+Item Level: 79
+--------
+30% increased Movement Speed
++104 to maximum Life
++38% to Fire Resistance
++12% to Cold Resistance

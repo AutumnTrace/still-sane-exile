@@ -1,0 +1,16 @@
+Item Class: Crossbows
+Rarity: Magic
+Merciless Expert Bombard Crossbow
+--------
+Physical Damage: 112-245 (augmented)
+Critical Hit Chance: 5.00%
+Attacks per Second: 1.60
+Reload Time: 0.80
+--------
+Requires: Level 79, 89 Str, 89 Dex
+--------
+Item Level: 82
+--------
+Grenade Skills Fire an additional Projectile (implicit)
+--------
+172% increased Physical Damage

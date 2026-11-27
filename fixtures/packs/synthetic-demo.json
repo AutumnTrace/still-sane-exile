@@ -1,0 +1,149 @@
+// SYNTHETIC DATA PACK. Every range below was written for tests and the demo profile.
+// It is NOT game data and must never be shown as such. Affix names are placeholders.
+{
+  "schemaVersion": 1,
+  "id": "sse-synthetic-demo",
+  "title": "Synthetic demo pack",
+  "provenance": "synthetic",
+  "rights": "Authored for Still Sane, Exile tests and demo. Not derived from game files.",
+  "verifiedDate": null,
+  "compatibleBuilds": ["synthetic"],
+  "locales": ["en"],
+  "families": [
+    {
+      "id": "syn.phys_pct",
+      "group": "local physical damage %",
+      "side": "prefix",
+      "itemClasses": ["Crossbows", "Bows", "Spears", "Quarterstaves", "One Hand Maces", "Two Hand Maces"],
+      "lines": [ { "template": "#% increased Physical Damage", "direction": "higherIsBetter", "unit": "%" } ],
+      "tiers": [
+        { "tier": 1, "name": "Merciless", "level": 82, "ranges": [[170, 179]] },
+        { "tier": 2, "name": "Tyrannical", "level": 73, "ranges": [[155, 169]] },
+        { "tier": 3, "name": "Cruel", "level": 60, "ranges": [[135, 154]] },
+        { "tier": 4, "name": "Bloodthirsty", "level": 46, "ranges": [[110, 134]] },
+        { "tier": 5, "name": "Vicious", "level": 35, "ranges": [[85, 109]] },
+        { "tier": 6, "name": "Wicked", "level": 23, "ranges": [[65, 84]] },
+        { "tier": 7, "name": "Serrated", "level": 11, "ranges": [[50, 64]] },
+        { "tier": 8, "name": "Heavy", "level": 1, "ranges": [[40, 49]] }
+      ]
+    },
+    {
+      "id": "syn.phys_pct_accuracy",
+      "group": "local physical damage % and accuracy",
+      "side": "prefix",
+      "itemClasses": ["Crossbows", "Bows", "Spears", "Quarterstaves", "One Hand Maces", "Two Hand Maces"],
+      "lines": [
+        { "template": "#% increased Physical Damage", "direction": "higherIsBetter", "unit": "%" },
+        { "template": "# to Accuracy Rating", "direction": "higherIsBetter", "unit": "" }
+      ],
+      "tiers": [
+        { "tier": 1, "name": "Dictator's", "level": 75, "ranges": [[75, 79], [175, 200]] },
+        { "tier": 2, "name": "Emperor's", "level": 60, "ranges": [[65, 74], [124, 174]] },
+        { "tier": 3, "name": "Conqueror's", "level": 46, "ranges": [[55, 64], [98, 123]] },
+        { "tier": 4, "name": "Champion's", "level": 35, "ranges": [[45, 54], [73, 97]] }
+      ]
+    },
+    {
+      "id": "syn.flat_phys",
+      "group": "local added physical damage",
+      "side": "prefix",
+      "itemClasses": ["Crossbows", "Bows", "Spears", "Quarterstaves", "One Hand Maces", "Two Hand Maces"],
+      "lines": [ { "template": "Adds # to # Physical Damage", "direction": "higherIsBetter", "unit": "", "components": 2 } ],
+      "tiers": [
+        { "tier": 1, "name": "Flaring", "level": 75, "ranges": [[26, 35], [44, 58]] },
+        { "tier": 2, "name": "Tempered", "level": 65, "ranges": [[20, 27], [34, 45]] },
+        { "tier": 3, "name": "Razor-sharp", "level": 54, "ranges": [[15, 20], [26, 34]] },
+        { "tier": 4, "name": "Honed", "level": 36, "ranges": [[10, 14], [17, 25]] }
+      ]
+    },
+    {
+      "id": "syn.accuracy",
+      "group": "accuracy",
+      "side": "suffix",
+      "itemClasses": ["Crossbows", "Bows", "Spears", "Quarterstaves", "One Hand Maces", "Two Hand Maces"],
+      "lines": [ { "template": "# to Accuracy Rating", "direction": "higherIsBetter", "unit": "" } ],
+      "tiers": [
+        { "tier": 1, "name": "of the Ranger", "level": 76, "ranges": [[301, 350]] },
+        { "tier": 2, "name": "of the Marksman", "level": 67, "ranges": [[241, 300]] },
+        { "tier": 3, "name": "of the Sniper", "level": 58, "ranges": [[161, 240]] },
+        { "tier": 4, "name": "of the Deadeye", "level": 40, "ranges": [[101, 160]] },
+        { "tier": 5, "name": "of the Hunter", "level": 20, "ranges": [[41, 100]] },
+        { "tier": 6, "name": "of Steadiness", "level": 1, "ranges": [[11, 40]] }
+      ]
+    },
+    {
+      "id": "syn.attack_speed",
+      "group": "local attack speed",
+      "side": "suffix",
+      "itemClasses": ["Crossbows", "Bows", "Spears", "Quarterstaves", "One Hand Maces", "Two Hand Maces"],
+      "lines": [ { "template": "#% increased Attack Speed", "direction": "higherIsBetter", "unit": "%" } ],
+      "tiers": [
+        { "tier": 1, "name": "of Celebration", "level": 77, "ranges": [[24, 26]] },
+        { "tier": 2, "name": "of Infamy", "level": 60, "ranges": [[20, 23]] },
+        { "tier": 3, "name": "of Fame", "level": 45, "ranges": [[16, 19]] },
+        { "tier": 4, "name": "of Acclaim", "level": 30, "ranges": [[11, 15]] },
+        { "tier": 5, "name": "of Skill", "level": 1, "ranges": [[5, 10]] }
+      ]
+    },
+    {
+      "id": "syn.crit_chance",
+      "group": "local critical hit chance",
+      "side": "suffix",
+      "itemClasses": ["Crossbows", "Bows", "Spears", "Quarterstaves", "One Hand Maces", "Two Hand Maces"],
+      "lines": [ { "template": "#% increased Critical Hit Chance", "direction": "higherIsBetter", "unit": "%" } ],
+      "tiers": [
+        { "tier": 1, "name": "of Unmaking", "level": 73, "ranges": [[35, 38]] },
+        { "tier": 2, "name": "of Incision", "level": 59, "ranges": [[30, 34]] },
+        { "tier": 3, "name": "of Rupturing", "level": 44, "ranges": [[25, 29]] },
+        { "tier": 4, "name": "of Puncturing", "level": 20, "ranges": [[20, 24]] },
+        { "tier": 5, "name": "of Needling", "level": 1, "ranges": [[10, 19]] }
+      ]
+    },
+    {
+      "id": "syn.movement_speed",
+      "group": "movement speed",
+      "side": "prefix",
+      "itemClasses": ["Boots"],
+      "lines": [ { "template": "#% increased Movement Speed", "direction": "higherIsBetter", "unit": "%" } ],
+      "tiers": [
+        { "tier": 1, "name": "Hellion's", "level": 82, "ranges": [[35, 35]] },
+        { "tier": 2, "name": "Cheetah's", "level": 55, "ranges": [[30, 30]] },
+        { "tier": 3, "name": "Gazelle's", "level": 40, "ranges": [[25, 25]] },
+        { "tier": 4, "name": "Stallion's", "level": 15, "ranges": [[20, 20]] },
+        { "tier": 5, "name": "Runner's", "level": 1, "ranges": [[10, 10]] }
+      ]
+    },
+    {
+      "id": "syn.life",
+      "group": "maximum life",
+      "side": "prefix",
+      "itemClasses": ["Boots", "Gloves", "Helmets", "Body Armours"],
+      "lines": [ { "template": "# to maximum Life", "direction": "higherIsBetter", "unit": "" } ],
+      "tiers": [
+        { "tier": 1, "name": "Prime", "level": 80, "ranges": [[120, 139]] },
+        { "tier": 2, "name": "Virile", "level": 65, "ranges": [[100, 119]] },
+        { "tier": 3, "name": "Robust", "level": 44, "ranges": [[80, 99]] },
+        { "tier": 4, "name": "Stout", "level": 24, "ranges": [[60, 79]] },
+        { "tier": 5, "name": "Healthy", "level": 11, "ranges": [[40, 59]] },
+        { "tier": 6, "name": "Hale", "level": 1, "ranges": [[10, 39]] }
+      ]
+    },
+    {
+      "id": "syn.fire_res",
+      "group": "fire resistance",
+      "side": "suffix",
+      "itemClasses": ["Boots", "Gloves", "Helmets", "Body Armours", "Rings", "Amulets"],
+      "lines": [ { "template": "#% to Fire Resistance", "direction": "higherIsBetter", "unit": "%" } ],
+      "tiers": [
+        { "tier": 1, "name": "of Tzteosh", "level": 82, "ranges": [[41, 45]] },
+        { "tier": 2, "name": "of the Magma", "level": 71, "ranges": [[36, 40]] },
+        { "tier": 3, "name": "of the Volcano", "level": 60, "ranges": [[31, 35]] },
+        { "tier": 4, "name": "of the Furnace", "level": 48, "ranges": [[26, 30]] },
+        { "tier": 5, "name": "of the Kiln", "level": 36, "ranges": [[21, 25]] },
+        { "tier": 6, "name": "of the Drake", "level": 24, "ranges": [[16, 20]] },
+        { "tier": 7, "name": "of the Salamander", "level": 12, "ranges": [[11, 15]] },
+        { "tier": 8, "name": "of the Whelpling", "level": 1, "ranges": [[6, 10]] }
+      ]
+    }
+  ]
+}

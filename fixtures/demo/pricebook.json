@@ -1,0 +1,25 @@
+// SYNTHETIC PRICE BOOK for the demo profile. Not market data. The demo clock starts at
+// 2026-11-27T11:30:00Z so ages shown in the demo are the same on every run.
+{
+  "snapshotId": "demo-synthetic-2026-11-27T11",
+  "league": "Demo League (synthetic)",
+  "marketEra": "synthetic",
+  "primaryCurrency": "exalted",
+  "isSynthetic": true,
+  "createdAt": "2026-11-27T11:05:00Z",
+  "identities": [
+    { "id": "exalted", "kind": "currency", "name": "Exalted Orb" },
+    { "id": "divine", "kind": "currency", "name": "Divine Orb" },
+    { "id": "chaos", "kind": "currency", "name": "Chaos Orb" },
+    { "id": "regal", "kind": "currency", "name": "Regal Orb" },
+    { "id": "greater-iron-rune", "kind": "commodity", "name": "Greater Iron Rune" },
+    { "id": "unique.sanitys-last-loop", "kind": "unique", "name": "Sanity's Last Loop", "baseType": "Gold Ring" }
+  ],
+  "quotes": [
+    { "itemId": "divine", "amount": 120, "denomination": "exalted", "kind": "exchangeEstimate", "league": "Demo League (synthetic)", "source": "synthetic fixture", "observedFrom": "2026-11-27T10:00:00Z", "observedTo": "2026-11-27T11:00:00Z", "fetchedAt": "2026-11-27T11:05:00Z", "volume": 4200, "provenance": "synthetic" },
+    { "itemId": "chaos", "amount": 0.05, "denomination": "divine", "kind": "exchangeEstimate", "league": "Demo League (synthetic)", "source": "synthetic fixture", "observedFrom": "2026-11-27T10:00:00Z", "observedTo": "2026-11-27T11:00:00Z", "fetchedAt": "2026-11-27T11:05:00Z", "volume": 900, "provenance": "synthetic" },
+    { "itemId": "regal", "amount": 0.4, "denomination": "exalted", "kind": "exchangeEstimate", "league": "Demo League (synthetic)", "source": "synthetic fixture", "observedFrom": "2026-11-27T10:00:00Z", "observedTo": "2026-11-27T11:00:00Z", "fetchedAt": "2026-11-27T11:05:00Z", "volume": 310, "provenance": "synthetic" },
+    { "itemId": "greater-iron-rune", "amount": 3, "denomination": "exalted", "kind": "exchangeEstimate", "league": "Demo League (synthetic)", "source": "synthetic fixture", "observedFrom": "2026-11-27T06:00:00Z", "observedTo": "2026-11-27T07:00:00Z", "fetchedAt": "2026-11-27T07:05:00Z", "volume": 12, "provenance": "synthetic" },
+    { "itemId": "unique.sanitys-last-loop", "amount": 1.4, "denomination": "divine", "kind": "categoryBaseline", "league": "Demo League (synthetic)", "source": "synthetic fixture", "observedFrom": "2026-11-27T10:00:00Z", "observedTo": "2026-11-27T11:00:00Z", "fetchedAt": "2026-11-27T11:05:00Z", "volume": 37, "provenance": "synthetic" }
+  ]
+}
