@@ -40,13 +40,8 @@ public sealed partial class StashPicturesViewModel : ObservableObject
 
     /// <summary>On: each physical press of the stash key with the game in front saves one picture.</summary>
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(ShowCard), nameof(Summary), nameof(Problem), nameof(ShowSummaryCard))]
+    [NotifyPropertyChangedFor(nameof(ShowCard), nameof(Summary), nameof(Problem))]
     public partial bool IsCollecting { get; set; }
-
-    /// <summary>My wealth shows the pictures instead of the holdings.</summary>
-    [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(ShowSummaryCard))]
-    public partial bool IsReviewing { get; set; }
 
     [ObservableProperty]
     public partial string? Message { get; set; }
@@ -59,11 +54,8 @@ public sealed partial class StashPicturesViewModel : ObservableObject
 
     public int Labelled => Pictures.Count(p => p.TabType is not null);
 
-    /// <summary>My wealth's card about the pictures: while collecting, or while any are left.</summary>
+    /// <summary>Worth a mention outside Settings: while collecting, or while any pictures are left.</summary>
     public bool ShowCard => IsCollecting || HasPictures;
-
-    /// <summary>The card in My wealth's right column; the review list takes its place while open.</summary>
-    public bool ShowSummaryCard => ShowCard && !IsReviewing;
 
     public string Summary => Count == 0
         ? IsCollecting ? $"None yet. Open your stash in the game and press {KeyLabel}." : "No pictures yet."
@@ -79,10 +71,10 @@ public sealed partial class StashPicturesViewModel : ObservableObject
 
     public string WhatIsTaken =>
         "Each press takes one picture of the game window: the game only, without other windows or the mouse pointer, and only while the game is in front. Holding the key, or a key sent by another program, takes nothing more. Windows draws a yellow border around the game for a moment while it does. " +
-        (Key.Vk == 0xA5 ? "If Right Alt does something in your game, change the stash key under Keys above, to F8 for example." : $"The stash key is {KeyLabel}; change it under Keys above.");
+        (Key.Vk == 0xA5 ? "If Right Alt does something in your game, change the stash key under Keys, to F8 for example." : $"The stash key is {KeyLabel}; change it under Keys.");
 
     public string WhereSaved =>
-        $"Saved as PNG files in {Folder}, one folder per day, each with a small .json file beside it: the time, SSE's version, the game window's size, your monitor's resolution, Windows display scaling, HDR on or off, and how long the picture took. Label and delete them on My wealth.";
+        $"Saved as PNG files in {Folder}, one folder per day, each with a small .json file beside it: the time, SSE's version, the game window's size, your monitor's resolution, Windows display scaling, HDR on or off, and how long the picture took. Label and delete them on this page.";
 
     public const string Privacy =
         "The pictures stay on this computer: SSE never uploads them, and deleting one deletes its files. Chat and character names may be visible in them: crop or blur those before you share a picture.";
@@ -153,20 +145,13 @@ public sealed partial class StashPicturesViewModel : ObservableObject
         }
     }
 
+    /// <summary>Opens Settings on Stash pictures, where each picture is labelled.</summary>
     [RelayCommand]
     private void Review()
     {
         Reload();
         Message = null;
-        IsReviewing = true;
-        _shell.Navigate(_shell.Wealth);
-    }
-
-    [RelayCommand]
-    private void DoneReviewing()
-    {
-        IsReviewing = false;
-        Message = null;
+        _shell.OpenSettings("pictures");
     }
 
     /// <summary>Opens the pictures folder in Explorer. Only ever on a click.</summary>
@@ -206,7 +191,6 @@ public sealed partial class StashPicturesViewModel : ObservableObject
         OnPropertyChanged(nameof(Labelled));
         OnPropertyChanged(nameof(Summary));
         OnPropertyChanged(nameof(ShowCard));
-        OnPropertyChanged(nameof(ShowSummaryCard));
     }
 }
 

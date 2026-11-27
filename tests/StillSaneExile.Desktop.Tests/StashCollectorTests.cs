@@ -318,7 +318,7 @@ public class StashCollectorTests
 
         Assert.True(rig.App.Settings.CollectStashPictures);
         Assert.Contains("\"Collect stash pictures\" is on", settings.ReadsExplanation, StringComparison.Ordinal);
-        Assert.Equal("takes stash pictures (see below)", settings.StashKeyNote);
+        Assert.Equal("takes stash pictures (see Stash pictures)", settings.StashKeyNote);
         Assert.True(rig.Pictures.ShowCard);
         Assert.Equal(0, rig.Source.Calls); // readying captures nothing
 

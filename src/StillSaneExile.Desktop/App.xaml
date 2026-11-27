@@ -86,6 +86,7 @@
       <v:ShortCurrencyConverter x:Key="CurrencyName" />
       <v:PillActiveConverter x:Key="PillActive" />
       <v:RarityBrushConverter x:Key="RarityBrush" />
+      <v:VisibleWhenEqualsConverter x:Key="VisibleWhen" />
 
       <!-- Buttons. One template; the styles change colours and the corner radius (v:Ui.Radius). Focus is a
            2 px ring in the text colour over the border: a border colour change alone is too faint on gold. -->
@@ -555,6 +556,64 @@
             </DataTemplate>
           </Setter.Value>
         </Setter>
+      </Style>
+
+      <!-- "Details": the fine print under a setting, folded away until asked for. The header is a link-coloured
+           toggle with a chevron; Space or Enter opens it, and screen readers hear it expand and collapse. -->
+      <Style x:Key="Details" TargetType="Expander">
+        <Setter Property="Focusable" Value="False" />
+        <Setter Property="IsTabStop" Value="False" />
+        <Setter Property="Margin" Value="0,8,0,0" />
+        <Setter Property="Template">
+          <Setter.Value>
+            <ControlTemplate TargetType="Expander">
+              <StackPanel>
+                <ToggleButton x:Name="toggle" Content="{TemplateBinding Header}" HorizontalAlignment="Left" Cursor="Hand" FocusVisualStyle="{x:Null}"
+                              IsChecked="{Binding IsExpanded, RelativeSource={RelativeSource TemplatedParent}, Mode=TwoWay}">
+                  <ToggleButton.Template>
+                    <ControlTemplate TargetType="ToggleButton">
+                      <Border x:Name="b" Background="Transparent" BorderBrush="Transparent" BorderThickness="1" Padding="3,2,5,2" Margin="-4,0,0,0">
+                        <StackPanel Orientation="Horizontal">
+                          <Path x:Name="chevron" Data="M 1,1 L 5,5 L 1,9" Width="7" Height="10" Stroke="{StaticResource Link}" StrokeThickness="1.6" VerticalAlignment="Center" Margin="0,0,7,0" RenderTransformOrigin="0.5,0.5" />
+                          <ContentPresenter x:Name="text" TextElement.Foreground="{StaticResource Link}" TextElement.FontSize="14" VerticalAlignment="Center" />
+                        </StackPanel>
+                      </Border>
+                      <ControlTemplate.Triggers>
+                        <Trigger Property="IsChecked" Value="True">
+                          <Setter TargetName="chevron" Property="RenderTransform">
+                            <Setter.Value>
+                              <RotateTransform Angle="90" />
+                            </Setter.Value>
+                          </Setter>
+                        </Trigger>
+                        <Trigger Property="IsMouseOver" Value="True">
+                          <Setter TargetName="text" Property="TextElement.Foreground" Value="{StaticResource LinkHover}" />
+                        </Trigger>
+                        <Trigger Property="IsKeyboardFocused" Value="True">
+                          <Setter TargetName="b" Property="BorderBrush" Value="{StaticResource Text}" />
+                        </Trigger>
+                      </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                  </ToggleButton.Template>
+                </ToggleButton>
+                <ContentPresenter x:Name="body" Visibility="Collapsed" Margin="0,6,0,0" />
+              </StackPanel>
+              <ControlTemplate.Triggers>
+                <Trigger Property="IsExpanded" Value="True">
+                  <Setter TargetName="body" Property="Visibility" Value="Visible" />
+                </Trigger>
+              </ControlTemplate.Triggers>
+            </ControlTemplate>
+          </Setter.Value>
+        </Setter>
+      </Style>
+      <!-- The fine print inside Details. -->
+      <Style x:Key="FinePrint" TargetType="TextBlock">
+        <Setter Property="FontSize" Value="14" />
+        <Setter Property="LineHeight" Value="20" />
+        <Setter Property="Foreground" Value="{StaticResource TextDim}" />
+        <Setter Property="TextWrapping" Value="Wrap" />
+        <Setter Property="Margin" Value="0,0,0,6" />
       </Style>
 
       <!-- Small label above a list ("CHECKED THIS SESSION"). -->

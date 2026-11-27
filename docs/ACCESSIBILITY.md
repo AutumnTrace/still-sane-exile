@@ -9,7 +9,8 @@ What SSE does for keyboard use, screen readers, contrast and text size, and what
 - `Enter` or `Space` presses a button, `Space` ticks a box, and the arrow keys move through a list or change the slider.
 - **Show prices in** in the header opens its menu with `Enter` or `Space`. Focus lands on the current currency: the arrow keys or `Tab` move, `Enter` picks one, `Esc` closes the menu and returns to the button.
 - `Esc` closes the price check over the game (`F3`). The quick price card never takes the keyboard from the game: while you hold the key it is click-through, and kept open it takes clicks only, so its close button, its stats with their − and + buttons, **Search** and **All filters** (in that order, if a window does give it focus) are used with the mouse. `F3` opens the same search in the price check, which works from the keyboard, **Search** included.
-- Keeping the card open means moving the mouse onto it while holding the key. **Press again to hide** (Settings → Quick price card) needs no held key: one press shows the card, the next hides it, and `F3` changes the search.
+- Keeping the card open means moving the mouse onto it while holding the key. **Press again to hide** (Settings → Price card) needs no held key: one press shows the card, the next hides it, and `F3` changes the search.
+- Settings is a rail of sections (League and prices, Keys, Price card, Live prices and trade, Stash pictures, Updates and privacy) and one section at a time. The fine print under a setting is folded into **Details** links: `Space` or `Enter` opens and closes them, and screen readers hear them expand and collapse.
 - Scroll bars page up or down when you click above or below the thumb.
 
 ## Screen readers
@@ -48,7 +49,7 @@ WPF does not follow Windows' text size (Settings → Accessibility → Text size
 
 Every page is laid out to work at the main window's minimum size (1260 × 640 at 100 %), so the minimum grows with the text size, and the factor stops where that minimum would no longer fit the screen. On a 1920 × 1080 screen at 100 % display scaling, text size works up to 152 %; at 125 % display scaling up to 121 %; at 150 % display scaling there is practically no room left (101 %). The price check over the game stops where it would no longer fit the game window, which on a 1080p game allows the full 225 %. At its largest factor a page looks as it does at the minimum window size: long lists scroll, and the longest names in the wealth tables end in an ellipsis with the full name in a tooltip.
 
-The quick price card ignores the text size: it has its own size, Settings → Quick price card → Scale (0.5 to 1.6, 0.85 by default), so it can stay small over the game.
+The quick price card ignores the text size: it has its own size, Settings → Price card → Scale (0.5 to 1.6, 0.85 by default), so it can stay small over the game.
 
 To check the layout without changing Windows' setting, render the screens at a text size: `--render-snapshots <dir> --data <empty dir> --text-scale 150`, optionally with `--window 1920x1032` for the size of the window (and the screen it must fit).
 

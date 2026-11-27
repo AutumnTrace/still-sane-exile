@@ -144,7 +144,7 @@ public class LivePricesTests
 
             Assert.Null(prices.League);
             Assert.Null(prices.NextRefresh);
-            Assert.Equal("Starts once you confirm a live league above.", demo.Shell.SettingsPage.LiveStatus);
+            Assert.Equal("Starts once you confirm a live league under League and prices.", demo.Shell.SettingsPage.LiveStatus);
         }
 
         using (var off = LiveApp(livePrices: false))

@@ -226,21 +226,68 @@ public class AccessibilityTests
     });
 
     [Fact]
-    public void Settings_work_from_the_keyboard() => UiThread.Run(() =>
+    public void Settings_work_from_the_keyboard_one_section_at_a_time() => UiThread.Run(() =>
     {
         using var app = new TestApp();
+        var settings = app.Shell.SettingsPage;
+        var rail = ViewModels.SettingsViewModel.Sections.Select(s => s.Label).ToArray();
 
-        var stops = Check(new SettingsView { DataContext = app.Shell.SettingsPage });
+        List<string> Section(string key)
+        {
+            settings.ShowSectionCommand.Execute(key);
+            var stops = Check(new SettingsView { DataContext = settings });
+            Assert.Equal(rail, stops[..rail.Length]); // the rail first, then the section's own controls
+            return stops[rail.Length..];
+        }
 
-        Assert.Contains("Live league name", stops);
-        Assert.Contains("Change the quick price key", stops);
-        Assert.Contains("Hide when I let go, unless I move onto the card", stops);
-        Assert.Contains("Press again to hide (accessibility)", stops);
-        Assert.Contains("Quick price card scale", stops);
-        Assert.Contains("Days until prices you write down expire", stops);
-        Assert.Contains("Collect stash pictures when I press RightAlt in the game", stops);
-        Assert.Contains("Open the pictures folder", stops);
-        Assert.True(stops.IndexOf("Practice with demo data") < stops.IndexOf("Divine Orb"));
+        var general = Section("general");
+        Assert.Contains("Live league name", general);
+        Assert.True(general.IndexOf("Practice with demo data") < general.IndexOf("Divine Orb"));
+        Assert.Contains("How leagues work", general);
+        Assert.DoesNotContain("Change the quick price key", general);
+
+        var keys = Section("keys");
+        Assert.Contains("Change the quick price key", keys);
+        Assert.Contains("What SSE listens to", keys);
+
+        var card = Section("card");
+        Assert.Contains("Hide when I let go, unless I move onto the card", card);
+        Assert.Contains("Press again to hide (accessibility)", card);
+        Assert.Contains("Quick price card scale", card);
+
+        var market = Section("market");
+        Assert.Contains("Search the trade site from SSE", market);
+        Assert.Contains("Days until prices you write down expire", market);
+
+        var pictures = Section("pictures");
+        Assert.Contains("Collect stash pictures when I press RightAlt in the game", pictures);
+        Assert.Contains("Open the pictures folder", pictures);
+
+        var about = Section("about");
+        Assert.Contains("Everything SSE keeps and sends", about);
+    });
+
+    [Fact]
+    public void Details_open_and_close_from_the_keyboard() => UiThread.Run(() =>
+    {
+        using var app = new TestApp();
+        var window = Show(new SettingsView { DataContext = app.Shell.SettingsPage });
+        try
+        {
+            Flush(window);
+            var details = Descendants<Expander>(window).First(e => e.IsVisible);
+            var toggle = Descendants<System.Windows.Controls.Primitives.ToggleButton>(details).Single();
+            Assert.False(details.IsExpanded);
+
+            ((System.Windows.Automation.Provider.IToggleProvider)Peer(toggle).GetPattern(PatternInterface.Toggle)).Toggle();
+            Flush(window);
+
+            Assert.True(details.IsExpanded);
+        }
+        finally
+        {
+            window.Close();
+        }
     });
 
     [Fact]
@@ -289,22 +336,18 @@ public class AccessibilityTests
         pictures.Reload();
         pictures.Pictures[0].TabType = Services.StashTabTypes.Currency;
 
-        var summary = Check(new WealthView { DataContext = app.Shell.Wealth });
-
-        Assert.Contains("Review and label", summary);
-        Assert.Contains("Open the pictures folder", summary);
-
         pictures.ReviewCommand.Execute(null);
-        var stops = Check(new WealthView { DataContext = app.Shell.Wealth });
+        Assert.Same(app.Shell.SettingsPage, app.Shell.CurrentPage);
+        Assert.Equal("pictures", app.Shell.SettingsPage.Section);
+        var stops = Check(new SettingsView { DataContext = app.Shell.SettingsPage });
 
-        Assert.Equal(["Open the pictures folder", "Back to what you hold"], stops[..2]);
+        Assert.Contains("Open the pictures folder", stops);
         Assert.Contains(stops, s => s.StartsWith("Currency tab: the picture from ", StringComparison.Ordinal));
         Assert.Contains(stops, s => s.StartsWith("Aldur panel: the picture from ", StringComparison.Ordinal));
         Assert.Single(stops, s => s.StartsWith("Currency subtab of the picture from ", StringComparison.Ordinal));
         Assert.Equal(2, stops.Count(s => s.StartsWith("In-game UI scale of the picture from ", StringComparison.Ordinal)));
         Assert.Equal(2, stops.Count(s => s.StartsWith("Held out: the picture from ", StringComparison.Ordinal)));
         Assert.Equal(2, stops.Count(s => s.StartsWith("Delete the picture from ", StringComparison.Ordinal)));
-        Assert.DoesNotContain("Review and label", stops);
     });
 
     [Fact]
@@ -443,7 +486,7 @@ public class AccessibilityTests
         var window = Show(new SettingsView { DataContext = app.Shell.SettingsPage });
         try
         {
-            var currencies = Descendants<Button>(window).Where(b => b.Content is "Exalted Orb" or "Divine Orb" or "Chaos Orb").ToList();
+            var currencies = Descendants<Button>(window).Where(b => SpokenName(b) is "Exalted Orb" or "Divine Orb" or "Chaos Orb").ToList();
 
             Assert.Equal(3, currencies.Count);
             var selected = Assert.Single(currencies, b => Equals(b.Tag, "active"));
