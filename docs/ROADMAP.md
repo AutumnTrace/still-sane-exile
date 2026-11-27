@@ -23,13 +23,13 @@ Open work is tracked as [issues](https://github.com/AutumnTrace/still-sane-exile
 - [x] Deterministic demo profile with synthetic fixtures and visible DEMO state
 - [ ] A verified (non-synthetic) data pack for one weapon family (#6)
 - [ ] Real-game acceptance run (#7)
-- [ ] Peek on a spare mouse button, key-collision warnings (#8)
-- [ ] Clear "unsupported language" message (#9); practice-peek fix (#10)
+- [x] Peek on a spare mouse button, key-collision warnings (#8); game default keys still to be checked in game
+- [x] Clear "unsupported language" message (#9); practice-peek fix (#10)
 
 ## 2 · Economy and held labels
 
 - [ ] Economy cache service: poe.ninja and the GGG exchange digest (#11)
-- [ ] Rate limits and cache headers for providers (#12)
+- [x] Rate limits and cache headers for providers (#12): library and fixture tests, used once the economy cache exists ([PROVIDER-ETIQUETTE.md](PROVIDER-ETIQUETTE.md))
 - [ ] Live prices in the app: league list, atomic league switch, stale states (#13)
 - [ ] Dedicated currency tab labels (#14) and Aldur reward panel values (#15)
 - [ ] Validated generic-grid subset (#16)
@@ -37,13 +37,13 @@ Open work is tracked as [issues](https://github.com/AutumnTrace/still-sane-exile
 ## 3 · Wealth
 
 - [ ] Snapshot preview, tab identity and coverage (#17)
-- [ ] Manual quantities and CSV import (#18)
+- [x] Manual quantities and CSV import (#18) ([WEALTH-CSV.md](WEALTH-CSV.md))
 - [ ] History and session rate (#19)
 
 ## 4 · Guide
 
-- [ ] Versioned zone graph, original route pack and HUD lines (#20)
-- [ ] Build plans from a saved Mobalytics link and player-written steps; stage-aware gem actions (#21)
+- [x] Versioned zone graph, original route pack and HUD lines (#20): the route covers the start of Act 1 as an unverified draft ([GUIDE.md](GUIDE.md))
+- [ ] Build plans from a saved Mobalytics link and player-written steps; stage-aware gem actions (#21): built; the manual run against the 0.5.5 Varashta guide is still to do
 
 ## 5 · Craft
 
@@ -54,6 +54,6 @@ Open work is tracked as [issues](https://github.com/AutumnTrace/still-sane-exile
 - [x] Installer and portable build (Velopack), per tag `vX.Y.Z` on main that matches `<Version>` ([RELEASING.md](RELEASING.md))
 - [x] Automatic updates from GitHub releases; install on close, never mid-game
 - [ ] Code signing (#23)
-- [ ] Pack the installer on every pull request (#24); Dependabot (#25)
-- [ ] "What's new" after an update (#26); desktop tests (#27); accessibility and UI polish (#28)
+- [x] Pack the installer on every pull request (#24); Dependabot (#25)
+- [x] "What's new" after an update (#26); desktop tests (#27); accessibility and UI polish (#28) ([ACCESSIBILITY.md](ACCESSIBILITY.md))
 - [ ] Changelog listing tested patches, layouts, languages and sources
