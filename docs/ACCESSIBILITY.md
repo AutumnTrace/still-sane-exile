@@ -8,7 +8,7 @@ What SSE does for keyboard use, screen readers, contrast and text size, and what
 - Every control shows when it has keyboard focus. Buttons, tick boxes, list rows and the slider get an outline in the text colour, text boxes a coloured border, and links in release notes a ring. The number boxes of an unticked stat are dimmed, but come up to full strength while one of them has focus.
 - `Enter` or `Space` presses a button, `Space` ticks a box, and the arrow keys move through a list or change the slider.
 - **Show prices in** in the header opens its menu with `Enter` or `Space`. Focus lands on the current currency: the arrow keys or `Tab` move, `Enter` picks one, `Esc` closes the menu and returns to the button.
-- `Esc` closes the price check over the game (`F3`), and a quick price card you kept open, once you have clicked it. While you hold the key the card is click-through and never takes focus, so it has nothing to tab to. Kept open, `Tab` goes through its close button, its stats with their − and + buttons, and **All filters**.
+- `Esc` closes the price check over the game (`F3`). The quick price card never takes the keyboard from the game: while you hold the key it is click-through, and kept open it takes clicks only, so its close button, its stats with their − and + buttons, **Search** and **All filters** (in that order, if a window does give it focus) are used with the mouse. `F3` opens the same search in the price check, which works from the keyboard, **Search** included.
 - Keeping the card open means moving the mouse onto it while holding the key. **Press again to hide** (Settings → Quick price card) needs no held key: one press shows the card, the next hides it, and `F3` changes the search.
 - Scroll bars page up or down when you click above or below the thumb.
 
@@ -32,6 +32,8 @@ Bold values were below the minimum. A ticked row is the accent at 10 % over Surf
 
 The numbers of an unticked stat were drawn at 45 % opacity, which left them at 4.0 to 4.2:1 although they can still be changed; they are now at 55 % (5.4 to 5.7:1). Every other colour already passed and is unchanged: Text, TextSoft and TextDim (6.7:1 or more anywhere), the accent as text (4.7:1 on Surface4), links, warnings, hints, the rarity colours (4.9:1 or more on Surface4), the DEMO and DRAFT badges (11.8:1) and the dark text on the accent (5.7:1).
 
+A price and listings whose search you have changed since are faded to 65 % until you press **Search**, and the line under the price says *Search to update* at full strength (6.8:1). Faded, the price stays at 7.0:1 and the listings' prices and numbers at 5.3:1 or more; the faint parts of that old result (the count, the listings' ages and heading) drop to about 3:1.
+
 Disabled controls are dimmed to 45 % and are exempt from the contrast minimum, as WCAG allows: a disabled button reads at 4.0:1, the disabled **Apply** on My wealth at 2.1:1. The borders of buttons and boxes are quiet (1.3 to 1.4:1); their labels and the darker fill of the boxes identify them.
 
 ## Text size
@@ -40,7 +42,7 @@ WPF does not follow Windows' text size (Settings → Accessibility → Text size
 
 Every page is laid out to work at the main window's minimum size (1260 × 640 at 100 %), so the minimum grows with the text size, and the factor stops where that minimum would no longer fit the screen. On a 1920 × 1080 screen at 100 % display scaling, text size works up to 152 %; at 125 % display scaling up to 121 %; at 150 % display scaling there is practically no room left (101 %). The price check over the game stops where it would no longer fit the game window, which on a 1080p game allows the full 225 %. At its largest factor a page looks as it does at the minimum window size: long lists scroll, and the longest names in the wealth tables end in an ellipsis with the full name in a tooltip.
 
-The quick price card ignores the text size: it has its own size, Settings → Quick price card → Scale (0.75 to 1.6), so it can stay small over the game.
+The quick price card ignores the text size: it has its own size, Settings → Quick price card → Scale (0.5 to 1.6, 0.85 by default), so it can stay small over the game.
 
 To check the layout without changing Windows' setting, render the screens at a text size: `--render-snapshots <dir> --data <empty dir> --text-scale 150`, optionally with `--window 1920x1032` for the size of the window (and the screen it must fit).
 
