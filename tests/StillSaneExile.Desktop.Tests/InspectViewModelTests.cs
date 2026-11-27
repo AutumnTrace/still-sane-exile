@@ -1,3 +1,5 @@
+using StillSaneExile.Domain.Pricing;
+
 namespace StillSaneExile.Desktop.Tests;
 
 public class InspectViewModelTests
@@ -111,6 +113,67 @@ public class InspectViewModelTests
         Assert.Equal(20, inspect.Recent.Count);
         Assert.Equal("test-25", inspect.Recent[0].Item.CaptureId);
         Assert.Equal("test-6", inspect.Recent[^1].Item.CaptureId);
+    });
+
+    /// <summary>The <c>q</c> parameter of a trade site link, decoded back to the query.</summary>
+    private static string Query(string url) => Uri.UnescapeDataString(url[(url.IndexOf("?q=", StringComparison.Ordinal) + 3)..]);
+
+    [Fact]
+    public void The_demo_links_its_search_in_standard_and_says_what_to_set_by_hand() => Sta.Run(() =>
+    {
+        using var app = new TestApp();
+        Assert.False(app.Shell.Session.Trade.IsEmpty); // the shipped data file reached the app folder
+
+        var item = app.Shell.Inspect.AddFromText(app.ItemText(Crossbow), "practice")!;
+
+        Assert.StartsWith("https://www.pathofexile.com/trade2/search/Standard?q=", item.TradeUrl);
+        Assert.Contains("\"explicit.stat_210067635\"", Query(item.TradeUrl));
+        Assert.Contains("\"pdps\":{\"min\":319}", Query(item.TradeUrl));
+        Assert.Contains("Standard", item.TradeTooltip);
+        Assert.Contains("made up", item.TradeTooltip);
+        Assert.Equal("Set by hand: Item base (Expert Bombard Crossbow)", item.ByHand);
+        Assert.True(item.HasByHand);
+
+        // "Copy search" carries the same link, then the filters as text, for the same league.
+        Assert.StartsWith($"Trade site link: {item.TradeUrl}", item.Instructions);
+        Assert.Contains("League: Standard", item.Instructions);
+
+        item.BuyNowOnly = false;
+        Assert.Contains("\"status\":{\"option\":\"available\"}", Query(item.TradeUrl));
+        item.BuyNowOnly = true;
+        Assert.Contains("\"status\":{\"option\":\"securable\"}", Query(item.TradeUrl));
+    });
+
+    [Fact]
+    public void A_live_profile_links_its_search_in_the_confirmed_league() => Sta.Run(() =>
+    {
+        using var app = new TestApp(s =>
+        {
+            s.LiveLeague = "Runes of Aldur";
+            s.Profile = ProfileKind.Live;
+        });
+
+        var item = app.Shell.Inspect.AddFromText(app.ItemText(Crossbow), "hud")!;
+
+        Assert.StartsWith("https://www.pathofexile.com/trade2/search/Runes%20of%20Aldur?q=", item.TradeUrl);
+        Assert.Equal("Opens this search on the official trade site in your browser, in Runes of Aldur.", item.TradeTooltip);
+        Assert.Contains("League: Runes of Aldur", item.Instructions);
+    });
+
+    [Fact]
+    public void A_ticked_stat_the_link_cannot_carry_is_listed_under_the_button() => Sta.Run(() =>
+    {
+        using var app = new TestApp();
+        const string armour = "Item Class: Body Armours\nRarity: Rare\nDoom Shell\nLeather Vest\n--------\nItem Level: 80\n--------\n+30 to Spirit\n+50 to maximum Life";
+        var item = app.Shell.Inspect.AddFromText(armour, "hud")!;
+        Assert.Null(item.ByHand);
+
+        var spirit = item.SearchRows.Single(r => r.Row.Template == "# to Spirit");
+        Assert.Equal("Not in the trade site link: set it by hand there", spirit.Hint);
+        spirit.IsOn = true;
+
+        Assert.Equal("Set by hand: +30 to Spirit", item.ByHand);
+        Assert.DoesNotContain("Spirit", Query(item.TradeUrl));
     });
 
     [Fact]

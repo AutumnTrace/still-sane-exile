@@ -20,10 +20,11 @@ public sealed class Session
 
     private Session(Store store, ProfileKind kind, string league, string displayCurrency, string? listingDenomination,
         PriceBook book, DataPack? pack, string packStatus, TimeProvider clock, IReadOnlyList<(string, Comparable)> seeded,
-        IReadOnlySet<string>? practiceTexts = null)
+        TradeData trade, IReadOnlySet<string>? practiceTexts = null)
     {
         _store = store;
         _practiceTexts = practiceTexts ?? new HashSet<string>();
+        Trade = trade;
         Kind = kind;
         League = league;
         DisplayCurrency = displayCurrency;
@@ -48,6 +49,13 @@ public sealed class Session
     public string PackStatus { get; }
     public TimeProvider Clock { get; }
     public DateTimeOffset Now => Clock.GetUtcNow();
+
+    /// <summary>The trade site's filter ids, from the file that ships with the app.</summary>
+    public TradeData Trade { get; }
+
+    /// <summary>The league trade site links search: the confirmed live league, or Standard in the demo,
+    /// whose league is made up.</summary>
+    public string TradeLeague => IsDemo ? TradeLink.DemoLeague : League;
 
     public string PriceStatus => Book.Quotes.Count == 0
         ? "No market data (economy cache arrives in Milestone 2)"
@@ -117,7 +125,7 @@ public sealed class Session
         var empty = PriceBook.Empty(league);
         PriceBookGuard.EnsureAllowed(ProfileKind.Live, league, empty);
         return new Session(store, kind, league, settings.DisplayCurrency(kind), settings.ListingDenomination(kind), empty,
-            pack: null, "No verified data pack yet: ranges come from advanced copies only", TimeProvider.System, []);
+            pack: null, "No verified data pack yet: ranges come from advanced copies only", TimeProvider.System, [], TradeDataFile.Load(paths));
     }
 
     /// <summary>The demo profile's session, whatever profile is active (onboarding shows a demo sample).</summary>
@@ -128,7 +136,7 @@ public sealed class Session
         PriceBookGuard.EnsureAllowed(ProfileKind.Demo, Settings.DemoLeague, book);
         return new Session(store, ProfileKind.Demo, book.League, settings.DisplayCurrency(ProfileKind.Demo), settings.ListingDenomination(ProfileKind.Demo), book,
             load.Pack, load.Pack is null ? $"Pack failed to load: {load.Error}" : "Synthetic demo pack (not game data)",
-            new DemoTimeProvider(DemoTimeProvider.Start), LoadSeeded(paths), LoadPracticeTexts(paths));
+            new DemoTimeProvider(DemoTimeProvider.Start), LoadSeeded(paths), TradeDataFile.Load(paths), LoadPracticeTexts(paths));
     }
 
     /// <summary>The practice items' text, so the demo can tell them from items copied from the game.</summary>
