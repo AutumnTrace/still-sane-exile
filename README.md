@@ -76,7 +76,7 @@ GGG doesn't approve or guarantee any third-party tool, and its rules can change,
 
 ## Also in the app
 
-**My wealth** keeps count of what you hold, tab by tab, from counts you type or a [CSV file](docs/WEALTH-CSV.md). The **Campaign guide** walks the start of Act 1 (a draft route, not yet checked in game) and turns your own build notes into gem steps for the stage you are at; a pasted guide link only ever opens in your browser.
+**My wealth** is switched off for now while it is rethought; counts saved by earlier versions stay in your data folder. The **Campaign guide** walks the start of Act 1 (a draft route, not yet checked in game) and turns your own build notes into gem steps for the stage you are at; a pasted guide link only ever opens in your browser.
 
 **Help build stash reading.** Path of Exile 2 has no stash API, so SSE will read your stash from a picture of the game window. To build that, switch on **Collect stash pictures** in Settings → **Stash pictures**, open your stash in the game and press `Right Alt` (or your stash key) once per tab: each press saves one picture of the game window, with notes on your screen setup, in your data folder. Label them on the same page. They are never uploaded; before you share any on [issue #3](https://github.com/AutumnTrace/still-sane-exile/issues/3), crop or blur chat and character names.
 

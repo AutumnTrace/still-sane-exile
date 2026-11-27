@@ -308,25 +308,6 @@ public class AccessibilityTests
     });
 
     [Fact]
-    public void My_wealth_works_from_the_keyboard() => UiThread.Run(() =>
-    {
-        using var app = new TestApp();
-        var wealth = app.Shell.Wealth;
-        wealth.PreviewPracticeCommand.Execute("example.csv");
-        wealth.ApplyImportCommand.Execute(null);
-
-        var stops = Check(new WealthView { DataContext = wealth });
-
-        Assert.Contains(stops, s => s.Contains(", tab Currency, as of ", StringComparison.Ordinal));
-        Assert.Contains("Tab", stops);
-
-        wealth.PreviewPracticeCommand.Execute("needs-fixing.csv");
-        var preview = Check(new WealthView { DataContext = wealth });
-
-        Assert.Contains("Cancel", preview);
-    });
-
-    [Fact]
     public void Stash_pictures_review_works_from_the_keyboard() => UiThread.Run(() =>
     {
         using var app = new TestApp(s => s.CollectStashPictures = true);
@@ -428,7 +409,7 @@ public class AccessibilityTests
 
         var stops = Check(window);
 
-        Assert.Equal(new[] { "Price check", "Crafting later", "My wealth" }, stops[..3]);
+        Assert.Equal(new[] { "Price check", "Crafting later", "My wealth later", "Campaign guide" }, stops[..4]);
         var league = stops.FindIndex(s => s.StartsWith("League: ", StringComparison.Ordinal));
         var currency = stops.FindIndex(s => s.StartsWith("Show prices in: ", StringComparison.Ordinal));
         var settings = stops.IndexOf("Settings");

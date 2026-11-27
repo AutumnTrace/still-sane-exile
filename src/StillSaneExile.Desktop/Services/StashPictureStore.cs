@@ -46,7 +46,7 @@ public sealed record MonitorNotes(string? Name, int Width, int Height, int Scali
 /// <param name="PeakScRgb">With HDR on: the brightest channel in scRGB (1.0 = 80 nits), before clamping.</param>
 public sealed record CaptureNotes(string Backend, string PixelFormat, string SavedAs, double PressToFrameMs, double? CreateToFrameMs, double? PeakScRgb);
 
-/// <summary>What the player fills in later, on My wealth.</summary>
+/// <summary>What the player fills in later, in Settings under Stash pictures.</summary>
 /// <param name="TabType">One of <see cref="StashTabTypes"/>, or null until labelled.</param>
 /// <param name="UiScale">The game's own UI scale setting, as the player typed it.</param>
 /// <param name="HeldOut">Kept apart from the pictures used to tune the readers (#3's held-out set).</param>

@@ -36,6 +36,8 @@ Open work is tracked as [issues](https://github.com/AutumnTrace/still-sane-exile
 
 ## 3 · Wealth
 
+My wealth is switched off for now while it is rethought (its page says so; holdings saved earlier stay in the data folder). The data layer below stays built and tested.
+
 - [ ] Snapshot preview, tab identity and coverage (#17)
 - [x] Manual quantities and CSV import (#18) ([WEALTH-CSV.md](WEALTH-CSV.md))
 - [ ] History and session rate (#19)
