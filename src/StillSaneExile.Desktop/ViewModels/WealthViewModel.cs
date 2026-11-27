@@ -297,6 +297,11 @@ public sealed class HoldingRowViewModel(HoldingEntry entry, MarketIdentity? iden
     public string ValueDetail => !value.Priced
         ? value.Note
         : $"{price.One(value.Value / entry.Quantity)} each" + (value.Quote is { } q ? $" · price seen {ValueFormat.Age(now - q.ObservedTo)}" : "");
+
+    /// <summary>The row as a screen reader says it: "Divine Orb, 15, tab Currency, as of 2 h ago, worth
+    /// 15 div". WPF names a list row after its data object's ToString.</summary>
+    public override string ToString() =>
+        $"{Name}{(Variant.Length > 0 ? $" ({Variant})" : "")}, {Quantity}, tab {Tab}, as of {AsOf}, {(Priced ? $"worth {ValueText}" : "unpriced")}";
 }
 
 /// <summary>A checked CSV file, before anything is stored.</summary>
@@ -400,4 +405,7 @@ public sealed class ImportRowViewModel
     public string? Raw { get; }
 
     public string? Note { get; }
+
+    /// <summary>The row as a screen reader says it (WPF reads a list row through ToString).</summary>
+    public override string ToString() => string.Join(", ", new string?[] { RowText, Status, Raw ?? $"{Item}, {Quantity}, tab {Tab}" }.Concat(Errors).Append(Note).Where(s => !string.IsNullOrEmpty(s)));
 }

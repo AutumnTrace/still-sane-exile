@@ -1,8 +1,10 @@
 using System.Windows;
 using System.Windows.Input;
 using System.Windows.Interop;
+using System.Windows.Media;
 using CommunityToolkit.Mvvm.Input;
 using StillSaneExile.Desktop.Infrastructure;
+using StillSaneExile.Desktop.Services;
 using StillSaneExile.Desktop.ViewModels;
 
 namespace StillSaneExile.Desktop.Views;
@@ -22,13 +24,39 @@ public interface IPriceCheckSurface
 /// back into the game closes it, and focus goes back to the game.</summary>
 public partial class PriceCheckWindow : Window, IPriceCheckSurface
 {
+    /// <summary>The least the window needs, unscaled: the 600-wide price check with its scroll bar and
+    /// shadow margins, and the shortest scroll area <see cref="Place"/> allows.</summary>
+    private static readonly Size Minimum = new(642, 276);
+
     private nint _gameWindow;
     private bool _hiding;
+    private TextScale? _textScale;
 
     public PriceCheckWindow()
     {
         InitializeComponent();
         View.CloseCommand = new RelayCommand(HideWindow);
+    }
+
+    /// <summary>The factor the content is drawn at (Windows' text size, as far as it fits the game).</summary>
+    public double ContentScale { get; private set; } = 1;
+
+    /// <summary>Follows Windows' text size, applied each time the window opens.</summary>
+    public void UseTextScale(TextScale textScale) => _textScale = textScale;
+
+    /// <summary>Scales the whole price check, as the main window does for the text size.</summary>
+    public void SetContentScale(double scale)
+    {
+        ContentScale = scale;
+        Root.LayoutTransform = scale == 1 ? Transform.Identity : new ScaleTransform(scale, scale);
+        if (scale == 1)
+        {
+            Root.ClearValue(TextOptions.TextFormattingModeProperty);
+        }
+        else
+        {
+            TextOptions.SetTextFormattingMode(Root, TextFormattingMode.Ideal);
+        }
     }
 
     public void ShowFor(ItemViewModel item, nint gameWindow)
@@ -99,7 +127,10 @@ public partial class PriceCheckWindow : Window, IPriceCheckSurface
         var dpi = _gameWindow != 0 ? NativeMethods.GetDpiForWindow(_gameWindow) : NativeMethods.GetDpiForWindow(hwnd);
         var factor = dpi > 0 ? dpi / 96.0 : 1.0;
         var margin = (int)(area.Height * 0.02);
-        Scroller.MaxHeight = Math.Max(240, (area.Height - 2 * margin) / factor - 32);
+        var room = new Size(area.Width * 0.94 / factor, (area.Height - 2 * margin) / factor);
+        var scale = TextScale.Fit(_textScale?.Factor ?? 1, room, Minimum);
+        SetContentScale(scale);
+        Scroller.MaxHeight = Math.Max(240, (room.Height - 32) / scale);
         UpdateLayout();
         var x = area.Left + (int)(area.Width * 0.03);
         var y = area.Top + margin;

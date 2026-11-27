@@ -50,14 +50,16 @@
               </StackPanel>
               <UniformGrid Columns="2" Margin="0,14,0,0">
                 <Button Style="{StaticResource ChoiceButton}" v:Ui.Radius="10" MinHeight="64" Padding="14,10" HorizontalContentAlignment="Left" Margin="0,0,5,0"
-                        Command="{Binding UseDemoCommand}" Tag="{Binding ProfileChoice, Converter={StaticResource Active}, ConverterParameter=demo}">
+                        Command="{Binding UseDemoCommand}" Tag="{Binding ProfileChoice, Converter={StaticResource Active}, ConverterParameter=demo}"
+                        AutomationProperties.Name="Practice with demo data" AutomationProperties.HelpText="Made-up items and prices to learn with">
                   <StackPanel>
                     <TextBlock Text="Practice with demo data" FontSize="14.5" FontWeight="SemiBold" Foreground="{StaticResource Text}" />
                     <TextBlock Text="Made-up items and prices to learn with" FontSize="12.5" Foreground="{StaticResource TextDim}" Margin="0,2,0,0" />
                   </StackPanel>
                 </Button>
                 <Button Style="{StaticResource ChoiceButton}" v:Ui.Radius="10" MinHeight="64" Padding="14,10" HorizontalContentAlignment="Left" Margin="5,0,0,0"
-                        Command="{Binding ChooseLiveCommand}" Tag="{Binding ProfileChoice, Converter={StaticResource Active}, ConverterParameter=live}">
+                        Command="{Binding ChooseLiveCommand}" Tag="{Binding ProfileChoice, Converter={StaticResource Active}, ConverterParameter=live}"
+                        AutomationProperties.Name="A live league" AutomationProperties.HelpText="Real prices come in a later update">
                   <StackPanel>
                     <TextBlock Text="A live league" FontSize="14.5" FontWeight="SemiBold" Foreground="{StaticResource Text}" />
                     <TextBlock Text="Real prices come in a later update" FontSize="12.5" Foreground="{StaticResource TextDim}" Margin="0,2,0,0" />
@@ -117,7 +119,7 @@
               </StackPanel>
               <Border BorderBrush="{StaticResource RowLine}" BorderThickness="0,1,0,0" Padding="0,10">
                 <DockPanel>
-                  <Button DockPanel.Dock="Right" Style="{StaticResource GhostButton}" Content="Change" FontWeight="Normal" Foreground="{StaticResource TextSoft}" v:Ui.Radius="6" Command="{Binding StartRecordingCommand}" CommandParameter="peek" Margin="14,0,0,0" />
+                  <Button DockPanel.Dock="Right" Style="{StaticResource GhostButton}" Content="Change" FontWeight="Normal" Foreground="{StaticResource TextSoft}" v:Ui.Radius="6" AutomationProperties.Name="Change the quick price key" Command="{Binding StartRecordingCommand}" CommandParameter="peek" Margin="14,0,0,0" />
                   <Border DockPanel.Dock="Right" Style="{StaticResource KeyCap}" Margin="14,0,0,0"><TextBlock Text="{Binding PeekKey}" FontSize="13" FontWeight="SemiBold" /></Border>
                   <StackPanel VerticalAlignment="Center">
                     <TextBlock Text="Quick price (hold)" FontSize="14.5" FontWeight="SemiBold" />
@@ -127,7 +129,7 @@
               </Border>
               <Border BorderBrush="{StaticResource RowLine}" BorderThickness="0,1,0,0" Padding="0,10">
                 <DockPanel>
-                  <Button DockPanel.Dock="Right" Style="{StaticResource GhostButton}" Content="Change" FontWeight="Normal" Foreground="{StaticResource TextSoft}" v:Ui.Radius="6" Command="{Binding StartRecordingCommand}" CommandParameter="openLast" Margin="14,0,0,0" />
+                  <Button DockPanel.Dock="Right" Style="{StaticResource GhostButton}" Content="Change" FontWeight="Normal" Foreground="{StaticResource TextSoft}" v:Ui.Radius="6" AutomationProperties.Name="Change the key that changes the search" Command="{Binding StartRecordingCommand}" CommandParameter="openLast" Margin="14,0,0,0" />
                   <Border DockPanel.Dock="Right" Style="{StaticResource KeyCap}" Margin="14,0,0,0"><TextBlock Text="{Binding OpenLastKey}" FontSize="13" FontWeight="SemiBold" /></Border>
                   <StackPanel VerticalAlignment="Center">
                     <TextBlock Text="Change the search" FontSize="14.5" FontWeight="SemiBold" />
@@ -137,7 +139,7 @@
               </Border>
               <Border BorderBrush="{StaticResource RowLine}" BorderThickness="0,1,0,0" Padding="0,10">
                 <DockPanel>
-                  <Button DockPanel.Dock="Right" Style="{StaticResource GhostButton}" Content="Change" FontWeight="Normal" Foreground="{StaticResource TextSoft}" v:Ui.Radius="6" Command="{Binding StartRecordingCommand}" CommandParameter="stash" Margin="14,0,0,0" />
+                  <Button DockPanel.Dock="Right" Style="{StaticResource GhostButton}" Content="Change" FontWeight="Normal" Foreground="{StaticResource TextSoft}" v:Ui.Radius="6" AutomationProperties.Name="Change the stash prices key" Command="{Binding StartRecordingCommand}" CommandParameter="stash" Margin="14,0,0,0" />
                   <Border DockPanel.Dock="Right" Style="{StaticResource KeyCap}" Margin="14,0,0,0"><TextBlock Text="{Binding StashKey}" FontSize="13" FontWeight="SemiBold" /></Border>
                   <StackPanel VerticalAlignment="Center">
                     <TextBlock Text="Stash prices (hold) · coming later" FontSize="14.5" FontWeight="SemiBold" Foreground="{StaticResource TextDim}" />
@@ -148,7 +150,7 @@
               <Border BorderBrush="{StaticResource Edge}" BorderThickness="1" CornerRadius="6" Padding="10,6" Margin="0,4,0,4" Visibility="{Binding Message, Converter={StaticResource Vis}}">
                 <TextBlock Text="{Binding Message}" FontSize="13" TextWrapping="Wrap" />
               </Border>
-              <ItemsControl ItemsSource="{Binding KeyWarnings}" Focusable="False">
+              <ItemsControl ItemsSource="{Binding KeyWarnings}" Focusable="False" AutomationProperties.Name="Key warnings">
                 <ItemsControl.ItemTemplate>
                   <DataTemplate>
                     <TextBlock Text="{Binding}" FontSize="12.5" Foreground="{StaticResource Warn}" TextWrapping="Wrap" Margin="0,2,0,2" />
@@ -173,7 +175,7 @@
             <TextBlock Text="How to read a price check" FontSize="19" FontWeight="Bold" />
             <TextBlock Text="Top to bottom: the item, the price, and what was searched." FontSize="14" Foreground="{StaticResource TextDim}" TextWrapping="Wrap" Margin="0,4,0,0" />
             <v:PeekCard DataContext="{Binding SamplePeek}" HorizontalAlignment="Left" Margin="4,20,0,0" />
-            <ItemsControl ItemsSource="{Binding GuideSteps}" Margin="0,22,0,0" Focusable="False">
+            <ItemsControl ItemsSource="{Binding GuideSteps}" Margin="0,22,0,0" Focusable="False" AutomationProperties.Name="How to read a price check">
               <ItemsControl.ItemTemplate>
                 <DataTemplate DataType="{x:Type vm:GuideStep}">
                   <Grid Margin="0,0,0,14">

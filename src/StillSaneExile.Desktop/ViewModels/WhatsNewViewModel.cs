@@ -9,7 +9,11 @@ using StillSaneExile.Domain.Releases;
 namespace StillSaneExile.Desktop.ViewModels;
 
 /// <summary>One version's notes as the card shows them.</summary>
-public sealed record WhatsNewSection(string Heading, IReadOnlyList<NoteBlock> Blocks);
+public sealed record WhatsNewSection(string Heading, IReadOnlyList<NoteBlock> Blocks)
+{
+    /// <summary>What a screen reader says for the section (WPF reads a list row through ToString).</summary>
+    public override string ToString() => Heading;
+}
 
 /// <summary>"What's new" after an update: the release notes since the version that last ran here, shown
 /// once as a card at the top of the main window. Never on the HUD and never a dialog, so a running game

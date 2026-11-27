@@ -4,6 +4,7 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:vm="clr-namespace:StillSaneExile.Desktop.ViewModels"
+             xmlns:v="clr-namespace:StillSaneExile.Desktop.Views"
              mc:Ignorable="d"
              d:DataContext="{d:DesignInstance Type=vm:ItemViewModel}"
              x:Name="Self"
@@ -34,7 +35,7 @@
           <Border Grid.Column="1" Style="{StaticResource DemoBadge}" VerticalAlignment="Top" Margin="12,2,0,0" Visibility="{Binding IsDemo, Converter={StaticResource Vis}}">
             <TextBlock Text="DEMO PRICES" FontSize="10.5" FontWeight="Bold" />
           </Border>
-          <Button Grid.Column="2" Style="{StaticResource IconButton}" Margin="12,0,0,0" VerticalAlignment="Top" ToolTip="Close (Esc)" AutomationProperties.Name="Close"
+          <Button Grid.Column="2" Style="{StaticResource IconButton}" Margin="12,0,0,0" VerticalAlignment="Top" ToolTip="Close (Esc)" AutomationProperties.Name="Close the price check"
                   Command="{Binding CloseCommand, ElementName=Self}" Visibility="{Binding CloseCommand, ElementName=Self, Converter={StaticResource Vis}}">
             <Path Data="M 1,1 L 11,11 M 11,1 L 1,11" Width="12" Height="12" Stroke="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}" StrokeThickness="2" StrokeStartLineCap="Round" StrokeEndLineCap="Round" />
           </Button>
@@ -88,8 +89,8 @@
 
         <StackPanel Orientation="Horizontal" Margin="16,4,16,10">
           <TextBlock Text="Start numbers at" FontSize="12.5" Foreground="{StaticResource TextDim}" VerticalAlignment="Center" Margin="0,0,10,0" />
-          <Border Background="{StaticResource Well}" BorderBrush="{StaticResource Edge}" BorderThickness="1" CornerRadius="8" Padding="2" AutomationProperties.Name="Start numbers at">
-            <ItemsControl ItemsSource="{x:Static vm:ItemViewModel.StrictnessChoices}">
+          <Border Background="{StaticResource Well}" BorderBrush="{StaticResource Edge}" BorderThickness="1" CornerRadius="8" Padding="2">
+            <ItemsControl ItemsSource="{x:Static vm:ItemViewModel.StrictnessChoices}" AutomationProperties.Name="Start numbers at">
               <ItemsControl.ItemsPanel>
                 <ItemsPanelTemplate>
                   <StackPanel Orientation="Horizontal" />
@@ -143,7 +144,7 @@
           </Grid>
         </Border>
 
-        <ItemsControl ItemsSource="{Binding SearchRows}" Focusable="False">
+        <ItemsControl ItemsSource="{Binding SearchRows}" Focusable="False" AutomationProperties.Name="Stats in the search">
           <ItemsControl.ItemTemplate>
             <DataTemplate DataType="{x:Type vm:SearchRowViewModel}">
               <Border BorderBrush="{StaticResource RowLine}" BorderThickness="0,1,0,0" Padding="16,6">
@@ -182,31 +183,37 @@
                     </StackPanel>
                   </CheckBox>
                   <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="10,0,0,0">
+                    <!-- Dimmed while the stat is unticked, but still in use (changing a number ticks it),
+                         so the dimmed numbers keep 4.5:1, and full strength while one has keyboard focus. -->
                     <StackPanel.Style>
                       <Style TargetType="StackPanel">
-                        <Setter Property="Opacity" Value="0.45" />
+                        <Setter Property="Opacity" Value="0.55" />
                         <Style.Triggers>
                           <DataTrigger Binding="{Binding IsOn}" Value="True">
                             <Setter Property="Opacity" Value="1" />
                           </DataTrigger>
+                          <Trigger Property="IsKeyboardFocusWithin" Value="True">
+                            <Setter Property="Opacity" Value="1" />
+                          </Trigger>
                         </Style.Triggers>
                       </Style>
                     </StackPanel.Style>
-                    <Button Style="{StaticResource StepButton}" Content="−" Command="{Binding DecreaseCommand}" ToolTip="Lower" AutomationProperties.Name="Lower" />
+                    <Button Style="{StaticResource StepButton}" Content="−" Command="{Binding DecreaseCommand}" ToolTip="Lower" AutomationProperties.Name="{Binding LowerName}" />
                     <TextBox Text="{Binding Bound, UpdateSourceTrigger=PropertyChanged}" Width="52" Height="32" MinHeight="0" Margin="4,0" Padding="2,0"
-                             HorizontalContentAlignment="Center" FontSize="14" FontWeight="Bold" AutomationProperties.Name="{Binding ShortLabel, StringFormat='Number to search for: {0}'}">
+                             HorizontalContentAlignment="Center" FontSize="14" FontWeight="Bold" AutomationProperties.Name="{Binding BoundName}">
                       <TextBox.Style>
                         <Style TargetType="TextBox" BasedOn="{StaticResource {x:Type TextBox}}">
                           <Style.Triggers>
                             <DataTrigger Binding="{Binding IsOn}" Value="True">
                               <Setter Property="BorderBrush" Value="{StaticResource Accent}" />
                               <Setter Property="BorderThickness" Value="1.5" />
+                              <Setter Property="v:Ui.FocusBrush" Value="{StaticResource Text}" />
                             </DataTrigger>
                           </Style.Triggers>
                         </Style>
                       </TextBox.Style>
                     </TextBox>
-                    <Button Style="{StaticResource StepButton}" Content="+" Command="{Binding IncreaseCommand}" ToolTip="Raise" AutomationProperties.Name="Raise" />
+                    <Button Style="{StaticResource StepButton}" Content="+" Command="{Binding IncreaseCommand}" ToolTip="Raise" AutomationProperties.Name="{Binding RaiseName}" />
                   </StackPanel>
                   <TextBlock Grid.Column="2" Text="{Binding Tier}" FontSize="11.5" FontWeight="Bold" Foreground="{StaticResource TextSoft}" HorizontalAlignment="Center" VerticalAlignment="Center" />
                 </Grid>
@@ -226,7 +233,7 @@
           <Border BorderBrush="{StaticResource Line}" BorderThickness="0,1,0,0" Padding="16,10,16,4">
             <TextBlock Text="CHEAPEST MATCHES" Style="{StaticResource ColumnHead}" />
           </Border>
-          <ItemsControl ItemsSource="{Binding Matches}" Margin="16,0" Focusable="False">
+          <ItemsControl ItemsSource="{Binding Matches}" Margin="16,0" Focusable="False" AutomationProperties.Name="Cheapest matches">
             <ItemsControl.ItemTemplate>
               <DataTemplate DataType="{x:Type vm:MatchViewModel}">
                 <Border BorderBrush="{StaticResource RowLine}" BorderThickness="0,0,0,1" Padding="0,7">

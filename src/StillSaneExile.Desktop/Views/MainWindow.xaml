@@ -8,7 +8,7 @@
         mc:Ignorable="d"
         d:DataContext="{d:DesignInstance Type=vm:ShellViewModel}"
         Title="Still Sane, Exile?"
-        Icon="pack://application:,,,/Assets/sse.ico"
+        Icon="pack://application:,,,/StillSaneExile;component/Assets/sse.ico"
         Width="1440" Height="1000" MinWidth="1260" MinHeight="640"
         Background="{StaticResource Surface}"
         Foreground="{StaticResource Text}"
@@ -20,7 +20,7 @@
     <!-- Header: destinations, then the demo badge, league and display currency always in view. -->
     <Border DockPanel.Dock="Top" Background="{StaticResource Surface2}" BorderBrush="{StaticResource Line}" BorderThickness="0,0,0,1" Padding="20,10">
       <DockPanel LastChildFill="False">
-        <Button DockPanel.Dock="Left" Style="{StaticResource TextButton}" Content="‹ Back" FontSize="13" Command="{Binding BackCommand}" Margin="0,0,14,0"
+        <Button DockPanel.Dock="Left" Style="{StaticResource TextButton}" Content="‹ Back" AutomationProperties.Name="Back" FontSize="13" Command="{Binding BackCommand}" Margin="0,0,14,0"
                 Visibility="{Binding CanGoBack, Converter={StaticResource Vis}}" ToolTip="Back keeps your selection and your search" />
         <TextBlock DockPanel.Dock="Left" Text="Still Sane, Exile?" FontSize="16" FontWeight="ExtraBold" VerticalAlignment="Center" Margin="0,0,20,0" />
         <StackPanel DockPanel.Dock="Left" Orientation="Horizontal">
@@ -32,37 +32,51 @@
           <Button Style="{StaticResource TabButton}" Content="Campaign guide" Command="{Binding GoGuideCommand}" Tag="{Binding PageName, Converter={StaticResource Active}, ConverterParameter='Campaign guide'}" />
         </StackPanel>
 
-        <Button DockPanel.Dock="Right" Content="Settings" Command="{Binding GoSettingsCommand}" Tag="{Binding PageName, Converter={StaticResource Active}, ConverterParameter=Settings}" Margin="8,0,0,0" />
-        <Grid DockPanel.Dock="Right" Margin="8,0,0,0">
-          <Button x:Name="CurrencyButton" Command="{Binding ToggleCurrencyMenuCommand}" ToolTip="Click to change the currency prices are shown in">
-            <TextBlock><Run Text="Show prices in: " Foreground="{StaticResource TextFaint}" /><Run Text="{Binding CurrencyWord, Mode=OneWay}" /></TextBlock>
+        <!-- Right side in reading order, so Tab moves left to right across it as well. -->
+        <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
+          <Button Margin="0,0,8,0" Padding="12,0" AutomationProperties.Name="{Binding Updates.ReadyVersion, StringFormat='Restart to install update {0}'}"
+                  Command="{Binding RestartToUpdateCommand}" Visibility="{Binding Updates.IsReady, Converter={StaticResource Vis}}"
+                  ToolTip="The update is downloaded. It also installs by itself when you close the app.">
+            <TextBlock><Run Text="Update " /><Run Text="{Binding Updates.ReadyVersion, Mode=OneWay}" /><Run Text=" ready · Restart" /></TextBlock>
           </Button>
-          <Popup IsOpen="{Binding CurrencyMenuOpen}" PlacementTarget="{Binding ElementName=CurrencyButton}" Placement="Bottom" StaysOpen="False" AllowsTransparency="True">
-            <Border Background="{StaticResource Surface3}" BorderBrush="{StaticResource Edge}" BorderThickness="1" CornerRadius="8" Padding="6" Margin="0,4,0,0" MinWidth="160">
-              <ItemsControl ItemsSource="{Binding CurrencyChoices}">
-                <ItemsControl.ItemTemplate>
-                  <DataTemplate>
-                    <Button Style="{StaticResource TabButton}" FontSize="13" MinHeight="34" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left"
-                            Content="{Binding Converter={StaticResource CurrencyName}}"
-                            Command="{Binding DataContext.SetCurrencyCommand, RelativeSource={RelativeSource AncestorType=Window}}"
-                            CommandParameter="{Binding}" />
-                  </DataTemplate>
-                </ItemsControl.ItemTemplate>
-              </ItemsControl>
-            </Border>
-          </Popup>
-        </Grid>
-        <Button DockPanel.Dock="Right" Command="{Binding OpenLeagueSettingCommand}" ToolTip="Click to change the league" Margin="8,0,0,0">
-          <TextBlock><Run Text="League: " Foreground="{StaticResource TextFaint}" /><Run Text="{Binding LeagueLabel, Mode=OneWay}" /></TextBlock>
-        </Button>
-        <Border DockPanel.Dock="Right" Style="{StaticResource DemoBadge}" Visibility="{Binding IsDemo, Converter={StaticResource Vis}}">
-          <TextBlock Text="DEMO PRICES" FontSize="11" FontWeight="Bold" />
-        </Border>
-        <Button DockPanel.Dock="Right" Margin="0,0,8,0" Padding="12,0"
-                Command="{Binding RestartToUpdateCommand}" Visibility="{Binding Updates.IsReady, Converter={StaticResource Vis}}"
-                ToolTip="The update is downloaded. It also installs by itself when you close the app.">
-          <TextBlock><Run Text="Update " /><Run Text="{Binding Updates.ReadyVersion, Mode=OneWay}" /><Run Text=" ready · Restart" /></TextBlock>
-        </Button>
+          <Border Style="{StaticResource DemoBadge}" Visibility="{Binding IsDemo, Converter={StaticResource Vis}}">
+            <TextBlock Text="DEMO PRICES" FontSize="11" FontWeight="Bold" />
+          </Border>
+          <Button Command="{Binding OpenLeagueSettingCommand}" ToolTip="Click to change the league" Margin="8,0,0,0">
+            <TextBlock><Run Text="League: " Foreground="{StaticResource TextFaint}" /><Run Text="{Binding LeagueLabel, Mode=OneWay}" /></TextBlock>
+          </Button>
+          <Grid Margin="8,0,0,0">
+            <Button x:Name="CurrencyButton" Command="{Binding ToggleCurrencyMenuCommand}" PreviewKeyDown="OnCurrencyButtonKeyDown" ToolTip="Click to change the currency prices are shown in">
+              <TextBlock><Run Text="Show prices in: " Foreground="{StaticResource TextFaint}" /><Run Text="{Binding CurrencyWord, Mode=OneWay}" /></TextBlock>
+            </Button>
+            <!-- Opened from the keyboard, focus moves into the menu: arrows or Tab to choose, Enter to pick,
+                 Esc to close. -->
+            <Popup x:Name="CurrencyMenu" IsOpen="{Binding CurrencyMenuOpen}" PlacementTarget="{Binding ElementName=CurrencyButton}" Placement="Bottom" StaysOpen="False" AllowsTransparency="True"
+                   Opened="OnCurrencyMenuOpened" Closed="OnCurrencyMenuClosed">
+              <Border Background="{StaticResource Surface3}" BorderBrush="{StaticResource Edge}" BorderThickness="1" CornerRadius="8" Padding="6" Margin="0,4,0,0" MinWidth="160"
+                      KeyboardNavigation.TabNavigation="Cycle" KeyboardNavigation.DirectionalNavigation="Cycle" PreviewKeyDown="OnCurrencyMenuKeyDown">
+                <ItemsControl x:Name="CurrencyMenuItems" ItemsSource="{Binding CurrencyChoices}" AutomationProperties.Name="Show prices in">
+                  <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                      <Button Style="{StaticResource TabButton}" FontSize="13" MinHeight="34" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left"
+                              Content="{Binding Converter={StaticResource CurrencyName}}"
+                              Command="{Binding DataContext.SetCurrencyCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                              CommandParameter="{Binding}">
+                        <Button.Tag>
+                          <MultiBinding Converter="{StaticResource PillActive}">
+                            <Binding />
+                            <Binding Path="DataContext.Session.DisplayCurrency" RelativeSource="{RelativeSource AncestorType=Window}" />
+                          </MultiBinding>
+                        </Button.Tag>
+                      </Button>
+                    </DataTemplate>
+                  </ItemsControl.ItemTemplate>
+                </ItemsControl>
+              </Border>
+            </Popup>
+          </Grid>
+          <Button Content="Settings" Command="{Binding GoSettingsCommand}" Tag="{Binding PageName, Converter={StaticResource Active}, ConverterParameter=Settings}" Margin="8,0,0,0" />
+        </StackPanel>
       </DockPanel>
     </Border>
 

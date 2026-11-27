@@ -8,6 +8,9 @@ public sealed record PeekRowViewModel(bool On, string Text, string Right, string
 {
     public bool Off => !On;
     public bool HasHint => Hint is not null;
+
+    /// <summary>The row as a screen reader says it (WPF reads a list row through ToString).</summary>
+    public override string ToString() => $"{Text}, {(On ? "searched" : "not searched")}{(Right.Length > 0 ? $", {Right}" : "")}";
 }
 
 /// <summary>The quick peek card: the item, what it is worth and exactly which stats the price used.</summary>

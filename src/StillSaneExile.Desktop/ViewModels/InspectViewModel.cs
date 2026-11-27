@@ -9,7 +9,11 @@ using StillSaneExile.Domain.Pricing;
 
 namespace StillSaneExile.Desktop.ViewModels;
 
-public sealed record PracticeItem(string Label, string File);
+public sealed record PracticeItem(string Label, string File)
+{
+    /// <summary>What a screen reader says for the row (WPF reads a list row through ToString).</summary>
+    public override string ToString() => Label;
+}
 
 public sealed partial class InspectViewModel : ObservableObject
 {

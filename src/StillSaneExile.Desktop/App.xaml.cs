@@ -16,6 +16,7 @@ public partial class App : Application
     private GuideHud? _guideHud;
     private AppPaths? _paths;
     private UpdateService? _updates;
+    private TextScale? _textScale;
     private bool _renderingSnapshots;
 
     protected override void OnStartup(StartupEventArgs e)
@@ -42,13 +43,18 @@ public partial class App : Application
 
         if (snapshots is not null)
         {
-            SnapshotRenderer.Render(shell, main, snapshots);
+            // --text-scale 150 renders as if Windows' text size were 150 %; --window 1920x1032 sets the
+            // main window's size (and the screen it must fit), by default the usual size times the scale.
+            SnapshotRenderer.Render(shell, main, snapshots, SnapshotRenderer.ParseScale(Arg("--text-scale")), SnapshotRenderer.ParseSize(Arg("--window")));
             Shutdown();
             return;
         }
 
+        _textScale = new TextScale();
+        main.UseTextScale(_textScale);
         _peek = new PeekWindow();
         _priceCheck = new PriceCheckWindow();
+        _priceCheck.UseTextScale(_textScale);
         _hud = new HudController(shell, new InputObserver(), new ForegroundWatcher(), clipboard, _peek, _priceCheck, main);
         shell.Hud = _hud;
 
@@ -68,6 +74,7 @@ public partial class App : Application
     {
         _hud?.Dispose();
         _guideHud?.Dispose();
+        _textScale?.Dispose();
         _peek?.Close();
         _priceCheck?.Close();
         _updates?.ApplyOnExit();

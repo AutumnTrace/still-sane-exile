@@ -32,7 +32,7 @@
                 ToolTip="Reads the clipboard once. Copy the item in game first (Ctrl+C, or Ctrl+Alt+C for tiers and ranges)." />
         <StackPanel Visibility="{Binding IsDemo, Converter={StaticResource Vis}}">
           <TextBlock Style="{StaticResource SectionTitle}" Text="PRACTICE ITEMS (MADE UP)" />
-          <ItemsControl ItemsSource="{Binding PracticeItems}" Focusable="False">
+          <ItemsControl ItemsSource="{Binding PracticeItems}" Focusable="False" AutomationProperties.Name="Practice items">
             <ItemsControl.ItemTemplate>
               <DataTemplate>
                 <Button Style="{StaticResource LinkButton}" Content="{Binding Label}" FontSize="13" Padding="4,3" HorizontalAlignment="Stretch"
@@ -44,7 +44,7 @@
         <TextBlock Style="{StaticResource SectionTitle}" Text="CHECKED THIS SESSION" />
         <TextBlock Text="Nothing yet." FontSize="12.5" Foreground="{StaticResource TextFaint}" Margin="4,0,0,0" Visibility="{Binding Recent.Count, Converter={StaticResource Vis}, ConverterParameter=invert}" />
       </StackPanel>
-      <ListBox ItemsSource="{Binding Recent}" SelectedItem="{Binding Selected}">
+      <ListBox ItemsSource="{Binding Recent}" SelectedItem="{Binding Selected}" AutomationProperties.Name="Checked this session">
         <ListBox.ItemTemplate>
           <DataTemplate DataType="{x:Type vm:ItemViewModel}">
             <StackPanel>
@@ -76,7 +76,7 @@
           <StackPanel>
             <TextBlock Text="How good are your rolls?" Style="{StaticResource CardTitle}" />
             <TextBlock Style="{StaticResource CardLead}" Text="Tier 1 is the best a stat can be. The bar shows how close you are to the best number in that tier." />
-            <ItemsControl ItemsSource="{Binding RollRows}" Margin="0,10,0,0" Focusable="False">
+            <ItemsControl ItemsSource="{Binding RollRows}" Margin="0,10,0,0" Focusable="False" AutomationProperties.Name="How good are your rolls?">
               <ItemsControl.ItemTemplate>
                 <DataTemplate DataType="{x:Type vm:RollRowViewModel}">
                   <Border BorderBrush="{StaticResource RowLine}" BorderThickness="0,1,0,0" Padding="0,10" Background="Transparent" ToolTip="{Binding Details}">
@@ -120,12 +120,13 @@
           <StackPanel>
             <TextBlock Text="Prices you wrote down" Style="{StaticResource CardTitle}" />
             <TextBlock Style="{StaticResource CardLead}" Text="Saved by you from the trade site. Only you see these." />
-            <ItemsControl ItemsSource="{Binding Selected.Comparables}" Margin="0,8,0,0" Focusable="False">
+            <ItemsControl ItemsSource="{Binding Selected.Comparables}" Margin="0,8,0,0" Focusable="False" AutomationProperties.Name="Prices you wrote down">
               <ItemsControl.ItemTemplate>
                 <DataTemplate DataType="{x:Type vm:ComparableViewModel}">
                   <Border BorderBrush="{StaticResource RowLine}" BorderThickness="0,1,0,0" Padding="0,8" Background="Transparent" ToolTip="{Binding Tags}">
                     <DockPanel>
                       <Button DockPanel.Dock="Right" Style="{StaticResource TextButton}" Content="Remove" FontSize="12" Padding="0" Margin="10,0,0,0"
+                              AutomationProperties.Name="{Binding Price, StringFormat='Remove the price {0}'}"
                               Command="{Binding DataContext.RemoveComparableCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{Binding}"
                               Visibility="{Binding Seeded, Converter={StaticResource Vis}, ConverterParameter=invert}" />
                       <TextBlock DockPanel.Dock="Right" FontSize="13.5" Foreground="{StaticResource TextDim}" TextTrimming="CharacterEllipsis"><Run Text="{Binding Seller, Mode=OneWay}" /><Run Text=" · " /><Run Text="{Binding Age, Mode=OneWay}" /></TextBlock>
@@ -137,7 +138,7 @@
             </ItemsControl>
             <TextBlock Text="Nothing written down yet." FontSize="12.5" Foreground="{StaticResource TextFaint}" Margin="0,8,0,0"
                        Visibility="{Binding Selected.Comparables.Count, Converter={StaticResource Vis}, ConverterParameter=invert}" />
-            <ItemsControl ItemsSource="{Binding Selected.PriceWarnings}" Margin="0,6,0,0" Focusable="False">
+            <ItemsControl ItemsSource="{Binding Selected.PriceWarnings}" Margin="0,6,0,0" Focusable="False" AutomationProperties.Name="Price warnings">
               <ItemsControl.ItemTemplate>
                 <DataTemplate>
                   <TextBlock Text="{Binding}" FontSize="12" Foreground="{StaticResource Warn}" TextWrapping="Wrap" Margin="0,0,0,3" />
@@ -163,7 +164,7 @@
                 <StackPanel Grid.Row="0" Grid.Column="1" Orientation="Horizontal" Margin="0,3">
                   <TextBox Width="72" Text="{Binding NewAmount, UpdateSourceTrigger=PropertyChanged}" AutomationProperties.Name="Asking price" />
                   <Border Background="{StaticResource Well}" BorderBrush="{StaticResource Edge}" BorderThickness="1" CornerRadius="8" Padding="2" Margin="8,0,0,0">
-                    <ItemsControl ItemsSource="{Binding CurrencyChoices}" Focusable="False">
+                    <ItemsControl ItemsSource="{Binding CurrencyChoices}" Focusable="False" AutomationProperties.Name="Asking price currency">
                       <ItemsControl.ItemsPanel>
                         <ItemsPanelTemplate>
                           <StackPanel Orientation="Horizontal" />
@@ -172,6 +173,7 @@
                       <ItemsControl.ItemTemplate>
                         <DataTemplate>
                           <Button Style="{StaticResource SegmentButton}" Padding="10,0" Content="{Binding Converter={StaticResource CurrencyName}, ConverterParameter=short}"
+                                  AutomationProperties.Name="{Binding Converter={StaticResource CurrencyName}}"
                                   Command="{Binding DataContext.SetNewCurrencyCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{Binding}">
                             <Button.Tag>
                               <MultiBinding Converter="{StaticResource PillActive}">
@@ -205,7 +207,7 @@
           <StackPanel>
             <TextBlock Text="Lines not understood" Style="{StaticResource CardTitle}" />
             <TextBlock Style="{StaticResource CardLead}" Text="Kept exactly as copied. They are not part of the price or the search." />
-            <ItemsControl ItemsSource="{Binding Unparsed}" Margin="0,8,0,0" Focusable="False">
+            <ItemsControl ItemsSource="{Binding Unparsed}" Margin="0,8,0,0" Focusable="False" AutomationProperties.Name="Lines not understood">
               <ItemsControl.ItemTemplate>
                 <DataTemplate>
                   <TextBlock Text="{Binding}" FontSize="12.5" Foreground="{StaticResource TextSoft}" TextWrapping="Wrap" Margin="0,0,0,3" />

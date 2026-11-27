@@ -329,7 +329,7 @@
         <Border Style="{StaticResource Card}">
           <StackPanel>
             <TextBlock Text="Coming later" Style="{StaticResource CardTitle}" />
-            <ItemsControl ItemsSource="{Binding Later}" Margin="0,8,0,0" Focusable="False">
+            <ItemsControl ItemsSource="{Binding Later}" Margin="0,8,0,0" Focusable="False" AutomationProperties.Name="Coming later">
               <ItemsControl.ItemTemplate>
                 <DataTemplate>
                   <TextBlock Text="{Binding StringFormat='•  {0}'}" FontSize="12.5" Foreground="{StaticResource TextDim}" TextWrapping="Wrap" LineHeight="19" Margin="0,0,0,6" />
