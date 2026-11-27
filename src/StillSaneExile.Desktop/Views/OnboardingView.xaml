@@ -67,10 +67,14 @@
                 </Button>
               </UniformGrid>
               <StackPanel Margin="0,12,0,0" Visibility="{Binding ShowLeagueInput, Converter={StaticResource Vis}}">
-                <DockPanel>
-                  <Button DockPanel.Dock="Right" Content="Confirm league" Command="{Binding ConfirmLeagueCommand}" Margin="8,0,0,0" />
+                <Grid>
+                  <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                  </Grid.ColumnDefinitions>
                   <TextBox Text="{Binding LeagueDraft, UpdateSourceTrigger=PropertyChanged}" MinHeight="40" AutomationProperties.Name="League name" ToolTip="Type the league name exactly as the game shows it" />
-                </DockPanel>
+                  <Button Grid.Column="1" Content="Confirm league" Command="{Binding ConfirmLeagueCommand}" Margin="8,0,0,0" />
+                </Grid>
                 <TextBlock Style="{StaticResource Small}" Margin="0,6,0,0" Text="Type the league name exactly as the game shows it. Until live prices arrive, a live league shows no prices and says so." />
               </StackPanel>
               <TextBlock Style="{StaticResource Small}" Margin="0,8,0,0" Visibility="{Binding ConfirmedLeague, Converter={StaticResource Vis}}">

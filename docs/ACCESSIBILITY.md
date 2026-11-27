@@ -13,13 +13,13 @@ What SSE does for keyboard use, screen readers, contrast and text size, and what
 
 ## Screen readers
 
-Every control has a name that says what it does and what it acts on, such as "Raise the minimum for 17% increased Attack Speed", "Remove the price 2.5 div" or "Change the quick price key". Rows of lists and tables read their contents ("Doom Thirst, Rare crossbow, checked at 13:30"), never the name of a program type. Buttons that pick one of a few (the page, the currency, the card position, how strict the search starts) report the chosen one with the item status "Selected".
+Every control has a name that says what it does and what it acts on, such as "Raise the minimum for 17% increased Attack Speed", "Remove the price 2.5 div", "Skip Defeat the Devourer" or "Change the quick price key". Rows of lists and tables read their contents ("Doom Thirst, Rare crossbow, checked at 13:30"), never the name of a program type. Buttons that pick one of a few (the page, the currency, the card position, how strict the search starts) report the chosen one with the item status "Selected".
 
 This is checked with WPF's UI Automation peers and a UI Automation client, not yet with Narrator or NVDA in daily use. Reports are welcome.
 
 ## Contrast
 
-Text meets WCAG AA (4.5:1) on every surface it appears on, including the selected rows, the header's current page, the ticked search rows and the quick price card over a bright game scene. The empty tick box meets the 3:1 minimum for controls. TextFaint and the tick box's grey were raised to reach these, and TextOff, the grey above TextFaint, with them, so the steps between the greys stay even:
+Text meets WCAG AA (4.5:1) on every surface it appears on, including the selected rows, the header's current page, the ticked search rows and the quick price card and the guide's pinned lines over a bright game scene. The empty tick box meets the 3:1 minimum for controls. TextFaint and the tick box's grey were raised to reach these, and TextOff, the grey above TextFaint, with them, so the steps between the greys stay even:
 
 | Colour | Before | After | On Surface (#101114) | Surface2 (#15161A) | Surface3 (#1B1D22) | Surface4 (#22242A) | Ticked row | Card over a white scene |
 |---|---|---|---|---|---|---|---|---|
@@ -29,7 +29,7 @@ Text meets WCAG AA (4.5:1) on every surface it appears on, including the selecte
 
 Bold values were below the minimum. A ticked row is the accent at 10 % over Surface2 (`#192231`); the card over a white scene is the card's 97 % Surface2 over white (`#1C1D21`). No tick box sits on Surface4.
 
-The numbers of an unticked stat were drawn at 45 % opacity, which left them at 4.0 to 4.2:1 although they can still be changed; they are now at 55 % (5.4 to 5.7:1). Every other colour already passed and is unchanged: Text, TextSoft and TextDim (6.7:1 or more anywhere), the accent as text (4.7:1 on Surface4), links, warnings, hints, the rarity colours (4.9:1 or more on Surface4), the DEMO badges (11.8:1) and the dark text on the accent (5.7:1).
+The numbers of an unticked stat were drawn at 45 % opacity, which left them at 4.0 to 4.2:1 although they can still be changed; they are now at 55 % (5.4 to 5.7:1). Every other colour already passed and is unchanged: Text, TextSoft and TextDim (6.7:1 or more anywhere), the accent as text (4.7:1 on Surface4), links, warnings, hints, the rarity colours (4.9:1 or more on Surface4), the DEMO and DRAFT badges (11.8:1) and the dark text on the accent (5.7:1).
 
 Disabled controls are dimmed to 45 % and are exempt from the contrast minimum, as WCAG allows: a disabled button reads at 4.0:1, the disabled **Apply** on My wealth at 2.1:1. The borders of buttons and boxes are quiet (1.3 to 1.4:1); their labels and the darker fill of the boxes identify them.
 
