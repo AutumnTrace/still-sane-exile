@@ -2,7 +2,7 @@
 
 Every release is a tag `vX.Y.Z` on `main` that matches `<Version>` in `Directory.Build.props`. See [docs/RELEASING.md](docs/RELEASING.md).
 
-## [Unreleased]
+## [0.2.0] - 2026-11-27
 
 - New look from the "UI & overlay" design: cool greys, one blue accent used only for the search, item names in their rarity colours, plain words ("Only 3 for sale — rough price", "Can't tell which stat this is").
 - **Price check** replaces Inspect: what items like yours sell for and how many are for sale, then the search behind it. Tick stats, type or step numbers, start from your exact rolls or 10% / 20% lower, buy-now and item-level filters, cheapest matches; it updates as you go. "Open this search on the trade site" and "Copy search".
