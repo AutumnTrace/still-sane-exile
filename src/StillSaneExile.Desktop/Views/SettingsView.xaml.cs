@@ -19,4 +19,12 @@ public partial class SettingsView : UserControl
             e.Handled = vm.Record(key, Keyboard.Modifiers);
         }
     }
+
+    private void OnPreviewMouseDown(object sender, MouseButtonEventArgs e)
+    {
+        if (DataContext is SettingsViewModel vm && vm.Recording is not null)
+        {
+            e.Handled = vm.RecordMouse(e.ChangedButton, Keyboard.Modifiers);
+        }
+    }
 }

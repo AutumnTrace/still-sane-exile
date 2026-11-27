@@ -16,9 +16,14 @@ public sealed class PeekViewModel
     /// <summary>Rows beyond this are left off the card (unticked ones first); F3 shows them all.</summary>
     public const int MaxRows = 8;
 
+    /// <summary>On cards from a binding that is not the game's copy key: the clipboard held this item
+    /// already, and it need not be the one under the cursor.</summary>
+    public const string LastCopiedNote = "Showing the last item you copied";
+
     public string Title { get; init; } = "";
     public ItemRarity Rarity { get; init; } = ItemRarity.Unknown;
     public string? Subtitle { get; init; }
+    public string? Note { get; init; }
     public bool IsDemo { get; init; }
     public PriceAnswer? Answer { get; init; }
     public IReadOnlyList<PeekRowViewModel> Rows { get; init; } = [];
@@ -36,8 +41,9 @@ public sealed class PeekViewModel
     public bool HasRows => Rows.Count > 0;
     public bool HasChangeKey => ChangeKey.Length > 0;
     public bool HasSubtitle => !string.IsNullOrEmpty(Subtitle);
+    public bool HasNote => !string.IsNullOrEmpty(Note);
 
-    public static PeekViewModel From(ItemViewModel item, bool demo, string releaseHint, string changeKey, bool pins = false)
+    public static PeekViewModel From(ItemViewModel item, bool demo, string releaseHint, string changeKey, bool pins = false, string? note = null)
     {
         var rows = new List<PeekRowViewModel>();
         if (item.IsUnique)
@@ -57,6 +63,7 @@ public sealed class PeekViewModel
             Title = item.Title,
             Rarity = item.Rarity,
             Subtitle = item.Subtitle,
+            Note = note,
             IsDemo = demo,
             Answer = item.Answer,
             Rows = rows,

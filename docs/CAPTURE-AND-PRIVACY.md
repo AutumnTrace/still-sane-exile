@@ -5,9 +5,10 @@
 | Mechanism | Windows API | Why | Never |
 |---|---|---|---|
 | Keyboard observer | `SetWindowsHookEx(WH_KEYBOARD_LL)` in SSE's own process | Notice physical presses and releases of your bindings | Swallow, delay, change or send a key. Events flagged as injected are ignored. |
+| Mouse button observer | `SetWindowsHookEx(WH_MOUSE_LL)` in SSE's own process, only while a side button is bound or Settings is open | Notice physical presses and releases of the side buttons (Mouse 4 and 5) | Look at the cursor position or movement; swallow, delay, change or send a click. Events flagged as injected are ignored. |
 | Foreground watcher | `SetWinEventHook(EVENT_SYSTEM_FOREGROUND / MINIMIZESTART)`, out of context | Only react while the game is in front; hide on focus change or minimize | Inspect another process beyond its window title and executable name |
 | Clipboard change counter | `GetClipboardSequenceNumber` | Wait until the game's own copy has landed | Read content (it is a counter) |
-| Clipboard read | `Clipboard.GetText`, once per qualifying press | Get the item text the game just copied | Read again on auto-repeat or release; read when the game copied nothing |
+| Clipboard read | `Clipboard.GetText`, once per qualifying press | Get the item text the game just copied. A binding that isn't the game's copy key, such as a side button, reads what the clipboard already holds: the last item you copied | Read again on auto-repeat or release; with `Ctrl+C`, read when the game copied nothing |
 | HUD card | Topmost, layered, click-through, no-activate window | Show the result over the game | Take focus or intercept clicks |
 | Price check window (`F3`) | Topmost window that takes focus while open; `SetForegroundWindow` hands focus back to the game when it closes | Tick stats and type numbers over the game | Send input to the game; stay open once you press `Esc`, press `F3` again or click back into the game |
 
@@ -16,7 +17,7 @@
 - **Settings** (`sse.db`, SQLite) in `%APPDATA%\StillSaneExile`, or in `data\` beside the portable build. Program files live separately in `%LOCALAPPDATA%\StillSaneExile` and are replaced on each update; uninstalling removes them but keeps your settings.
 - **Comparison sets** you create by adding a comparable: the asks you typed and the item text they compare against.
 - **Holdings** you type in or import on My wealth: league, tab, item id, variant, quantity and snapshot time, plus the file's name (not its folder) for an import. The CSV file itself is only read when you pick it, never copied or uploaded. Format: [Wealth CSV import](WEALTH-CSV.md).
-- **Not stored:** clipboard text that is not an item (discarded immediately), recent items (memory only, cleared on exit), key presses, screen pixels.
+- **Not stored:** clipboard text that is not an item (discarded immediately), recent items (memory only, cleared on exit), key presses, mouse clicks, screen pixels.
 
 ## Network
 

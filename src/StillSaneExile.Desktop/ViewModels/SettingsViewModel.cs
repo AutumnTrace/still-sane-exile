@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.IO;
 using System.Windows.Input;
@@ -17,6 +18,9 @@ public sealed record GuideStep(int Number, string Title, string Text);
 public sealed partial class SettingsViewModel : ObservableObject
 {
     private readonly ShellViewModel _shell;
+    private Hotkey _peek;
+    private Hotkey _openLast;
+    private Hotkey _stash;
 
     public SettingsViewModel(ShellViewModel shell)
     {
@@ -70,7 +74,7 @@ public sealed partial class SettingsViewModel : ObservableObject
     public WhatsNewViewModel WhatsNew => _shell.WhatsNew;
 
     [ObservableProperty]
-    public partial string TestLog { get; set; } = "Press any key while this page is open to see press, hold and release.";
+    public partial string TestLog { get; set; } = "Press any key or side mouse button while this page is open to see press, hold and release.";
 
     [ObservableProperty]
     public partial string? Message { get; set; }
@@ -110,10 +114,18 @@ public sealed partial class SettingsViewModel : ObservableObject
         get
         {
             var list = new List<string>();
-            var keys = new[] { ("Quick price", PeekKey), ("Change the search", OpenLastKey), ("Stash prices", StashKey) };
-            foreach (var g in keys.GroupBy(k => k.Item2, StringComparer.OrdinalIgnoreCase).Where(g => g.Count() > 1))
+            var keys = new[] { ("Quick price", _peek), ("Change the search", _openLast), ("Stash prices", _stash) };
+            foreach (var g in keys.GroupBy(k => k.Item2).Where(g => g.Count() > 1))
             {
-                list.Add($"{string.Join(" and ", g.Select(x => x.Item1))} share {g.Key}. Give each its own key.");
+                list.Add($"{string.Join(" and ", g.Select(x => x.Item1))} share {g.Key.Label}. Give each its own key or button.");
+            }
+
+            foreach (var (name, key) in keys)
+            {
+                if (GameKeys.DefaultAction(key) is { } action)
+                {
+                    list.Add($"{name} ({key.Label}) may clash with the game's default {action} key.");
+                }
             }
 
             if (StashKey.Equals("RightAlt", StringComparison.OrdinalIgnoreCase) && _shell.Hud?.AltGrDetected == true)
@@ -125,22 +137,35 @@ public sealed partial class SettingsViewModel : ObservableObject
         }
     }
 
+    /// <summary>Exactly what each binding reads. Only the game's own copy key makes the game copy the
+    /// hovered item; any other quick price binding reads whatever the clipboard already holds.</summary>
     public string ReadsExplanation =>
         (PeekKey.Equals("Ctrl+C", StringComparison.OrdinalIgnoreCase)
             ? "Ctrl+C is the game's own copy key, so one press copies and peeks (Ctrl+Alt+C too, for the advanced copy). The game still copies; the app only listens.\n"
             : "") +
-        $"{PeekKey}: reads the clipboard once, right after the game copies the hovered item. If the game copied nothing, nothing is read.\n" +
+        (_peek.IsNativeCopy
+            ? $"{PeekKey}: reads the clipboard once, right after the game copies the hovered item. If the game copied nothing, nothing is read.\n"
+            : $"{PeekKey}: reads the clipboard once per press, straight away. It is not the game's copy key, so the game copies nothing: it shows the last item you copied with Ctrl+C (or Ctrl+Alt+C), which may not be the one under your cursor.\n") +
         $"{OpenLastKey}: reads nothing; opens the price check for your last item over the game (Esc closes it).\n" +
         $"{StashKey}: reserved for stash and Aldur labels (Milestone 2). Not active yet; it will read one frame of the game window per press, with your opt-in.";
 
+    /// <summary>Onboarding's one line under "Quick price".</summary>
+    public string PeekHowTo => _peek.IsNativeCopy
+        ? "Hover an item and hold. Let go to hide."
+        : "Shows the last item you copied with Ctrl+C. Let go to hide.";
+
+    [MemberNotNull(nameof(_peek), nameof(_openLast), nameof(_stash))]
     public void Load()
     {
         LiveSelected = S.Profile == ProfileKind.Live && !string.IsNullOrWhiteSpace(S.LiveLeague);
         ConfirmedLeague = string.IsNullOrWhiteSpace(S.LiveLeague) ? null : S.LiveLeague;
         LeagueDraft = ConfirmedLeague ?? "";
-        PeekKey = S.PeekKey.ToString();
-        OpenLastKey = S.OpenLastKey.ToString();
-        StashKey = S.StashKey.ToString();
+        _peek = S.PeekKey;
+        _openLast = S.OpenLastKey;
+        _stash = S.StashKey;
+        PeekKey = _peek.Label;
+        OpenLastKey = _openLast.Label;
+        StashKey = _stash.Label;
         ToggleMode = S.PeekMode == HoldMode.Toggle;
         Anchor = S.Anchor;
         PeekScale = S.PeekScale;
@@ -150,6 +175,7 @@ public sealed partial class SettingsViewModel : ObservableObject
         _samplePeek = null; // keys or currency may have changed
         OnPropertyChanged(nameof(CurrentCurrency));
         OnPropertyChanged(nameof(ReadsExplanation));
+        OnPropertyChanged(nameof(PeekHowTo));
         OnPropertyChanged(nameof(KeyWarnings));
         OnPropertyChanged(nameof(GuideSteps));
         OnPropertyChanged(nameof(SamplePeek));
@@ -240,7 +266,7 @@ public sealed partial class SettingsViewModel : ObservableObject
     private void StartRecording(string target)
     {
         Recording = target;
-        Message = "Press the new key combination now. Esc cancels.";
+        Message = "Press the new key combination, or a side mouse button, now. Esc cancels.";
     }
 
     /// <summary>Called by the view while recording. Returns true when the key was consumed.</summary>
@@ -263,7 +289,36 @@ public sealed partial class SettingsViewModel : ObservableObject
             return true; // wait for the main key
         }
 
-        var binding = new Hotkey(KeyInterop.VirtualKeyFromKey(key), mods.HasFlag(ModifierKeys.Control), mods.HasFlag(ModifierKeys.Shift), mods.HasFlag(ModifierKeys.Alt) && key != Key.RightAlt);
+        Save(new Hotkey(KeyInterop.VirtualKeyFromKey(key), mods.HasFlag(ModifierKeys.Control), mods.HasFlag(ModifierKeys.Shift), mods.HasFlag(ModifierKeys.Alt) && key != Key.RightAlt));
+        return true;
+    }
+
+    /// <summary>Called by the view for mouse presses while recording: a side button becomes the
+    /// binding. Left, right and middle click never do, because the game uses them for skills and SSE's
+    /// own buttons need the left one. Returns true when the press was consumed.</summary>
+    public bool RecordMouse(MouseButton button, ModifierKeys mods)
+    {
+        if (Recording is null)
+        {
+            return false;
+        }
+
+        switch (button)
+        {
+            case MouseButton.XButton1 or MouseButton.XButton2:
+                var vk = button == MouseButton.XButton1 ? Hotkey.VkXButton1 : Hotkey.VkXButton2;
+                Save(new Hotkey(vk, mods.HasFlag(ModifierKeys.Control), mods.HasFlag(ModifierKeys.Shift), mods.HasFlag(ModifierKeys.Alt)));
+                return true;
+            case MouseButton.Right or MouseButton.Middle:
+                Message = "Left, right and middle click are skill buttons in the game, so they can't be bound. Press a key or a side mouse button (Mouse 4 or 5). Esc cancels.";
+                return true;
+            default:
+                return false; // a left click still works the page, e.g. another "Change" button
+        }
+    }
+
+    private void Save(Hotkey binding)
+    {
         switch (Recording)
         {
             case "peek":
@@ -278,12 +333,11 @@ public sealed partial class SettingsViewModel : ObservableObject
         }
 
         Recording = null;
-        Message = $"Saved {binding}.";
+        Message = $"Saved {binding.Label}.";
         Load();
         OnPropertyChanged(nameof(KeyWarnings));
         OnPropertyChanged(nameof(ReadsExplanation));
         _shell.Hud?.ApplySettings();
-        return true;
     }
 
     [RelayCommand]
@@ -328,7 +382,7 @@ public sealed partial class SettingsViewModel : ObservableObject
         }
 
         var item = new ItemViewModel(parsed.Item!, session);
-        return PeekViewModel.From(item, true, PeekViewModel.ReleaseHintFor(S.PeekMode), S.OpenLastKey.ToString(), pins: true);
+        return PeekViewModel.From(item, true, PeekViewModel.ReleaseHintFor(S.PeekMode), S.OpenLastKey.Label, pins: true);
     }
 
     public void OnTestKey(KeyEvent e, string name, TimeSpan? held)

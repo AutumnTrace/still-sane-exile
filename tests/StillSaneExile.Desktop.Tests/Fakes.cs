@@ -7,13 +7,16 @@ using StillSaneExile.Desktop.Views;
 
 namespace StillSaneExile.Desktop.Tests;
 
-/// <summary>Stands in for the keyboard hook. <see cref="Press"/> and <see cref="Release"/> raise the
-/// event synchronously on the calling thread, as the hook callback does on the UI thread.</summary>
+/// <summary>Stands in for the keyboard and mouse hooks. <see cref="Press"/> and <see cref="Release"/>
+/// raise the event synchronously on the calling thread, as the hook callback does on the UI thread; a
+/// side button is a <see cref="Hotkey"/> like any key.</summary>
 internal sealed class FakeKeys : IKeySource
 {
     public event Action<KeyEvent>? Key;
 
     public bool AltGrDetected { get; set; }
+
+    public bool ObserveMouseButtons { get; set; }
 
     public bool Started { get; private set; }
 
