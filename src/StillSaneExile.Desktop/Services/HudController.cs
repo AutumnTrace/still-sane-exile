@@ -1,6 +1,4 @@
 using System.Diagnostics;
-using System.Windows;
-using System.Windows.Input;
 using System.Windows.Threading;
 using Microsoft.Win32;
 using StillSaneExile.Desktop.Infrastructure;
@@ -17,20 +15,20 @@ public sealed class HudController : IDisposable
     public const string PeekCommand = "item-peek";
 
     private readonly ShellViewModel _shell;
-    private readonly KeyboardObserver _keys;
-    private readonly ForegroundWatcher _foreground;
-    private readonly ClipboardReader _clipboard;
+    private readonly IKeySource _keys;
+    private readonly IForegroundSource _foreground;
+    private readonly IClipboardSource _clipboard;
     private readonly CaptureGate _gate = new();
-    private readonly PeekWindow _peek;
-    private readonly PriceCheckWindow _priceCheck;
-    private readonly Window _main;
+    private readonly IPeekSurface _peek;
+    private readonly IPriceCheckSurface _priceCheck;
+    private readonly IShellWindow _main;
     private readonly Dispatcher _dispatcher;
     private readonly Dictionary<int, long> _downSince = [];
     private Hotkey _peekKey;
     private Hotkey _openLastKey;
     private bool _openLastHeld;
 
-    public HudController(ShellViewModel shell, KeyboardObserver keys, ForegroundWatcher foreground, ClipboardReader clipboard, PeekWindow peek, PriceCheckWindow priceCheck, Window main)
+    public HudController(ShellViewModel shell, IKeySource keys, IForegroundSource foreground, IClipboardSource clipboard, IPeekSurface peek, IPriceCheckSurface priceCheck, IShellWindow main)
     {
         _shell = shell;
         _keys = keys;
@@ -154,7 +152,7 @@ public sealed class HudController : IDisposable
         // Released, focus lost or a newer press while we were reading: never paint late.
         if (_gate.TryAccept(PeekCommand, generation))
         {
-            _peek.ShowCard(card, _shell.Settings.Anchor, _shell.Settings.PeekScale, gameWindow != 0 ? gameWindow : new System.Windows.Interop.WindowInteropHelper(_main).Handle);
+            _peek.ShowCard(card, _shell.Settings.Anchor, _shell.Settings.PeekScale, gameWindow != 0 ? gameWindow : _main.Handle);
         }
 
         PublishDiagnostics();
@@ -189,13 +187,7 @@ public sealed class HudController : IDisposable
             _shell.Inspect.Selected = _shell.Inspect.Recent[0];
         }
 
-        if (_main.WindowState == WindowState.Minimized)
-        {
-            _main.WindowState = WindowState.Normal;
-        }
-
-        _main.Show();
-        _main.Activate();
+        _main.BringToFront();
     }
 
     private void OnForegroundChanged(ForegroundKind kind, string reason) => Invalidate(reason);

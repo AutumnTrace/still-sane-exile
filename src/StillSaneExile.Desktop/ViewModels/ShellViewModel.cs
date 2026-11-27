@@ -11,7 +11,7 @@ public sealed partial class ShellViewModel : ObservableObject
 {
     private readonly Stack<object> _back = new();
 
-    public ShellViewModel(AppPaths paths, Store store, Settings settings, ClipboardReader clipboard, UpdateService updates)
+    public ShellViewModel(AppPaths paths, Store store, Settings settings, IClipboardSource clipboard, UpdateService updates)
     {
         Paths = paths;
         Store = store;

@@ -15,10 +15,10 @@ public sealed partial class InspectViewModel : ObservableObject
 {
     private const int MaxRecent = 20;
     private readonly ShellViewModel _shell;
-    private readonly ClipboardReader _clipboard;
+    private readonly IClipboardSource _clipboard;
     private int _captureCounter;
 
-    public InspectViewModel(ShellViewModel shell, ClipboardReader clipboard)
+    public InspectViewModel(ShellViewModel shell, IClipboardSource clipboard)
     {
         _shell = shell;
         _clipboard = clipboard;

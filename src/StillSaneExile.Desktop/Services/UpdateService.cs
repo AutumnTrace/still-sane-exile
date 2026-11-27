@@ -1,8 +1,10 @@
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Reflection;
 using System.Windows.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using Velopack;
+using Velopack.Locators;
 using Velopack.Sources;
 
 namespace StillSaneExile.Desktop.Services;
@@ -20,7 +22,8 @@ public sealed partial class UpdateService : ObservableObject
 
     private static readonly TimeSpan Interval = TimeSpan.FromHours(6);
 
-    private readonly UpdateManager _manager;
+    /// <summary>Null when this process never started Velopack (see the constructor).</summary>
+    private readonly UpdateManager? _manager;
     private readonly DispatcherTimer _timer = new() { Interval = Interval };
     private UpdateInfo? _ready;
     private bool _busy;
@@ -31,24 +34,28 @@ public sealed partial class UpdateService : ObservableObject
         IUpdateSource source = !string.IsNullOrWhiteSpace(overrideSource) && Directory.Exists(overrideSource)
             ? new SimpleFileSource(new DirectoryInfo(overrideSource))
             : new GithubSource(RepoUrl, accessToken: null, prerelease: false);
-        _manager = new UpdateManager(source);
+
+        // Program.Main starts Velopack before anything else. A process that never did (the test
+        // runner) has no installed copy to update, and Velopack would throw if asked.
+        _manager = VelopackLocator.IsCurrentSet ? new UpdateManager(source) : null;
         _timer.Tick += async (_, _) => await CheckAsync(userInitiated: false);
 
-        CurrentVersion = _manager.CurrentVersion?.ToString() ?? AssemblyVersion();
-        Status = !_manager.IsInstalled
+        CurrentVersion = _manager?.CurrentVersion?.ToString() ?? AssemblyVersion();
+        Status = !IsInstalled
             ? "Development build: updates apply to installed copies only."
             : _manager.UpdatePendingRestart is { } pending
                 ? $"Update {pending.Version} is downloaded and installs when you close SSE."
                 : $"Version {CurrentVersion}.";
-        ReadyVersion = _manager.UpdatePendingRestart?.Version.ToString();
+        ReadyVersion = _manager?.UpdatePendingRestart?.Version.ToString();
     }
 
-    public bool IsInstalled => _manager.IsInstalled;
+    [MemberNotNullWhen(true, nameof(_manager))]
+    public bool IsInstalled => _manager?.IsInstalled == true;
 
-    public bool IsPortable => _manager.IsInstalled && _manager.IsPortable;
+    public bool IsPortable => IsInstalled && _manager.IsPortable;
 
     /// <summary>Where a portable copy keeps its files (survives updates). Null when not portable.</summary>
-    public string? PortableRoot => IsPortable ? Velopack.Locators.VelopackLocator.Current.RootAppDir : null;
+    public string? PortableRoot => IsPortable ? VelopackLocator.Current.RootAppDir : null;
 
     public string CurrentVersion { get; }
 
