@@ -1,4 +1,6 @@
+using System.Windows.Controls;
 using StillSaneExile.Desktop.Infrastructure;
+using StillSaneExile.Desktop.Views;
 using StillSaneExile.Domain.Pricing;
 
 namespace StillSaneExile.Desktop.Tests;
@@ -232,6 +234,58 @@ public class HudControllerTests
         Assert.Empty(rig.Peek.Shown);
         Assert.Equal(0, rig.Clipboard.Reads);
         Assert.Equal(0, rig.Hud.Counters.Reads);
+    });
+
+    [Fact]
+    public void Ctrl_C_while_typing_in_SSE_is_only_a_copy() => Sta.Run(() =>
+    {
+        using var rig = new HudRig();
+        rig.Shell.Inspect.LoadPracticeCommand.Execute(rig.Shell.Inspect.PracticeItems[0]);
+        rig.Foreground.Current = ForegroundKind.ThisApp;
+        rig.Window.IsTyping = true; // e.g. selecting the "Asking price" text to copy it
+
+        rig.Keys.Press(CtrlC);
+        rig.Keys.Release(CtrlC);
+        Sta.Drain();
+
+        Assert.Empty(rig.Peek.Shown);
+        Assert.Equal(0, rig.Clipboard.Reads);
+        Assert.Equal(0, rig.Hud.Counters.Reads);
+        Assert.Equal(0, rig.Shell.ItemsRead);
+
+        rig.Window.IsTyping = false; // focus moved to the item list
+        rig.Keys.Press(CtrlC);
+        Sta.Drain();
+
+        Assert.Single(rig.Peek.Shown);
+        Assert.Equal(1, rig.Hud.Counters.Reads);
+    });
+
+    [Fact]
+    public void A_text_box_focused_in_SSE_does_not_stop_the_peek_over_the_game() => Sta.Run(() =>
+    {
+        using var rig = new HudRig();
+        rig.Clipboard.Text = rig.App.ItemText(Crossbow);
+        rig.Window.IsTyping = true; // SSE keeps its focused box while the game is in front
+
+        rig.Keys.Press(CtrlC);
+        Sta.Drain();
+
+        Assert.Equal(1, rig.Clipboard.Reads);
+        Assert.Single(rig.Peek.Shown);
+    });
+
+    [Fact]
+    public void Text_inputs_are_recognised_as_typing() => Sta.Run(() =>
+    {
+        Assert.True(MainWindow.IsTextInput(new TextBox()));
+        Assert.True(MainWindow.IsTextInput(new RichTextBox()));
+        Assert.True(MainWindow.IsTextInput(new PasswordBox()));
+        Assert.True(MainWindow.IsTextInput(new ComboBox { IsEditable = true }));
+        Assert.False(MainWindow.IsTextInput(new ComboBox()));
+        Assert.False(MainWindow.IsTextInput(new Button()));
+        Assert.False(MainWindow.IsTextInput(new ListBox()));
+        Assert.False(MainWindow.IsTextInput(null));
     });
 
     [Fact]
