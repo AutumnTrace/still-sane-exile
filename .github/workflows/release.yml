@@ -41,10 +41,6 @@ jobs:
           dotnet build StillSaneExile.sln -c Release --no-restore
           dotnet test StillSaneExile.sln -c Release --no-build
 
-      - name: Publish app
-        shell: pwsh
-        run: dotnet publish src/StillSaneExile.Desktop -c Release -r win-x64 --self-contained true -p:Version=${{ steps.version.outputs.version }} -o publish
-
       - name: Restore vpk
         run: dotnet tool restore
 
@@ -57,13 +53,14 @@ jobs:
         shell: pwsh
         run: ./scripts/release-notes.ps1 -Version '${{ steps.version.outputs.version }}' -OutFile release-notes.md
 
-      # --packTitle has no '?': it becomes the shortcut and Apps-list name, and Windows file names cannot contain '?'.
-      - name: Pack installer
+      # The same script the CI pack check runs on every pull request: publish self-contained, then vpk pack.
+      - name: Publish and pack installer
         shell: pwsh
-        run: >
-          dotnet vpk pack --packId $env:PACK_ID --packVersion '${{ steps.version.outputs.version }}'
-          --packDir publish --mainExe StillSaneExile.exe --packTitle 'Still Sane, Exile' --packAuthors 'Mina Rotari'
-          --icon src/StillSaneExile.Desktop/Assets/sse.ico --releaseNotes release-notes.md --outputDir releases
+        run: ./scripts/pack-local.ps1 -Version '${{ steps.version.outputs.version }}' -PackId $env:PACK_ID -PublishDir publish -OutDir releases -ReleaseNotes release-notes.md
+
+      - name: Start the packed app
+        shell: pwsh
+        run: ./scripts/smoke-packed.ps1 -PackDir releases -PackId $env:PACK_ID -WorkDir "$env:RUNNER_TEMP/smoke"
 
       - name: Publish GitHub release
         shell: pwsh

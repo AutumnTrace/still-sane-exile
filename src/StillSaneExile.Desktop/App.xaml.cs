@@ -15,6 +15,7 @@ public partial class App : Application
     private PriceCheckWindow? _priceCheck;
     private AppPaths? _paths;
     private UpdateService? _updates;
+    private bool _renderingSnapshots;
 
     protected override void OnStartup(StartupEventArgs e)
     {
@@ -29,6 +30,7 @@ public partial class App : Application
         }
 
         var snapshots = Arg("--render-snapshots");
+        _renderingSnapshots = snapshots is not null;
         _updates = new UpdateService();
         _paths = new AppPaths(Arg("--data"), _updates.PortableRoot);
         var store = new Store(_paths.Database);
@@ -76,6 +78,15 @@ public partial class App : Application
         }
         catch (IOException)
         {
+        }
+
+        if (_renderingSnapshots)
+        {
+            // Unattended (the CI smoke run): a message box would wait forever. Exit with an error instead;
+            // the exception is in errors.log above.
+            e.Handled = true;
+            Shutdown(1);
+            return;
         }
 
         _peek?.HideCard();
