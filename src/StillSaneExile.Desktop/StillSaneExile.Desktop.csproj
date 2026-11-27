@@ -7,6 +7,9 @@
     <AssemblyName>StillSaneExile</AssemblyName>
     <RootNamespace>StillSaneExile.Desktop</RootNamespace>
     <ApplicationManifest>app.manifest</ApplicationManifest>
+    <ApplicationIcon>Assets\sse.ico</ApplicationIcon>
+    <!-- Program.Main runs Velopack's install/update hooks before WPF starts. -->
+    <StartupObject>StillSaneExile.Desktop.Program</StartupObject>
     <Title>Still Sane, Exile</Title>
     <Description>Path of Exile 2 companion: item roll bars, price evidence and (later) stash, crafting, wealth and campaign guidance.</Description>
   </PropertyGroup>
@@ -18,10 +21,12 @@
   <ItemGroup>
     <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.2" />
     <PackageReference Include="Microsoft.Data.Sqlite" Version="10.0.15" />
+    <PackageReference Include="Velopack" Version="1.2.161" />
   </ItemGroup>
 
   <ItemGroup>
     <Content Include="..\..\fixtures\**\*" LinkBase="fixtures" CopyToOutputDirectory="PreserveNewest" />
+    <Resource Include="Assets\sse.ico" />
   </ItemGroup>
 
 </Project>

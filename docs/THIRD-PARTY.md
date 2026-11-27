@@ -5,6 +5,7 @@
 | .NET 10 / WPF | Runtime and UI | MIT |
 | CommunityToolkit.Mvvm | View-model source generators | MIT |
 | Microsoft.Data.Sqlite | Local settings and comparables | MIT |
+| Velopack (library and `vpk` CLI) | Installer, portable build, delta updates | MIT |
 | SQLitePCLRaw (via Microsoft.Data.Sqlite) | SQLite native binding | Apache-2.0 |
 | SQLite | Embedded database | Public domain |
 | xUnit, Microsoft.NET.Test.Sdk, coverlet | Tests only | Apache-2.0 / MIT / MIT |

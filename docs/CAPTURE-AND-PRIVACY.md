@@ -12,13 +12,13 @@
 
 ## What is stored
 
-- **Settings** (`sse.db`, SQLite) in `%LOCALAPPDATA%\StillSaneExile`, or in `data\` next to the exe in the portable build.
+- **Settings** (`sse.db`, SQLite) in `%APPDATA%\StillSaneExile`, or in `data\` beside the portable build. Program files live separately in `%LOCALAPPDATA%\StillSaneExile` and are replaced on each update; uninstalling removes them but keeps your settings.
 - **Comparison sets** you create by adding a comparable: the asks you typed and the item text they compare against.
 - **Not stored:** clipboard text that is not an item (discarded immediately), recent items (memory only, cleared on exit), key presses, screen pixels.
 
 ## Network
 
-This version makes no network requests of its own. "Open official trade site" asks Windows to open your default browser. The Milestone 2 economy cache will fetch public market data only; screen pixels, clipboard text, stash contents and build notes stay local by default.
+The only request SSE makes itself is the update check: an anonymous call to GitHub's releases API for this repository at start and every 6 hours, plus the package download when there is a new version. It sends nothing about you or your game, and Settings → "Check for updates automatically" turns it off. "Open official trade site" asks Windows to open your default browser. The Milestone 2 economy cache will fetch public market data only; screen pixels, clipboard text, stash contents and build notes stay local by default.
 
 ## Demo isolation
 

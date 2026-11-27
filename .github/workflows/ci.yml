@@ -13,6 +13,19 @@ jobs:
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Version is valid and not behind the last release
+        shell: pwsh
+        run: |
+          [xml]$props = Get-Content Directory.Build.props
+          $v = ($props.Project.PropertyGroup | ForEach-Object { $_.Version } | Where-Object { $_ }) | Select-Object -First 1
+          if ($v -notmatch '^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)$') { Write-Host "::error::<Version>$v</Version> is not MAJOR.MINOR.PATCH"; exit 1 }
+          $last = git tag --list 'v*' | Where-Object { $_ -match '^v\d+\.\d+\.\d+$' } | ForEach-Object { [version]$_.Substring(1) } | Sort-Object -Descending | Select-Object -First 1
+          if ($last -and [version]$v -lt $last) { Write-Host "::error::Version $v is lower than the latest release v$last"; exit 1 }
+          Write-Host "Version $v (latest release: $(if ($last) { "v$last" } else { 'none' }))"
+
       - uses: actions/setup-dotnet@v4
         with:
           dotnet-version: 10.0.x

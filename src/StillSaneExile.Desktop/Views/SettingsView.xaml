@@ -155,6 +155,26 @@
         </StackPanel>
       </Border>
 
+      <!-- Version and updates -->
+      <TextBlock Text="VERSION AND UPDATES" Style="{StaticResource SectionTitle}" />
+      <Border Style="{StaticResource Card}">
+        <StackPanel>
+          <TextBlock>
+            <Run Text="Still Sane, Exile " Foreground="{StaticResource TextDim}" /><Run Text="{Binding Updates.CurrentVersion, Mode=OneWay}" FontWeight="SemiBold" />
+          </TextBlock>
+          <TextBlock Text="{Binding Updates.Status}" TextWrapping="Wrap" FontSize="12" Foreground="{StaticResource TextDim}" Margin="0,4,0,0" />
+          <CheckBox IsChecked="{Binding AutoUpdate}" Margin="0,10,0,0" IsEnabled="{Binding Updates.IsInstalled}"
+                    Content="Check for updates automatically (at start and every 6 hours)" />
+          <WrapPanel Margin="0,10,0,0">
+            <Button Content="Check now" Command="{Binding CheckForUpdatesCommand}" IsEnabled="{Binding Updates.IsInstalled}" Margin="0,0,8,0" />
+            <Button Style="{StaticResource AccentButton}" Content="Restart now to update" Command="{Binding RestartToUpdateCommand}"
+                    Visibility="{Binding Updates.IsReady, Converter={StaticResource Vis}}" />
+          </WrapPanel>
+          <TextBlock TextWrapping="Wrap" FontSize="12" Foreground="{StaticResource TextFaint}" Margin="0,8,0,0"
+                     Text="Updates come from the project's GitHub releases. A downloaded update installs when you close SSE, so it never restarts in the middle of a game unless you ask." />
+        </StackPanel>
+      </Border>
+
       <!-- About and data -->
       <TextBlock Text="DATA AND PRIVACY" Style="{StaticResource SectionTitle}" />
       <Border Style="{StaticResource Card}">
@@ -163,7 +183,7 @@
             <Run Text="Data folder: " /><Run Text="{Binding DataFolder, Mode=OneWay}" Foreground="{StaticResource Text}" />
           </TextBlock>
           <TextBlock TextWrapping="Wrap" FontSize="12" Foreground="{StaticResource TextDim}" Margin="0,6,0,0"
-                     Text="Clipboard text is kept in memory only while it is a parsed item, and saved to disk only with a comparison set you create. Anything that is not an item is discarded at once. This version makes no network requests of its own; the trade site opens in your browser when you ask." />
+                     Text="Clipboard text is kept in memory only while it is a parsed item, and saved to disk only with a comparison set you create. Anything that is not an item is discarded at once. The only network request SSE makes is the update check to GitHub (switch it off above); the trade site opens in your browser when you ask." />
           <TextBlock TextWrapping="Wrap" FontSize="12" Foreground="{StaticResource TextFaint}" Margin="0,6,0,0"
                      Text="This product isn't affiliated with or endorsed by Grinding Gear Games in any way." />
         </StackPanel>

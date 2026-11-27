@@ -82,6 +82,13 @@ public sealed class Settings(Store store)
         set => store.Set("peek.scale", value.ToString(CultureInfo.InvariantCulture));
     }
 
+    /// <summary>Check GitHub Releases for updates at startup and every few hours. On by default.</summary>
+    public bool AutoUpdate
+    {
+        get => store.Get("updates.auto") != "0";
+        set => store.Set("updates.auto", value ? "1" : "0");
+    }
+
     public int ComparableExpiryDays
     {
         get => int.TryParse(store.Get("comparables.expiryDays"), out var d) ? Math.Clamp(d, 1, 60) : 3;

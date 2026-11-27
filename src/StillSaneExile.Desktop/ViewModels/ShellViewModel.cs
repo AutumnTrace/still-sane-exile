@@ -10,11 +10,12 @@ public sealed partial class ShellViewModel : ObservableObject
 {
     private readonly Stack<object> _back = new();
 
-    public ShellViewModel(AppPaths paths, Store store, Settings settings, ClipboardReader clipboard)
+    public ShellViewModel(AppPaths paths, Store store, Settings settings, ClipboardReader clipboard, UpdateService updates)
     {
         Paths = paths;
         Store = store;
         Settings = settings;
+        Updates = updates;
         Session = Session.Create(store, settings, paths);
         Inspect = new InspectViewModel(this, clipboard);
         Craft = PlaceholderViewModel.Craft();
@@ -27,7 +28,9 @@ public sealed partial class ShellViewModel : ObservableObject
     public AppPaths Paths { get; }
     public Store Store { get; }
     public Settings Settings { get; }
+    public UpdateService Updates { get; }
     public HudController? Hud { get; set; }
+    public string VersionLabel => $"v{Updates.CurrentVersion}";
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(IsDemo), nameof(League), nameof(DisplayCurrency), nameof(ProfileBadge), nameof(PackStatus), nameof(PriceStatus))]
@@ -131,6 +134,9 @@ public sealed partial class ShellViewModel : ObservableObject
 
     [RelayCommand]
     private void ToggleCurrencyMenu() => CurrencyMenuOpen = !CurrencyMenuOpen;
+
+    [RelayCommand]
+    private void RestartToUpdate() => Updates.RestartNow();
 
     [RelayCommand]
     private void SetCurrency(string currency)

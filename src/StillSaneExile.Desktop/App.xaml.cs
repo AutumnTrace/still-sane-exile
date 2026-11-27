@@ -13,6 +13,7 @@ public partial class App : Application
     private HudController? _hud;
     private PeekWindow? _peek;
     private AppPaths? _paths;
+    private UpdateService? _updates;
 
     protected override void OnStartup(StartupEventArgs e)
     {
@@ -27,11 +28,12 @@ public partial class App : Application
         }
 
         var snapshots = Arg("--render-snapshots");
-        _paths = new AppPaths(Arg("--data"));
+        _updates = new UpdateService();
+        _paths = new AppPaths(Arg("--data"), _updates.PortableRoot);
         var store = new Store(_paths.Database);
         var settings = new Settings(store);
         var clipboard = new ClipboardReader();
-        var shell = new ShellViewModel(_paths, store, settings, clipboard);
+        var shell = new ShellViewModel(_paths, store, settings, clipboard, _updates);
         var main = new MainWindow { DataContext = shell };
 
         if (snapshots is not null)
@@ -49,12 +51,14 @@ public partial class App : Application
         MainWindow = main;
         main.Show();
         _hud.Start();
+        _updates.Start(settings.AutoUpdate);
     }
 
     protected override void OnExit(ExitEventArgs e)
     {
         _hud?.Dispose();
         _peek?.Close();
+        _updates?.ApplyOnExit();
         base.OnExit(e);
     }
 

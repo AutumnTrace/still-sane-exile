@@ -3,16 +3,20 @@ using System.IO;
 
 namespace StillSaneExile.Desktop.Infrastructure;
 
-/// <summary>Where the app keeps its files. A file named <c>portable.txt</c> next to the executable
-/// switches to a <c>data</c> folder beside it (portable build).</summary>
+/// <summary>Where the app keeps its files. Program files live in the installer's folder and are
+/// replaced on every update; settings and comparables never live there.</summary>
 public sealed class AppPaths
 {
-    public AppPaths(string? dataOverride = null)
+    /// <param name="dataOverride"><c>--data &lt;dir&gt;</c>, for tests and clean starts.</param>
+    /// <param name="portableRoot">Root of a portable copy (the folder holding <c>current\</c>), if any.</param>
+    public AppPaths(string? dataOverride = null, string? portableRoot = null)
     {
         AppDir = AppContext.BaseDirectory;
-        Portable = File.Exists(Path.Combine(AppDir, "portable.txt"));
+        Portable = dataOverride is null && portableRoot is not null;
         DataDir = dataOverride
-            ?? (Portable ? Path.Combine(AppDir, "data") : Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "StillSaneExile"));
+            ?? (portableRoot is not null
+                ? Path.Combine(portableRoot, "data")
+                : Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "StillSaneExile"));
         Directory.CreateDirectory(DataDir);
     }
 

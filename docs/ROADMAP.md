@@ -48,5 +48,8 @@ Each milestone ships only what passed its fixtures **and** its real-device accep
 
 ## Release
 
+- [x] Installer and portable build (Velopack), per tag `vX.Y.Z` on main that matches `<Version>` ([RELEASING.md](RELEASING.md))
+- [x] Automatic updates from GitHub releases; install on close, never mid-game
+- [ ] Code signing (SmartScreen warns on unsigned downloads)
 - [ ] Windows smoke test, accessibility pass, provider-failure exercises
-- [ ] Installer plus portable build, version tag, changelog listing tested patches, layouts, languages and sources
+- [ ] Changelog listing tested patches, layouts, languages and sources

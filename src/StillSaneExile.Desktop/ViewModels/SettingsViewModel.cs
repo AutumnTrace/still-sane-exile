@@ -59,6 +59,11 @@ public sealed partial class SettingsViewModel : ObservableObject
     public partial string ExpiryDays { get; set; } = "3";
 
     [ObservableProperty]
+    public partial bool AutoUpdate { get; set; }
+
+    public UpdateService Updates => _shell.Updates;
+
+    [ObservableProperty]
     public partial string TestLog { get; set; } = "Press any key while this page is open to see press, hold and release.";
 
     [ObservableProperty]
@@ -108,6 +113,7 @@ public sealed partial class SettingsViewModel : ObservableObject
         Anchor = S.Anchor;
         PeekScale = S.PeekScale;
         ExpiryDays = S.ComparableExpiryDays.ToString(CultureInfo.InvariantCulture);
+        AutoUpdate = S.AutoUpdate;
         IsOnboarding = !S.Onboarded;
         OnPropertyChanged(nameof(CurrentCurrency));
         OnPropertyChanged(nameof(ReadsExplanation));
@@ -123,6 +129,21 @@ public sealed partial class SettingsViewModel : ObservableObject
     }
 
     partial void OnAnchorChanged(PeekAnchor value) => S.Anchor = value;
+
+    partial void OnAutoUpdateChanged(bool value)
+    {
+        if (S.AutoUpdate != value)
+        {
+            S.AutoUpdate = value;
+            Updates.Start(value);
+        }
+    }
+
+    [RelayCommand]
+    private Task CheckForUpdates() => Updates.CheckAsync(userInitiated: true);
+
+    [RelayCommand]
+    private void RestartToUpdate() => Updates.RestartNow();
 
     partial void OnPeekScaleChanged(double value) => S.PeekScale = value;
 

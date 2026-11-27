@@ -19,14 +19,23 @@ A Path of Exile 2 companion for Windows. Hover an item, hold a key, and see whic
 | **Verified game data pack** | Not yet. Live roll bars use advanced-copy ranges only, shown as position markers until directions are verified. |
 | **Stash and Aldur labels** | Not yet (Milestone 2). The key is reserved and nothing reads the screen. |
 | **Wealth / Guide / Craft** | Not yet (Milestones 3, 4, 5). Each page says what is planned. |
+| **Installer and auto-update** | Works. Velopack installer and portable zip on every release; installed copies update themselves from GitHub releases. |
 | **Real-game validation** | Not done. Item text, overlay placement and DPI behaviour are tested on synthetic fixtures and this machine only; see [docs/SOURCES.md](docs/SOURCES.md). |
 
-## Run it
+## Install
 
-Requirements: Windows 10 or 11 (x64), the [.NET 10 SDK](https://dotnet.microsoft.com/download), and the game in **windowed or borderless** mode. Exclusive fullscreen cannot show an overlay.
+1. Download **`StillSaneExile-win-Setup.exe`** from the [latest release](https://github.com/AutumnTrace/still-sane-exile/releases/latest) and run it. It installs for your user only (no admin rights) and adds Start menu and desktop shortcuts. Prefer no installer? Take `StillSaneExile-win-Portable.zip` instead.
+2. The build is not code-signed yet, so Windows SmartScreen may say "Windows protected your PC". Choose **More info → Run anyway**.
+3. Play in **windowed or borderless** mode. Exclusive fullscreen cannot show an overlay.
+
+**Updates are automatic.** SSE checks GitHub releases at start and every 6 hours, downloads a new version in the background, and installs it when you close the app, so it never restarts mid-game. Settings → Version and updates has "Check now", "Restart now" and an off switch. Uninstall from Windows Settings → Apps. How releases are cut: [docs/RELEASING.md](docs/RELEASING.md).
+
+## Run from source
+
+Requirements: Windows 10 or 11 (x64) and the [.NET 10 SDK](https://dotnet.microsoft.com/download).
 
 ```powershell
-git clone <this repo>
+git clone https://github.com/AutumnTrace/still-sane-exile.git
 cd still-sane-exile
 dotnet run --project src/StillSaneExile.Desktop
 ```
@@ -43,10 +52,16 @@ Tests (domain logic: parsing, roll math, pricing, evidence, worksheet, capture g
 dotnet test
 ```
 
-Portable build (self-contained, no .NET install needed; settings stay next to the exe):
+Installer and portable zip, built locally the same way the Release workflow builds them:
 
 ```powershell
-./scripts/publish-portable.ps1   # → publish/StillSaneExile-portable-win-x64.zip
+./scripts/pack-local.ps1   # → artifacts/releases
+```
+
+Release a new version (bumps the version, tags `vX.Y.Z` on main, pushes; CI builds and publishes the installer):
+
+```powershell
+./scripts/release.ps1 -Version 0.2.0
 ```
 
 Screenshots of the demo screens, rendered offscreen without hooks:
@@ -75,6 +90,7 @@ SSE only reacts to physical key presses while the game (or, for practice, SSE it
 - Call the official trade site's internal endpoints or collect session cookies. "Open official trade site" opens your browser.
 - Scrape or mirror Mobalytics. Build guides will be saved as links and opened in your browser.
 - Show demo (synthetic) prices in a live profile, or carry rates between leagues.
+- Talk to any server except GitHub for its own update check (which you can switch off).
 
 The keyboard observer is an in-process low-level hook that passes every event on unchanged. The full list of Windows calls is in [`NativeMethods.cs`](src/StillSaneExile.Desktop/Infrastructure/NativeMethods.cs). Details: [docs/CAPTURE-AND-PRIVACY.md](docs/CAPTURE-AND-PRIVACY.md).
 
@@ -112,10 +128,11 @@ The full source matrix, with real-capture versus fixture coverage, is in [docs/S
 
 ```
 src/StillSaneExile.Domain     item parsing, roll math, data packs, pricing, evidence, worksheet, capture gate (no Windows or network)
-src/StillSaneExile.Desktop    WPF app: hooks, foreground detection, one-shot clipboard, HUD card, views
+src/StillSaneExile.Desktop    WPF app: hooks, foreground detection, one-shot clipboard, HUD card, views, updates
 tests/StillSaneExile.Domain.Tests
 fixtures/                     synthetic items, data pack, price book and comparables
-docs/                         sources, roadmap, capture and privacy notes, screenshots
+scripts/                      release, pack-local, verify-release, release-notes, make-icon
+docs/                         sources, roadmap, releasing, capture and privacy notes, screenshots
 ```
 
 ## Third-party
