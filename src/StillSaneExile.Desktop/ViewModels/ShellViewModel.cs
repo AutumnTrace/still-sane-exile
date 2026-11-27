@@ -18,6 +18,7 @@ public sealed partial class ShellViewModel : ObservableObject
         Settings = settings;
         Updates = updates;
         Session = Session.Create(store, settings, paths);
+        TradeSite = new TradeSiteSwitch(this);
         Inspect = new InspectViewModel(this, clipboard);
         Craft = PlaceholderViewModel.Craft();
         StashPictures = new StashPicturesViewModel(this);
@@ -66,6 +67,14 @@ public sealed partial class ShellViewModel : ObservableObject
             TrackPrices();
         }
     }
+
+    /// <summary>Searches the trade site when the player clicks Search. Null in tests and while rendering
+    /// snapshots, so neither ever reaches the site; the HUD holds no reference to it.</summary>
+    public LiveListings? Listings { get; set; }
+
+    /// <summary>What each price check searches through: <see cref="Listings"/> while "Search the trade site
+    /// from SSE" is on, otherwise nothing.</summary>
+    public ITradeSite TradeSite { get; }
 
     /// <summary>The league to keep prices for: the session's, when it is live and live prices are on.</summary>
     private string? LiveLeague => !Session.IsDemo && Session.LivePricesOn ? Session.League : null;
@@ -248,5 +257,16 @@ public sealed partial class ShellViewModel : ObservableObject
         Settings.SetDisplayCurrency(Session.Kind, currency);
         CurrencyMenuOpen = false;
         ReloadSession();
+    }
+
+    /// <summary>Reads the switch and the client at the moment of each Search, so a price check never keeps
+    /// a client the player has switched off.</summary>
+    private sealed class TradeSiteSwitch(ShellViewModel shell) : ITradeSite
+    {
+        public bool IsOn => shell.Listings is not null && shell.Settings.TradeSearch;
+
+        public Task<Domain.Trade.TradePage> SearchAsync(string league, string queryJson, bool buyNowOnly, CancellationToken cancellationToken = default) =>
+            IsOn ? shell.Listings!.SearchAsync(league, queryJson, buyNowOnly, cancellationToken)
+                : Task.FromException<Domain.Trade.TradePage>(new InvalidOperationException("Searching the trade site from SSE is off."));
     }
 }

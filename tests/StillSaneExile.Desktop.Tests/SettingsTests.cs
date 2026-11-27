@@ -25,8 +25,10 @@ public class SettingsTests
         Assert.Equal("RightAlt", s.StashKey.ToString());
         Assert.Equal(HoldMode.Hold, s.PeekMode);
         Assert.Equal(PeekAnchor.Auto, s.Anchor);
-        Assert.Equal(1.0, s.PeekScale);
+        Assert.Equal(0.85, s.PeekScale);
         Assert.True(s.AutoUpdate);
+        Assert.True(s.LivePrices);
+        Assert.True(s.TradeSearch);
         Assert.Equal(3, s.ComparableExpiryDays);
     }
 
@@ -44,6 +46,7 @@ public class SettingsTests
             Anchor = PeekAnchor.Left,
             PeekScale = 1.25,
             AutoUpdate = false,
+            TradeSearch = false,
             ComparableExpiryDays = 7,
         };
         before.SetDisplayCurrency(ProfileKind.Live, "exalted");
@@ -58,6 +61,7 @@ public class SettingsTests
         Assert.Equal(PeekAnchor.Left, after.Anchor);
         Assert.Equal(1.25, after.PeekScale);
         Assert.False(after.AutoUpdate);
+        Assert.False(after.TradeSearch);
         Assert.Equal(7, after.ComparableExpiryDays);
         Assert.Equal("exalted", after.DisplayCurrency(ProfileKind.Live));
         Assert.Equal("divine", after.DisplayCurrency(ProfileKind.Demo));
@@ -95,5 +99,8 @@ public class SettingsTests
         Assert.Equal(PeekAnchor.Auto, s.Anchor);
         Assert.Equal(1.6, s.PeekScale);
         Assert.Equal(1, s.ComparableExpiryDays);
+
+        store.Set("peek.scale", "0.2");
+        Assert.Equal(0.5, s.PeekScale); // the slider's smallest
     }
 }

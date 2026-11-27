@@ -2,12 +2,16 @@ using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Globalization;
+using System.Net;
+using System.Net.Http;
 using System.Runtime.InteropServices;
+using System.Text.Json;
 using System.Windows;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using StillSaneExile.Desktop.Services;
 using StillSaneExile.Domain.Items;
+using StillSaneExile.Domain.Market;
 using StillSaneExile.Domain.Pricing;
 using StillSaneExile.Domain.Reading;
 using StillSaneExile.Domain.Rolls;
@@ -260,11 +264,27 @@ public sealed class RollRowViewModel
     }
 }
 
-/// <summary>One of the cheapest listings that match the search.</summary>
-public sealed record MatchViewModel(string Price, string Stats, string How, string Age)
+/// <summary>One of the cheapest listings the search found: its price, the listed item's numbers for the
+/// stats searched, whether it can be bought at once, and how long ago it was listed. Never the seller.</summary>
+public sealed record MatchViewModel(string Price, string Stats, bool BuyNow, string Age)
 {
+    /// <summary>"Instant buyout" or "In person", as the trade site says it.</summary>
+    public string How => BuyNow ? "Instant buyout" : "In person";
+
+    /// <summary>The card's shorter right-hand column: "2 h", with "in person" when it can't be bought at once.</summary>
+    public string Short
+    {
+        get
+        {
+            var age = Age == "just now" ? "now" : Age.EndsWith(" ago", StringComparison.Ordinal) ? Age[..^4] : Age;
+            return BuyNow ? age : age.Length > 0 ? $"{age} · in person" : "in person";
+        }
+    }
+
+    public bool InPerson => !BuyNow;
+
     /// <summary>What a screen reader says for the row (WPF reads a list row through ToString).</summary>
-    public override string ToString() => $"{Price}, {Stats}, {How}, {Age}";
+    public override string ToString() => string.Join(", ", new[] { Price, Stats, How, Age.Length > 0 ? $"listed {Age}" : "" }.Where(s => s.Length > 0));
 }
 
 public sealed record StrictnessChoice(string Key, string Label, decimal Tolerance)
@@ -292,6 +312,10 @@ public sealed class ComparableViewModel(Comparable c, string display, bool seede
 
 /// <summary>Everything the price check shows for one item snapshot. The Inspect page and the in-game
 /// price check window bind to the same object, so a change in one shows in the other.</summary>
+/// <remarks>Changing the search (a tick, a number, strictness, buy-now, item level) never searches: it marks
+/// the result shown as old ("Search to update") until the player clicks Search. The demo's practice items
+/// get their first result at once, from synthetic listings; a live item gets nothing from the trade site
+/// until Search is clicked, so opening a card (a key press) never makes a request.</remarks>
 public sealed partial class ItemViewModel : ObservableObject
 {
     public static readonly IReadOnlyList<StrictnessChoice> StrictnessChoices =
@@ -301,14 +325,38 @@ public sealed partial class ItemViewModel : ObservableObject
         new("20", "20% lower", 0.2m),
     ];
 
+    /// <summary>The most listings shown: the cheapest of the last search.</summary>
+    public const int ListingRows = 10;
+
+    /// <summary>The line under an old result.</summary>
+    public const string StaleText = "Search to update";
+
+    public const string SearchingText = "Searching the trade site…";
+
+    public const string NeedsLiveLeague = "Search needs a live league: the demo's listings are made up and only cover the practice items. Pick a live league in Settings.";
+
+    public const string SearchOffText = "Searching the trade site from SSE is off (Settings, Trade site search). Open this search on the trade site instead.";
+
     private const string DefaultStrictness = "10";
     private readonly Session _session;
+    private readonly ITradeSite? _site;
     private readonly IReadOnlyList<Listing>? _listings;
 
-    public ItemViewModel(ItemSnapshot item, Session session)
+    /// <summary>The search as it stands, and the one the result shown was found with (null: no result yet).</summary>
+    private string _currentKey = "";
+    private string? _resultKey;
+    private SearchResult? _result;
+    private IReadOnlyList<SearchRowViewModel> _resultRows = [];
+
+    /// <summary>The last trade site answer, kept so a session change can re-price it without asking again.</summary>
+    private TradePage? _page;
+
+    /// <param name="site">Where Search asks for live listings; null in the demo's onboarding sample and tests.</param>
+    public ItemViewModel(ItemSnapshot item, Session session, ITradeSite? site = null)
     {
         Item = item;
         _session = session;
+        _site = site;
         Reading = ItemReader.Read(item, session.Pack);
         Worksheet = NewWorksheet();
         SearchRows = new ObservableCollection<SearchRowViewModel>(Worksheet.Rows.Select(r => new SearchRowViewModel(r, ReadingFor(r), OnSearchChanged)));
@@ -318,8 +366,13 @@ public sealed partial class ItemViewModel : ObservableObject
             .ToList();
         SetKey = ComparisonSet.KeyFor(item);
         _listings = ShowsWorksheet ? session.Listings(item, Worksheet) : null;
-        RefreshPrice();
         OnSearchChanged();
+        if (_listings is not null && !IsUnidentified)
+        {
+            RunDemoSearch(); // the practice items open with a result, as the demo always did
+        }
+
+        RefreshPrice();
     }
 
     public ItemSnapshot Item { get; }
@@ -392,20 +445,81 @@ public sealed partial class ItemViewModel : ObservableObject
 
     public bool ShowsWorksheet => Item.Rarity is not (ItemRarity.Currency or ItemRarity.Gem);
 
-    /// <summary>Whether this profile has listings to search (the demo does; a live profile not yet).</summary>
-    public bool HasListings => _listings is not null;
+    /// <summary>Whether Search finds listings here: the demo's practice items (synthetic), or a live profile
+    /// with "Search the trade site from SSE" on.</summary>
+    public bool HasListings => _listings is not null || LiveSearchOn;
+
+    private bool LiveSearchOn => !_session.IsDemo && _site is { IsOn: true };
+
+    private bool IsUnidentified => Item.Rarity == ItemRarity.Rare && Item.States.HasFlag(ItemStates.Unidentified);
+
+    /// <summary>The item has a search to run: Search shows (in the demo, for an item copied from the game,
+    /// it says why there is nothing to search).</summary>
+    public bool CanSearch => ShowsWorksheet && !IsUnidentified;
 
     [ObservableProperty]
     public partial PriceLine? Price { get; set; }
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(PeekLine), nameof(PeekLineIsWarning), nameof(NoteLine), nameof(NoteLineIsWarning))]
     public partial PriceAnswer Answer { get; set; } = PriceAnswer.NoPrice(noMarketData: true);
 
+    /// <summary>The cheapest listings of the last search, at most <see cref="ListingRows"/>.</summary>
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(HasMatches), nameof(ListingsTitle), nameof(ListingsHead))]
     public partial IReadOnlyList<MatchViewModel> Matches { get; set; } = [];
 
     [ObservableProperty]
     public partial bool NoMatches { get; set; }
+
+    public bool HasMatches => Matches.Count > 0;
+
+    /// <summary>"Cheapest 10 of 1,605", "All 5 for sale".</summary>
+    public string ListingsTitle => _result is not { } r || Matches.Count == 0 ? ""
+        : r.Count > Matches.Count ? $"Cheapest {Matches.Count} of {r.Count.ToString("N0", CultureInfo.InvariantCulture)}"
+        : $"All {Matches.Count} for sale";
+
+    /// <summary><see cref="ListingsTitle"/> as the card's small heading: "CHEAPEST 10 OF 1,605".</summary>
+    public string ListingsHead => ListingsTitle.ToUpperInvariant();
+
+    /// <summary>A Search is on its way to the trade site.</summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsDimmed), nameof(PeekLine), nameof(PeekLineIsWarning), nameof(SearchLine), nameof(HasSearchLine), nameof(SearchLineIsWarning))]
+    public partial bool IsSearching { get; set; }
+
+    /// <summary>What happened to the last Search click, when there is something to say: the trade site asks
+    /// to wait, could not be reached, Search needs a live league...</summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(PeekLine), nameof(PeekLineIsWarning), nameof(SearchLine), nameof(HasSearchLine))]
+    public partial string? SearchNote { get; set; }
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(PeekLineIsWarning), nameof(SearchLineIsWarning))]
+    public partial bool SearchNoteIsWarning { get; set; }
+
+    /// <summary>The result shown was found with a search the player has changed since.</summary>
+    public bool IsStale => _resultKey is not null && _resultKey != _currentKey;
+
+    /// <summary>The price and listings are drawn faded: they belong to an older search, or a new one is running.</summary>
+    public bool IsDimmed => IsStale || IsSearching;
+
+    /// <summary>The line under the price on the card: what Search is doing, else "Search to update" under an
+    /// old result, else how sure the price is.</summary>
+    public string PeekLine => IsSearching ? SearchingText : SearchNote ?? (IsStale ? StaleText : Answer.PeekNote);
+
+    public bool PeekLineIsWarning => !IsSearching && (SearchNote is not null ? SearchNoteIsWarning : !IsStale && Answer.NoteIsWarning);
+
+    /// <summary>The price check's note under the price: "Search to update" under an old result.</summary>
+    public string NoteLine => IsStale ? $"{StaleText}: the price and listings are from your search before the changes." : Answer.Note;
+
+    public bool NoteLineIsWarning => !IsStale && Answer.NoteIsWarning;
+
+    /// <summary>Next to the price check's Search button.</summary>
+    public string? SearchLine => IsSearching ? SearchingText : SearchNote ?? (IsStale ? StaleText : null);
+
+    public bool HasSearchLine => SearchLine is not null;
+
+    public bool SearchLineIsWarning => !IsSearching && SearchNote is not null && SearchNoteIsWarning;
 
     [ObservableProperty]
     public partial IReadOnlyList<ComparableViewModel> Comparables { get; set; } = [];
@@ -495,13 +609,170 @@ public sealed partial class ItemViewModel : ObservableObject
         UpdateAnswer();
     }
 
+    /// <summary>The search changed: the link and the copied filters follow at once; the price and listings
+    /// stay as they were, marked old, until the player clicks Search.</summary>
     private void OnSearchChanged()
     {
         OnCount = SearchRows.Count(r => r.IsOn) + (IsUnique ? 1 : 0);
         Trade = TradeQuery.Build(Worksheet, Item, _session.TradeLeague, _session.Trade);
         Instructions = $"Trade site link: {Trade.Url}{Environment.NewLine}{Environment.NewLine}{Worksheet.ToManualInstructions(_session.TradeLeague)}";
         SearchStatus = null;
+        _currentKey = SearchKey();
+        SearchNote = null;
+        NotifySearchState();
+    }
+
+    /// <summary>Everything the search is made of, so a result can tell whether it is still the current one
+    /// (ticking a stat off and on again makes it current again).</summary>
+    private string SearchKey() => string.Join("|",
+        Trade?.Json ?? "",
+        Worksheet.BuyNowOnly,
+        Worksheet.MinItemLevel,
+        string.Join(";", Worksheet.Rows.Where(r => r.Selected).Select(r => $"{r.Id}:{r.Min}:{r.Max}:{r.Match}:{r.Group}")));
+
+    private void NotifySearchState()
+    {
+        OnPropertyChanged(nameof(IsStale));
+        OnPropertyChanged(nameof(IsDimmed));
+        OnPropertyChanged(nameof(PeekLine));
+        OnPropertyChanged(nameof(PeekLineIsWarning));
+        OnPropertyChanged(nameof(NoteLine));
+        OnPropertyChanged(nameof(NoteLineIsWarning));
+        OnPropertyChanged(nameof(SearchLine));
+        OnPropertyChanged(nameof(HasSearchLine));
+        OnPropertyChanged(nameof(SearchLineIsWarning));
+    }
+
+    /// <summary>Search: the practice items search their synthetic listings at once; a live item asks the
+    /// trade site (one search, one fetch of the ten cheapest), only now, on this click. While the trade site
+    /// asks to wait, or cannot be reached, the last result stays and the line under it says why.</summary>
+    [RelayCommand]
+    private async Task Search()
+    {
+        if (!CanSearch)
+        {
+            return;
+        }
+
+        if (_listings is not null)
+        {
+            RunDemoSearch();
+            SearchNote = null;
+            UpdateAnswer();
+            NotifySearchState();
+            return;
+        }
+
+        if (_session.IsDemo)
+        {
+            Say(NeedsLiveLeague, warning: true);
+            return;
+        }
+
+        if (_site is not { IsOn: true } site)
+        {
+            Say(SearchOffText, warning: false);
+            return;
+        }
+
+        var trade = Trade!;
+        if (!trade.Identifies)
+        {
+            var missing = trade.ByHand.Where(b => b.StartsWith("Name", StringComparison.Ordinal) || b.StartsWith("Unique name", StringComparison.Ordinal) || b.StartsWith("Item category", StringComparison.Ordinal));
+            Say($"The trade site's filters don't know this item ({string.Join(", ", missing)}), so SSE doesn't search for it. Open the search on the trade site and set that by hand.", warning: true);
+            return;
+        }
+
+        var key = _currentKey;
+        var rows = SearchRows.Where(r => r.IsOn).ToList();
+        var buyNow = Worksheet.BuyNowOnly;
+        SearchNote = null;
+        IsSearching = true;
+        try
+        {
+            ApplyPage(await site.SearchAsync(trade.League, trade.Json, buyNow), key, rows);
+        }
+        catch (ProviderHoldException e)
+        {
+            Say(TradeClient.HoldText(e.Decision, _session.Now), warning: true);
+        }
+        catch (TradeSiteException e) when (e.StatusCode == HttpStatusCode.TooManyRequests)
+        {
+            Say(e.RetryAfter is { } wait ? $"The trade site asks to wait {TradeClient.Wait(wait)}." : "The trade site asks SSE to slow down. Try again in a minute.", warning: true);
+        }
+        catch (TradeSiteException e)
+        {
+            Say(e.SiteMessage is { } why ? $"The trade site turned this search down: {why.TrimEnd('.')}." : $"The trade site answered {(int)e.StatusCode!}. The last result stays.", warning: true);
+        }
+        catch (HttpRequestException)
+        {
+            Say("Couldn't reach the trade site. The last result stays.", warning: true);
+        }
+        catch (TaskCanceledException)
+        {
+            Say("The trade site took too long to answer. The last result stays.", warning: true);
+        }
+        catch (JsonException)
+        {
+            Say("The trade site's answer could not be read; the site may have changed. The last result stays.", warning: true);
+        }
+        finally
+        {
+            IsSearching = false;
+            NotifySearchState();
+        }
+    }
+
+    private void Say(string text, bool warning)
+    {
+        SearchNoteIsWarning = warning;
+        SearchNote = text;
+    }
+
+    /// <summary>A trade site answer for the search <paramref name="key"/>, priced with this session's rates.</summary>
+    private void ApplyPage(TradePage page, string key, IReadOnlyList<SearchRowViewModel> rows)
+    {
+        _page = page;
+        var listings = page.Listings.Select(l => MarketSearch.FromTradeSite(l, Worksheet, _session.Trade)).ToList();
+        _result = MarketSearch.Summarize(listings, page.Total, _session.Converter, _session.DisplayCurrency, _session.Now);
+        _resultKey = key;
+        _resultRows = rows;
         UpdateAnswer();
+        NotifySearchState();
+    }
+
+    /// <summary>After a session change in the same league (an hourly price refresh, another display
+    /// currency): the player's search and the last trade site answer carry over to the same item, re-priced
+    /// with the new rates, so the site is not asked again.</summary>
+    public void CarryOver(ItemViewModel old)
+    {
+        ArgumentNullException.ThrowIfNull(old);
+        if (_session.IsDemo || old._page is not { } page || old._resultKey is not { } key
+            || !string.Equals(old._session.League, _session.League, StringComparison.Ordinal) || old.SetKey != SetKey)
+        {
+            return;
+        }
+
+        Worksheet.CopySearchFrom(old.Worksheet);
+        Strictness = old.Strictness;
+        foreach (var r in SearchRows)
+        {
+            r.Refresh();
+        }
+
+        OnPropertyChanged(nameof(BuyNowOnly));
+        OnPropertyChanged(nameof(UseItemLevel));
+        OnSearchChanged();
+        var searched = old._resultRows.Select(r => r.Row.Id).ToHashSet(StringComparer.Ordinal);
+        ApplyPage(page, key, SearchRows.Where(r => searched.Contains(r.Row.Id)).ToList());
+    }
+
+    /// <summary>The demo's synthetic market searched with the worksheet as it stands.</summary>
+    private void RunDemoSearch()
+    {
+        _result = MarketSearch.Run(Worksheet, _listings!, _session.Converter, _session.DisplayCurrency, _session.Now);
+        _resultKey = _currentKey;
+        _resultRows = SearchRows.Where(r => r.IsOn).ToList();
     }
 
     private void UpdateAnswer()
@@ -515,16 +786,15 @@ public sealed partial class ItemViewModel : ObservableObject
         Matches = [];
         NoMatches = false;
 
-        if (Item.Rarity == ItemRarity.Rare && Item.States.HasFlag(ItemStates.Unidentified))
+        if (IsUnidentified)
         {
             Answer = PriceAnswer.Unidentified();
         }
-        else if (ShowsWorksheet && _listings is not null)
+        else if (_result is { } result)
         {
-            var result = MarketSearch.Run(Worksheet, _listings, _session.Converter, _session.DisplayCurrency, _session.Now);
             Answer = PriceAnswer.FromSearch(result, price, IsUnique);
-            Matches = result.Matches.Take(5).Select(m => ToMatch(m, price)).ToList();
-            NoMatches = result.Count == 0;
+            Matches = result.Matches.Take(ListingRows).Select(m => ToMatch(m, price)).ToList();
+            NoMatches = result.Confidence == SearchConfidence.NoMatches;
         }
         else if (Price.Evidence is { } evidence && PriceAnswer.FromWrittenDown(evidence, price) is { } written)
         {
@@ -542,20 +812,30 @@ public sealed partial class ItemViewModel : ObservableObject
         {
             Answer = PriceAnswer.Baseline(Price, _session.IsDemo ? null : _session.Now);
         }
+        else if (ShowsWorksheet && LiveSearchOn)
+        {
+            Answer = PriceAnswer.SearchFirst(ShowsComparables);
+        }
         else
         {
             Answer = PriceAnswer.NoPrice(_session.Book.Quotes.Count == 0, ShowsWorksheet, ShowsComparables);
         }
     }
 
+    /// <summary>One listing as a row: its price in the display currency and the listed item's numbers for
+    /// the stats the search used (up to three), e.g. "Phys DPS 341 · Attack speed 17". A unique searched by
+    /// name alone shows its first rolls instead.</summary>
     private MatchViewModel ToMatch(PricedListing m, PriceText price)
     {
-        var shown = SearchRows.Where(r => r.IsOn).Take(3)
-            .Select(r => m.Listing.Stats.TryGetValue(r.Row.Id, out var v) ? $"{r.ShortLabel} {RollQuality.Num(v)}" : null)
+        IEnumerable<SearchRowViewModel> rows = _resultRows.Count > 0 ? _resultRows : IsUnique ? SearchRows : [];
+        var shown = rows
+            .Select(r => m.Listing.Stats.TryGetValue(r.Row.Id, out var v) ? Labels.WithValue(r.Row, v) : null)
             .Where(s => s is not null)
+            .Take(3)
             .ToList();
         var stats = shown.Count > 0 ? string.Join(" · ", shown) : IsUnique ? Title : $"Any {Labels.Singular(Item.ItemClass)}";
-        return new MatchViewModel(price.One(m.Value), stats, m.Listing.BuyNow ? "Buy now" : "Message seller", ValueFormat.Age(_session.Now - m.Listing.ListedAt));
+        var age = m.Listing.HasListedAt ? ValueFormat.Age(_session.Now - m.Listing.ListedAt) : "";
+        return new MatchViewModel(price.One(m.Value), stats, m.Listing.BuyNow, age);
     }
 
     [RelayCommand]
@@ -664,7 +944,26 @@ public static class Labels
 
         var plain = row.Template.Replace("#", "").Replace("%", "").Replace("+", "").Replace(" increased ", " ").Trim();
         plain = plain.StartsWith("to ", StringComparison.Ordinal) ? plain[3..] : plain;
+        plain = string.Join(' ', plain.Split(' ', StringSplitOptions.RemoveEmptyEntries));
         return plain.Length > 18 ? plain[..17].TrimEnd() + "…" : plain;
+    }
+
+    /// <summary>A listed item's number for a stat, short: "Phys DPS 341", "3 Charm Slots", "Life 85",
+    /// "14% Rarity of Items found".</summary>
+    public static string WithValue(WorksheetRow row, decimal value)
+    {
+        var number = RollQuality.Num(Math.Round(value, Math.Abs(value) >= 100 ? 0 : 1));
+        if (!ShortStats.ContainsKey(row.Id) && !ShortStats.ContainsKey(row.Template) && row.Template.Count(c => c == '#') == 1)
+        {
+            var filled = row.Template.Replace("#", number, StringComparison.Ordinal).Replace(" increased ", " ", StringComparison.Ordinal);
+            filled = filled.StartsWith("Has ", StringComparison.Ordinal) ? filled[4..] : filled;
+            if (filled.Length <= 26)
+            {
+                return filled;
+            }
+        }
+
+        return $"{Short(row)} {number}";
     }
 
     /// <summary>"Rare crossbow", "Unique ring", "Currency".</summary>

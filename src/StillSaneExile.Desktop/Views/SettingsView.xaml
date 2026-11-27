@@ -103,7 +103,17 @@
           <TextBlock FontSize="12" Foreground="{StaticResource TextFaint}" TextWrapping="Wrap" Margin="0,8,0,0"
                      Text="With a live league confirmed, SSE asks poe.ninja a few seconds after it starts, then every hour, for that league's exchange prices (currency, fragments, essences, runes, soul cores, idols, uncut gems, lineage supports, omens, delirium, expedition, verisium) and unique item prices: about 20 requests, one at a time, at least 5 seconds apart, following poe.ninja's cache headers. Each request names the league, the category and SSE's version, nothing about you, your account or your items. The last few refreshes stay in the data folder, so prices still show when you're offline, with their age." />
           <TextBlock FontSize="12" Foreground="{StaticResource TextFaint}" TextWrapping="Wrap" Margin="0,6,0,0"
-                     Text="The prices are poe.ninja's own estimates for the whole league. Unique prices are a baseline for the item, not for your rolls. Prices are marked stale after two missed hourly refreshes, and too old to rank after 24 hours. A key press never asks poe.ninja for anything: the card over the game only reads what is already here. Rares have no price list: check them on the trade site." />
+                     Text="The prices are poe.ninja's own estimates for the whole league. Unique prices are a baseline for the item, not for your rolls. Prices are marked stale after two missed hourly refreshes, and too old to rank after 24 hours. A key press never asks poe.ninja for anything: the card over the game only reads what is already here. Rares have no price list: Search finds their listings on the trade site." />
+        </StackPanel>
+      </Border>
+
+      <!-- Trade site search: what Search sends, when, and the switch. -->
+      <TextBlock Text="TRADE SITE SEARCH" Style="{StaticResource SectionTitle}" />
+      <Border Style="{StaticResource Card}">
+        <StackPanel>
+          <CheckBox IsChecked="{Binding TradeSearchOn}" Content="Search the trade site from SSE" />
+          <TextBlock FontSize="12" Foreground="{StaticResource TextFaint}" TextWrapping="Wrap" Margin="0,8,0,0"
+                     Text="When you click Search on the price card or the price check of a live item, SSE asks the official Path of Exile trade site for the listings that match: one search, then one request for the ten cheapest. Only on that click, never on a key press, and never in the demo. The requests carry the search (the item's base, rarity, the stats and numbers you ticked, your live league) and SSE's version; no login, no cookies, nothing about your account. SSE keeps within the limits the site announces and waits when it asks. Prices come from instant buyout listings; the sellers' names are never read or shown. Off, Search tells you to open the search on the trade site instead." />
         </StackPanel>
       </Border>
 
@@ -206,12 +216,12 @@
           </WrapPanel>
           <StackPanel Orientation="Horizontal" Margin="0,10,0,0">
             <TextBlock Text="Scale" VerticalAlignment="Center" Margin="0,0,10,0" />
-            <Slider Width="220" Minimum="0.75" Maximum="1.6" TickFrequency="0.05" SmallChange="0.05" LargeChange="0.25" IsSnapToTickEnabled="True" Value="{Binding PeekScale}"
+            <Slider Width="220" Minimum="0.5" Maximum="1.6" TickFrequency="0.05" SmallChange="0.05" LargeChange="0.25" IsSnapToTickEnabled="True" Value="{Binding PeekScale}"
                     AutomationProperties.Name="Quick price card scale" />
             <TextBlock Text="{Binding PeekScale, StringFormat='{}{0:0.00}×'}" VerticalAlignment="Center" Margin="10,0,0,0" />
           </StackPanel>
           <TextBlock FontSize="12" Foreground="{StaticResource TextFaint}" TextWrapping="Wrap" Margin="0,8,0,0"
-                     Text="The card keeps clear of the screen centre, the skill bar and the top-right map. While you hold the key it is click-through and never takes focus. Once you move onto it, it takes clicks, takes focus when you click it, and stays until you close it (× or Esc) or check another item. Any card hides when another program comes to the front, on minimize, lock and resolution change. Windowed or borderless only; exclusive fullscreen cannot show it." />
+                     Text="The card keeps clear of the screen centre, the skill bar and the top-right map. While you hold the key it is click-through and never takes focus. Once you move onto it, it takes clicks (never the focus: the game keeps your keyboard) and stays until you close it (×) or check another item. Any card hides when another program comes to the front, on minimize, lock and resolution change. Windowed or borderless only; exclusive fullscreen cannot show it." />
           <TextBlock FontSize="12" Foreground="{StaticResource TextFaint}" TextWrapping="Wrap" Margin="0,6,0,0"
                      Text="Scale is the card's own size. The Windows text size setting (Accessibility, Text size) enlarges this window and the price check over the game, not the card." />
         </StackPanel>
@@ -283,7 +293,7 @@
             <Run Text="Data folder: " /><Run Text="{Binding DataFolder, Mode=OneWay}" Foreground="{StaticResource Text}" />
           </TextBlock>
           <TextBlock TextWrapping="Wrap" FontSize="12" Foreground="{StaticResource TextDim}" Margin="0,6,0,0"
-                     Text="Clipboard text is kept in memory only while it is a parsed item, and saved to disk only with a comparison set you create. Anything that is not an item is discarded at once. SSE makes two kinds of network request: the update check to GitHub, and for a live league with live prices on, that league's prices from poe.ninja every hour (plus poe.ninja's league list when you pick a league). Neither sends anything about you, and each has its switch above. The trade site opens in your browser when you ask." />
+                     Text="Clipboard text is kept in memory only while it is a parsed item, and saved to disk only with a comparison set you create. Anything that is not an item is discarded at once. SSE makes three kinds of network request: the update check to GitHub; for a live league with live prices on, that league's prices from poe.ninja every hour (plus poe.ninja's league list when you pick a league); and, only when you click Search on a live item, that search on the official trade site. None of them sends anything about you, and each has its switch above. &quot;Open this search on the trade site&quot; opens it in your browser." />
           <TextBlock TextWrapping="Wrap" FontSize="12" Foreground="{StaticResource TextFaint}" Margin="0,6,0,0"
                      Text="This product isn't affiliated with or endorsed by Grinding Gear Games in any way." />
         </StackPanel>

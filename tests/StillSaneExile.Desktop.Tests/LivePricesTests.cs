@@ -281,7 +281,11 @@ public class LivePricesTests
     [Fact]
     public void The_HUD_has_no_way_to_reach_the_network()
     {
-        var reachable = new[] { typeof(HttpClient), typeof(HttpMessageHandler), typeof(LivePrices), typeof(PoeNinjaClient), typeof(ProviderGovernor) };
+        var reachable = new[]
+        {
+            typeof(HttpClient), typeof(HttpMessageHandler), typeof(LivePrices), typeof(PoeNinjaClient), typeof(ProviderGovernor),
+            typeof(LiveListings), typeof(ITradeSite), typeof(Domain.Trade.TradeClient),
+        };
         var fields = typeof(HudController).GetFields(BindingFlags.Instance | BindingFlags.Static | BindingFlags.NonPublic | BindingFlags.Public);
 
         Assert.DoesNotContain(fields, f => reachable.Any(t => t.IsAssignableFrom(f.FieldType)));

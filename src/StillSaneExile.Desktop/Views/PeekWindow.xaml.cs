@@ -54,11 +54,22 @@ public partial class PeekWindow : Window, IPeekSurface
     private nint _over;
     private bool _pinned;
 
+    /// <summary>The side the card was placed on, so a card that grows (Search adds its listings) stays on
+    /// that side and keeps clear of the skill bar.</summary>
+    private PeekAnchor? _side;
+
     public PeekWindow()
     {
         InitializeComponent();
         CardView.CloseCommand = new RelayCommand(() => CloseRequested?.Invoke());
         CardView.MoreCommand = new RelayCommand(() => MoreRequested?.Invoke());
+        SizeChanged += (_, e) =>
+        {
+            if (e.HeightChanged && IsVisible && _side is { } side)
+            {
+                Place(side, _over);
+            }
+        };
     }
 
     public event Action? CloseRequested;
@@ -80,6 +91,7 @@ public partial class PeekWindow : Window, IPeekSurface
     {
         SetPinned(false);
         _over = referenceWindow;
+        _side = null;
         DataContext = card;
         Scale.ScaleX = Scale.ScaleY = scale;
         Opacity = 0;
@@ -181,6 +193,7 @@ public partial class PeekWindow : Window, IPeekSurface
             _ => cursor.X > area.Left + area.Width / 2,
         };
 
+        _side = left ? PeekAnchor.Left : PeekAnchor.Right;
         var margin = (int)(area.Width * 0.03);
         var x = left ? area.Left + margin : area.Right - margin - w;
         var top = area.Top + (int)(area.Height * (left ? 0.16 : 0.27)); // right side starts below the map

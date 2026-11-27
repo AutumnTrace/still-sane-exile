@@ -11,34 +11,51 @@
              Foreground="{StaticResource Text}">
   <UserControl.Resources>
     <Style x:Key="StatText" TargetType="TextBlock">
-      <Setter Property="FontSize" Value="13" />
+      <Setter Property="FontSize" Value="11.5" />
       <Setter Property="TextWrapping" Value="Wrap" />
       <Setter Property="Foreground" Value="{StaticResource TextOff}" />
     </Style>
 
     <Style x:Key="CardStep" TargetType="Button" BasedOn="{StaticResource StepButton}">
-      <Setter Property="Width" Value="24" />
-      <Setter Property="Height" Value="24" />
-      <Setter Property="FontSize" Value="14" />
-      <Setter Property="v:Ui.Radius" Value="5" />
+      <Setter Property="Width" Value="20" />
+      <Setter Property="Height" Value="20" />
+      <Setter Property="FontSize" Value="12.5" />
+      <Setter Property="v:Ui.Radius" Value="4" />
+    </Style>
+
+    <!-- Small caps over a part of the card ("SEARCHED WITH", "CHEAPEST 10 OF 29"). -->
+    <Style x:Key="CardHead" TargetType="TextBlock">
+      <Setter Property="FontSize" Value="11" />
+      <Setter Property="FontWeight" Value="SemiBold" />
+      <Setter Property="Foreground" Value="{StaticResource TextFaint}" />
+      <Setter Property="VerticalAlignment" Value="Center" />
+    </Style>
+
+    <!-- The price and the listings of a search the player has changed since: still readable, clearly older. -->
+    <Style x:Key="Dimmable" TargetType="FrameworkElement">
+      <Style.Triggers>
+        <DataTrigger Binding="{Binding Item.IsDimmed}" Value="True">
+          <Setter Property="Opacity" Value="0.65" />
+        </DataTrigger>
+      </Style.Triggers>
     </Style>
 
     <!-- A row as the price searched with it, and on a pinned card the unique's name, which can't be unticked. -->
     <DataTemplate DataType="{x:Type vm:PeekRowViewModel}">
-      <Border BorderBrush="{StaticResource RowLine}" BorderThickness="0,1,0,0" Padding="0,6">
+      <Border BorderBrush="{StaticResource RowLine}" BorderThickness="0,1,0,0" Padding="0,2">
         <Grid>
           <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="18" />
+            <ColumnDefinition Width="16" />
             <ColumnDefinition Width="*" />
             <ColumnDefinition Width="Auto" />
           </Grid.ColumnDefinitions>
-          <Grid Width="16" Height="16" VerticalAlignment="Center" HorizontalAlignment="Left">
-            <Border CornerRadius="3.5" Background="{StaticResource Accent}" Visibility="{Binding On, Converter={StaticResource Vis}}" AutomationProperties.Name="In search">
-              <Path Data="M 4,8.2 L 6.6,10.8 L 12,5.4" Stroke="{StaticResource OnAccent}" StrokeThickness="2" StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round" />
+          <Grid Width="14" Height="14" VerticalAlignment="Center" HorizontalAlignment="Left">
+            <Border CornerRadius="3" Background="{StaticResource Accent}" Visibility="{Binding On, Converter={StaticResource Vis}}" AutomationProperties.Name="In search">
+              <Path Data="M 3.5,7.2 L 5.8,9.5 L 10.5,4.7" Stroke="{StaticResource OnAccent}" StrokeThickness="1.8" StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round" />
             </Border>
-            <Border CornerRadius="3.5" BorderBrush="{StaticResource Unchecked}" BorderThickness="1.5" Margin="0.5" Visibility="{Binding Off, Converter={StaticResource Vis}}" AutomationProperties.Name="Not in search" />
+            <Border CornerRadius="3" BorderBrush="{StaticResource Unchecked}" BorderThickness="1.5" Margin="0.5" Visibility="{Binding Off, Converter={StaticResource Vis}}" AutomationProperties.Name="Not in search" />
           </Grid>
-          <StackPanel Grid.Column="1" Margin="8,0,8,0" VerticalAlignment="Center">
+          <StackPanel Grid.Column="1" Margin="6,0,6,0" VerticalAlignment="Center">
             <TextBlock Text="{Binding Text}">
               <TextBlock.Style>
                 <Style TargetType="TextBlock" BasedOn="{StaticResource StatText}">
@@ -51,9 +68,9 @@
                 </Style>
               </TextBlock.Style>
             </TextBlock>
-            <TextBlock Text="{Binding Hint}" FontSize="11.5" Foreground="{StaticResource Hint}" TextWrapping="Wrap" Visibility="{Binding HasHint, Converter={StaticResource Vis}}" />
+            <TextBlock Text="{Binding Hint}" FontSize="11" Foreground="{StaticResource Hint}" TextWrapping="Wrap" Visibility="{Binding HasHint, Converter={StaticResource Vis}}" />
           </StackPanel>
-          <TextBlock Grid.Column="2" Text="{Binding Right}" FontSize="12" VerticalAlignment="Center">
+          <TextBlock Grid.Column="2" Text="{Binding Right}" FontSize="11.5" VerticalAlignment="Center">
             <TextBlock.Style>
               <Style TargetType="TextBlock">
                 <Setter Property="Foreground" Value="{StaticResource TextFaint}" />
@@ -72,16 +89,16 @@
     </DataTemplate>
 
     <!-- A stat on a pinned card: the item's own search row. Ticking it, or stepping its number, changes
-         the search, and the price above follows. -->
+         the search; Search then updates the price and the listings above. -->
     <DataTemplate DataType="{x:Type vm:SearchRowViewModel}">
-      <Border BorderBrush="{StaticResource RowLine}" BorderThickness="0,1,0,0" Padding="0,3">
-        <Grid MinHeight="26">
+      <Border BorderBrush="{StaticResource RowLine}" BorderThickness="0,1,0,0">
+        <Grid MinHeight="21">
           <Grid.ColumnDefinitions>
             <ColumnDefinition Width="*" />
             <ColumnDefinition Width="Auto" />
           </Grid.ColumnDefinitions>
           <CheckBox IsChecked="{Binding IsOn}" VerticalContentAlignment="Center" AutomationProperties.Name="{Binding Text}">
-            <StackPanel Margin="-2,0,8,0">
+            <StackPanel Margin="-4,0,6,0">
               <TextBlock Text="{Binding Text}">
                 <TextBlock.Style>
                   <Style TargetType="TextBlock" BasedOn="{StaticResource StatText}">
@@ -94,25 +111,50 @@
                   </Style>
                 </TextBlock.Style>
               </TextBlock>
-              <TextBlock Text="{Binding Hint}" FontSize="11.5" Foreground="{StaticResource Hint}" TextWrapping="Wrap" Visibility="{Binding IsAmbiguous, Converter={StaticResource Vis}}" />
+              <TextBlock Text="{Binding Hint}" FontSize="11" Foreground="{StaticResource Hint}" TextWrapping="Wrap" Visibility="{Binding IsAmbiguous, Converter={StaticResource Vis}}" />
             </StackPanel>
           </CheckBox>
           <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center" Visibility="{Binding IsOn, Converter={StaticResource Vis}}">
             <Button Style="{StaticResource CardStep}" Content="−" Command="{Binding DecreaseCommand}" ToolTip="Lower" AutomationProperties.Name="{Binding LowerName}" />
-            <TextBlock Text="{Binding BoundLabel}" MinWidth="46" TextAlignment="Center" FontSize="12" FontWeight="Bold" Foreground="{StaticResource Accent}" VerticalAlignment="Center" Margin="2,0" />
+            <TextBlock Text="{Binding BoundLabel}" MinWidth="34" TextAlignment="Center" FontSize="11.5" FontWeight="Bold" Foreground="{StaticResource Accent}" VerticalAlignment="Center" Margin="1,0" />
             <Button Style="{StaticResource CardStep}" Content="+" Command="{Binding IncreaseCommand}" ToolTip="Raise" AutomationProperties.Name="{Binding RaiseName}" />
           </StackPanel>
-          <TextBlock Grid.Column="1" Text="{Binding TierOrBlank}" FontSize="12" FontWeight="SemiBold" Foreground="{StaticResource TextFaint}" VerticalAlignment="Center"
+          <TextBlock Grid.Column="1" Text="{Binding TierOrBlank}" FontSize="11" FontWeight="SemiBold" Foreground="{StaticResource TextFaint}" VerticalAlignment="Center"
                      Visibility="{Binding IsOn, Converter={StaticResource Vis}, ConverterParameter=invert}" />
         </Grid>
       </Border>
     </DataTemplate>
+
+    <!-- One of the cheapest listings, on one line: price, the listed item's numbers, how long ago. -->
+    <DataTemplate DataType="{x:Type vm:MatchViewModel}">
+      <Grid Height="17">
+        <Grid.ColumnDefinitions>
+          <ColumnDefinition Width="Auto" MinWidth="50" />
+          <ColumnDefinition Width="*" />
+          <ColumnDefinition Width="Auto" />
+        </Grid.ColumnDefinitions>
+        <TextBlock Text="{Binding Price}" FontSize="12" FontWeight="Bold" VerticalAlignment="Center" />
+        <TextBlock Grid.Column="1" Text="{Binding Stats}" FontSize="11" Foreground="{StaticResource TextSoft}" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" Margin="6,0" ToolTip="{Binding Stats}" />
+        <TextBlock Grid.Column="2" Text="{Binding Short}" FontSize="11" VerticalAlignment="Center">
+          <TextBlock.Style>
+            <Style TargetType="TextBlock">
+              <Setter Property="Foreground" Value="{StaticResource TextFaint}" />
+              <Style.Triggers>
+                <DataTrigger Binding="{Binding InPerson}" Value="True">
+                  <Setter Property="Foreground" Value="{StaticResource Warn}" />
+                </DataTrigger>
+              </Style.Triggers>
+            </Style>
+          </TextBlock.Style>
+        </TextBlock>
+      </Grid>
+    </DataTemplate>
   </UserControl.Resources>
 
-  <!-- The quick peek card: item, price, and exactly which stats the price searched with. Pinned, it
-       has a close button, and its stats can be ticked. -->
+  <!-- The quick peek card: item, price, the cheapest listings, and exactly which stats the price searched
+       with. Pinned, it has a close button, its stats can be ticked, and Search runs the search. -->
   <Grid x:Name="Root">
-    <Border x:Name="Card" Width="360" Background="#F715161A" BorderThickness="1" CornerRadius="12" HorizontalAlignment="Left" VerticalAlignment="Top">
+    <Border x:Name="Card" Width="280" Background="#F715161A" BorderThickness="1" CornerRadius="10" HorizontalAlignment="Left" VerticalAlignment="Top">
       <Border.Style>
         <Style TargetType="Border">
           <Setter Property="BorderBrush" Value="{StaticResource Edge}" />
@@ -124,77 +166,112 @@
         </Style>
       </Border.Style>
       <StackPanel>
-        <Grid Margin="14,12,10,10">
+        <!-- Name, the demo badge and the close button on one line; the base and level under them, full width. -->
+        <Grid Margin="10,5,5,5">
           <Grid.ColumnDefinitions>
             <ColumnDefinition Width="*" />
             <ColumnDefinition Width="Auto" />
             <ColumnDefinition Width="Auto" />
           </Grid.ColumnDefinitions>
-          <StackPanel>
-            <TextBlock x:Name="NameText" Text="{Binding Title}" FontSize="17" FontWeight="Bold" TextWrapping="Wrap" Foreground="{Binding Rarity, Converter={StaticResource RarityBrush}}" />
-            <TextBlock Text="{Binding Subtitle}" FontSize="12.5" Foreground="{StaticResource TextDim}" TextWrapping="Wrap" Margin="0,1,0,0" Visibility="{Binding HasSubtitle, Converter={StaticResource Vis}}" />
-            <TextBlock Text="{Binding Note}" FontSize="11.5" Foreground="{StaticResource TextFaint}" TextWrapping="Wrap" Margin="0,3,0,0" Visibility="{Binding HasNote, Converter={StaticResource Vis}}" />
-          </StackPanel>
-          <Border Grid.Column="1" Style="{StaticResource DemoBadge}" Padding="6,2" VerticalAlignment="Top" Margin="10,2,4,0" Visibility="{Binding IsDemo, Converter={StaticResource Vis}}">
-            <TextBlock Text="DEMO" FontSize="10" FontWeight="Bold" />
+          <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+          </Grid.RowDefinitions>
+          <TextBlock x:Name="NameText" Text="{Binding Title}" FontSize="15" FontWeight="Bold" TextWrapping="Wrap" VerticalAlignment="Center" Foreground="{Binding Rarity, Converter={StaticResource RarityBrush}}" />
+          <Border Grid.Column="1" Style="{StaticResource DemoBadge}" Padding="5,1" VerticalAlignment="Center" Margin="8,0,2,0" Visibility="{Binding IsDemo, Converter={StaticResource Vis}}">
+            <TextBlock Text="DEMO" FontSize="9.5" FontWeight="Bold" />
           </Border>
-          <Button x:Name="CloseButton" Grid.Column="2" Style="{StaticResource IconButton}" Width="28" Height="28" Margin="4,-4,0,0" VerticalAlignment="Top"
-                  ToolTip="Close (Esc)" AutomationProperties.Name="Close the price card"
+          <Button x:Name="CloseButton" Grid.Column="2" Style="{StaticResource IconButton}" Width="22" Height="22" Margin="2,0,0,0" VerticalAlignment="Center"
+                  ToolTip="Close" AutomationProperties.Name="Close the price card"
                   Command="{Binding CloseCommand, ElementName=Self}" Visibility="{Binding IsPinned, Converter={StaticResource Vis}}">
-            <Path Data="M 1,1 L 9,9 M 9,1 L 1,9" Width="10" Height="10" Stroke="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}" StrokeThickness="2" StrokeStartLineCap="Round" StrokeEndLineCap="Round" />
+            <Path Data="M 1,1 L 8,8 M 8,1 L 1,8" Width="9" Height="9" Stroke="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}" StrokeThickness="1.8" StrokeStartLineCap="Round" StrokeEndLineCap="Round" />
           </Button>
+          <TextBlock Grid.Row="1" Grid.ColumnSpan="3" Text="{Binding Subtitle}" FontSize="11.5" Foreground="{StaticResource TextDim}" TextWrapping="Wrap" Margin="0,0,5,0" Visibility="{Binding HasSubtitle, Converter={StaticResource Vis}}" />
+          <TextBlock Grid.Row="2" Grid.ColumnSpan="3" Text="{Binding Note}" FontSize="11" Foreground="{StaticResource TextFaint}" TextWrapping="Wrap" Margin="0,2,5,0" Visibility="{Binding HasNote, Converter={StaticResource Vis}}" />
         </Grid>
 
-        <TextBlock Text="{Binding MessageText}" FontSize="14" TextWrapping="Wrap" Margin="14,0,14,12" Visibility="{Binding IsMessage, Converter={StaticResource Vis}}" />
+        <TextBlock Text="{Binding MessageText}" FontSize="13" TextWrapping="Wrap" Margin="10,0,10,10" Visibility="{Binding IsMessage, Converter={StaticResource Vis}}" />
 
-        <Border x:Name="PriceBlock" Background="{StaticResource Surface3}" Padding="14,10" Visibility="{Binding HasAnswer, Converter={StaticResource Vis}}">
+        <Border x:Name="PriceBlock" Background="{StaticResource Surface3}" Padding="10,4,10,5" Visibility="{Binding HasAnswer, Converter={StaticResource Vis}}">
           <Grid>
             <Grid.ColumnDefinitions>
               <ColumnDefinition Width="*" />
               <ColumnDefinition Width="Auto" />
             </Grid.ColumnDefinitions>
             <StackPanel>
-              <TextBlock Text="{Binding Answer.Lead}" FontSize="12" Foreground="{StaticResource TextDim}" TextWrapping="Wrap" />
-              <TextBlock x:Name="BigText" Text="{Binding Answer.Big}" FontSize="24" FontWeight="ExtraBold" TextWrapping="Wrap" Margin="0,2,0,2" />
-              <TextBlock Text="{Binding Answer.PeekNote}" FontSize="12" TextWrapping="Wrap">
+              <TextBlock Text="{Binding Answer.Lead}" FontSize="11" Foreground="{StaticResource TextDim}" TextWrapping="Wrap" />
+              <TextBlock x:Name="BigText" Text="{Binding Answer.Big}" FontSize="19" FontWeight="ExtraBold" TextWrapping="Wrap" Margin="0,0,0,1" Style="{StaticResource Dimmable}" />
+              <TextBlock x:Name="PeekLineText" Text="{Binding Item.PeekLine}" FontSize="11.5" TextWrapping="Wrap">
                 <TextBlock.Style>
                   <Style TargetType="TextBlock">
                     <Setter Property="Foreground" Value="{StaticResource TextSoft}" />
                     <Style.Triggers>
-                      <DataTrigger Binding="{Binding Answer.NoteIsWarning}" Value="True">
+                      <DataTrigger Binding="{Binding Item.IsStale}" Value="True">
+                        <Setter Property="Foreground" Value="{StaticResource Link}" />
+                        <Setter Property="FontWeight" Value="SemiBold" />
+                      </DataTrigger>
+                      <DataTrigger Binding="{Binding Item.PeekLineIsWarning}" Value="True">
                         <Setter Property="Foreground" Value="{StaticResource Warn}" />
+                        <Setter Property="FontWeight" Value="Normal" />
                       </DataTrigger>
                     </Style.Triggers>
                   </Style>
                 </TextBlock.Style>
               </TextBlock>
             </StackPanel>
-            <StackPanel x:Name="CountBlock" Grid.Column="1" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="12,0,0,0" Visibility="{Binding Answer.HasCount, Converter={StaticResource Vis}}">
-              <TextBlock x:Name="CountText" Text="{Binding Answer.Count}" FontSize="22" FontWeight="ExtraBold" Foreground="{StaticResource Accent}" HorizontalAlignment="Right" />
-              <TextBlock Text="for sale" FontSize="11.5" Foreground="{StaticResource TextDim}" HorizontalAlignment="Right" />
+            <StackPanel x:Name="CountBlock" Grid.Column="1" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="8,0,0,0" Visibility="{Binding Answer.HasCount, Converter={StaticResource Vis}}">
+              <TextBlock x:Name="CountText" Text="{Binding Answer.Count, StringFormat='{}{0:#,0}'}" FontSize="18" FontWeight="ExtraBold" Foreground="{StaticResource Accent}" HorizontalAlignment="Right" Style="{StaticResource Dimmable}" />
+              <TextBlock Text="for sale" FontSize="11" Foreground="{StaticResource TextDim}" HorizontalAlignment="Right" />
             </StackPanel>
           </Grid>
         </Border>
 
+        <!-- The cheapest listings of the last search, under the price. Seven rows show; a pinned card
+             scrolls to the rest. -->
+        <StackPanel x:Name="Listings" Margin="10,5,10,0" Visibility="{Binding Item.HasMatches, Converter={StaticResource Vis}, FallbackValue=Collapsed}">
+          <TextBlock Text="{Binding Item.ListingsHead}" Style="{StaticResource CardHead}" Margin="0,0,0,1" />
+          <Border Style="{StaticResource Dimmable}">
+            <ScrollViewer x:Name="ListingsScroll" MaxHeight="119" HorizontalScrollBarVisibility="Disabled">
+              <ScrollViewer.Style>
+                <!-- Held, the card is click-through: no scroll bar, the first rows only. Pinned, it scrolls. -->
+                <Style TargetType="ScrollViewer" BasedOn="{StaticResource {x:Type ScrollViewer}}">
+                  <Setter Property="VerticalScrollBarVisibility" Value="Hidden" />
+                  <Style.Triggers>
+                    <DataTrigger Binding="{Binding IsPinned}" Value="True">
+                      <Setter Property="VerticalScrollBarVisibility" Value="Auto" />
+                    </DataTrigger>
+                  </Style.Triggers>
+                </Style>
+              </ScrollViewer.Style>
+              <ItemsControl x:Name="ListingsList" ItemsSource="{Binding Item.Matches}" Focusable="False" AutomationProperties.Name="Cheapest listings" />
+            </ScrollViewer>
+          </Border>
+        </StackPanel>
+
         <StackPanel Visibility="{Binding HasRows, Converter={StaticResource Vis}}">
-          <StackPanel x:Name="SearchedWith" Orientation="Horizontal" Margin="14,10,14,4">
-            <TextBlock Text="SEARCHED WITH" FontSize="11" FontWeight="SemiBold" Foreground="{StaticResource TextFaint}" VerticalAlignment="Center" />
-            <Border Style="{StaticResource AccentPill}" Padding="8,1" CornerRadius="9" Margin="8,0,0,0">
-              <TextBlock FontSize="11.5"><Run Text="{Binding OnCount, Mode=OneWay}" /><Run Text=" of " /><Run Text="{Binding Total, Mode=OneWay}" /></TextBlock>
+          <StackPanel x:Name="SearchedWith" Orientation="Horizontal" Margin="10,5,10,2">
+            <TextBlock Text="SEARCHED WITH" Style="{StaticResource CardHead}" />
+            <Border Style="{StaticResource AccentPill}" Padding="6,0" CornerRadius="8" Margin="6,0,0,0">
+              <TextBlock FontSize="11"><Run Text="{Binding OnCount, Mode=OneWay}" /><Run Text=" of " /><Run Text="{Binding Total, Mode=OneWay}" /></TextBlock>
             </Border>
           </StackPanel>
-          <ItemsControl x:Name="RowsList" ItemsSource="{Binding Rows}" Margin="14,0" Focusable="False" Visibility="{Binding ShowsStaticRows, Converter={StaticResource Vis}}" />
-          <ItemsControl x:Name="LiveRowsList" ItemsSource="{Binding LiveRows}" Margin="14,0" Focusable="False" AutomationProperties.Name="Stats in the search"
+          <ItemsControl x:Name="RowsList" ItemsSource="{Binding Rows}" Margin="10,0" Focusable="False" Visibility="{Binding ShowsStaticRows, Converter={StaticResource Vis}}" />
+          <ItemsControl x:Name="LiveRowsList" ItemsSource="{Binding LiveRows}" Margin="10,0" Focusable="False" AutomationProperties.Name="Stats in the search"
                         Visibility="{Binding ShowsLiveRows, Converter={StaticResource Vis}}" />
         </StackPanel>
 
-        <Border BorderBrush="{StaticResource Line}" BorderThickness="0,1,0,0" Padding="14,8,14,10" Margin="0,6,0,0">
+        <Border BorderBrush="{StaticResource Line}" BorderThickness="0,1,0,0" Padding="10,5,10,6" Margin="0,4,0,0">
           <DockPanel>
-            <TextBlock x:Name="ChangeHint" DockPanel.Dock="Right" FontSize="11.5" Foreground="{StaticResource TextFaint}" VerticalAlignment="Center" Margin="10,0,0,0"
+            <Button x:Name="SearchButton" DockPanel.Dock="Left" Style="{StaticResource PrimaryButton}" Content="Search" FontSize="12" MinHeight="0" Height="24" Padding="12,0" Margin="0,0,8,0" v:Ui.Radius="5"
+                    Command="{Binding Item.SearchCommand}" Visibility="{Binding ShowsSearch, Converter={StaticResource Vis}}"
+                    AutomationProperties.Name="Search" AutomationProperties.HelpText="Runs the search as ticked: the price and the listings above follow"
+                    ToolTip="Runs the search as ticked. In a live league it asks the trade site, only now." />
+            <TextBlock x:Name="ChangeHint" DockPanel.Dock="Right" FontSize="11" Foreground="{StaticResource TextFaint}" VerticalAlignment="Center" Margin="8,0,0,0"
                        Visibility="{Binding ShowsChangeKey, Converter={StaticResource Vis}}">
               <Run Text="{Binding ChangeKey, Mode=OneWay}" Foreground="{StaticResource Text}" FontWeight="SemiBold" /><Run Text=" change the search" />
             </TextBlock>
-            <Button x:Name="MoreButton" DockPanel.Dock="Right" Style="{StaticResource LinkButton}" FontSize="12" FontWeight="SemiBold" Padding="4,2" Margin="10,-2,-4,-2" VerticalAlignment="Center"
+            <Button x:Name="MoreButton" DockPanel.Dock="Right" Style="{StaticResource LinkButton}" FontSize="11.5" FontWeight="SemiBold" Padding="4,2" Margin="8,-2,-4,-2" VerticalAlignment="Center"
                     Command="{Binding MoreCommand, ElementName=Self}" Visibility="{Binding ShowsMore, Converter={StaticResource Vis}}"
                     AutomationProperties.Name="All filters" AutomationProperties.HelpText="Opens the full price check for this item">
               <Button.ToolTip>
@@ -202,7 +279,7 @@
               </Button.ToolTip>
               <TextBlock><Run Text="All filters" /><Run Text=" · " Foreground="{StaticResource TextFaint}" /><Run Text="{Binding ChangeKey, Mode=OneWay}" Foreground="{StaticResource TextSoft}" /></TextBlock>
             </Button>
-            <TextBlock x:Name="FooterText" Text="{Binding FooterHint}" FontSize="11.5" Foreground="{StaticResource TextFaint}" TextWrapping="Wrap" VerticalAlignment="Center" />
+            <TextBlock x:Name="FooterText" Text="{Binding FooterHint}" FontSize="11" Foreground="{StaticResource TextFaint}" TextWrapping="Wrap" VerticalAlignment="Center" />
           </DockPanel>
         </Border>
       </StackPanel>

@@ -15,9 +15,10 @@ public sealed record PeekRowViewModel(bool On, string Text, string Right, string
     public override string ToString() => $"{Text}, {(On ? "searched" : "not searched")}{(Right.Length > 0 ? $", {Right}" : "")}";
 }
 
-/// <summary>The quick peek card: the item, what it is worth and exactly which stats the price used.
-/// Pinned (the player moved onto it while holding the key), its stats can be ticked: they are the
-/// item's own search rows, so the price on the card follows, and so does the price check page.</summary>
+/// <summary>The quick peek card: the item, what it is worth, the cheapest listings and exactly which stats
+/// the price used. Pinned (the player moved onto it while holding the key), its stats can be ticked: they
+/// are the item's own search rows, and its Search runs the search, so the price and listings on the card
+/// follow, and so does the price check page.</summary>
 public sealed partial class PeekViewModel : ObservableObject
 {
     /// <summary>Rows beyond this are left off the card (unticked ones first); F3 shows them all.</summary>
@@ -27,8 +28,11 @@ public sealed partial class PeekViewModel : ObservableObject
     /// already, and it need not be the one under the cursor.</summary>
     public const string LastCopiedNote = "Showing the last item you copied";
 
-    /// <summary>The footer of a pinned card.</summary>
-    public const string PinnedHint = "Pinned · tick stats to change the search";
+    /// <summary>The footer of a pinned card, next to its Search button.</summary>
+    public const string PinnedHint = "Tick, then Search";
+
+    /// <summary>Listing rows the card shows before it scrolls (its list's MaxHeight in PeekCard.xaml).</summary>
+    public const int VisibleListings = 7;
 
     public string Title { get; init; } = "";
     public ItemRarity Rarity { get; init; } = ItemRarity.Unknown;
@@ -62,8 +66,11 @@ public sealed partial class PeekViewModel : ObservableObject
     /// <summary>The player moved onto the card while holding the key: it stays after release, with a
     /// close button and stats to tick.</summary>
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(ShowsStaticRows), nameof(ShowsLiveRows), nameof(FooterHint), nameof(ShowsChangeKey), nameof(ShowsMore))]
+    [NotifyPropertyChangedFor(nameof(ShowsStaticRows), nameof(ShowsLiveRows), nameof(FooterHint), nameof(ShowsChangeKey), nameof(ShowsMore), nameof(ShowsSearch))]
     public partial bool IsPinned { get; set; }
+
+    /// <summary>The pinned card's Search: runs the search as ticked, and the price and listings follow.</summary>
+    public bool ShowsSearch => IsPinned && Item?.CanSearch == true;
 
     public bool HasAnswer => Answer is not null;
     public bool HasRows => Rows.Count > 0;
