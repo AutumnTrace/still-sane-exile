@@ -1,6 +1,7 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.IO;
+using System.Net.Http;
 using System.Windows.Input;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -8,6 +9,7 @@ using StillSaneExile.Desktop.Infrastructure;
 using StillSaneExile.Desktop.Services;
 using StillSaneExile.Domain.Capture;
 using StillSaneExile.Domain.Items;
+using StillSaneExile.Domain.Market;
 using StillSaneExile.Domain.Pricing;
 
 namespace StillSaneExile.Desktop.ViewModels;
@@ -72,6 +74,70 @@ public sealed partial class SettingsViewModel : ObservableObject
 
     [ObservableProperty]
     public partial bool AutoUpdate { get; set; }
+
+    /// <summary>"Live prices from poe.ninja". On by default; only ever fetches for a confirmed live league.</summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(LiveStatus), nameof(LiveHold), nameof(LiveProblem))]
+    public partial bool LivePricesOn { get; set; }
+
+    /// <summary>poe.ninja's economy leagues, offered as choices next to the typed name.</summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(CanLoadLeagues))]
+    public partial IReadOnlyList<string> LeagueChoices { get; set; } = [];
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(CanLoadLeagues))]
+    public partial bool LoadingLeagues { get; set; }
+
+    /// <summary>Where the league choices came from, or why there are none and what to do instead.</summary>
+    [ObservableProperty]
+    public partial string? LeagueListStatus { get; set; }
+
+    /// <summary>The "Get the league list from poe.ninja" button shows until a list has loaded.</summary>
+    public bool CanLoadLeagues => LeagueChoices.Count == 0 && !LoadingLeagues;
+
+    /// <summary>Last refresh and next refresh, in clock times.</summary>
+    public string LiveStatus
+    {
+        get
+        {
+            if (!LivePricesOn)
+            {
+                return "Off: SSE asks poe.ninja for nothing.";
+            }
+
+            var session = _shell.Session;
+            if (session is null || session.IsDemo)
+            {
+                return "Starts once you confirm a live league above.";
+            }
+
+            var prices = _shell.Prices;
+            var now = session.Now;
+            var book = session.Book;
+            var last = prices?.LastRefresh ?? (book.Quotes.Count > 0 ? book.CreatedAt : null);
+            var count = prices is { LastCount: > 0 } ? prices.LastCount : book.Quotes.Count;
+            var text = last is { } l
+                ? $"Last refresh {Session.LocalTime(l, now)}: {count.ToString("N0", CultureInfo.InvariantCulture)} prices for {session.League}."
+                : $"No prices for {session.League} yet.";
+            if (prices?.IsRefreshing == true)
+            {
+                text += $" Refreshing now: {prices.RequestsPerRefresh} requests, one at a time.";
+            }
+            else if (prices?.NextRefresh is { } next)
+            {
+                text += $" Next refresh about {Session.LocalTime(next, now)}.";
+            }
+
+            return text;
+        }
+    }
+
+    /// <summary>Why poe.ninja is not being asked right now (cooling down, circuit open...), or null.</summary>
+    public string? LiveHold => LivePricesOn && _shell.Session is { IsDemo: false } ? _shell.Prices?.Hold : null;
+
+    /// <summary>What went wrong with the last refresh, or null.</summary>
+    public string? LiveProblem => LivePricesOn && _shell.Session is { IsDemo: false } ? _shell.Prices?.Problem : null;
 
     public UpdateService Updates => _shell.Updates;
 
@@ -185,6 +251,8 @@ public sealed partial class SettingsViewModel : ObservableObject
         PeekScale = S.PeekScale;
         ExpiryDays = S.ComparableExpiryDays.ToString(CultureInfo.InvariantCulture);
         AutoUpdate = S.AutoUpdate;
+        LivePricesOn = S.LivePrices;
+        OnPricesChanged();
         IsOnboarding = !S.Onboarded;
         _samplePeek = null; // keys or currency may have changed
         OnPropertyChanged(nameof(CurrentCurrency));
@@ -224,6 +292,94 @@ public sealed partial class SettingsViewModel : ObservableObject
         }
     }
 
+    partial void OnLivePricesOnChanged(bool value)
+    {
+        if (S.LivePrices == value)
+        {
+            return;
+        }
+
+        S.LivePrices = value;
+        if (value)
+        {
+            _shell.Prices?.Retry(); // the player's own retry after poe.ninja refused access
+        }
+
+        _shell.ReloadSession();
+    }
+
+    private LivePrices? _watched;
+
+    /// <summary>Follows the refresh's progress for the Live prices card.</summary>
+    public void UsePrices(LivePrices? prices)
+    {
+        if (_watched is not null)
+        {
+            _watched.PropertyChanged -= OnPricesPropertyChanged;
+        }
+
+        _watched = prices;
+        if (prices is not null)
+        {
+            prices.PropertyChanged += OnPricesPropertyChanged;
+        }
+
+        OnPricesChanged();
+    }
+
+    private void OnPricesPropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e) => OnPricesChanged();
+
+    public void OnPricesChanged()
+    {
+        OnPropertyChanged(nameof(LiveStatus));
+        OnPropertyChanged(nameof(LiveHold));
+        OnPropertyChanged(nameof(LiveProblem));
+    }
+
+    /// <summary>The Settings page came to the front: a player already on live prices gets poe.ninja's
+    /// leagues to pick from without asking. Anyone else asks with the button.</summary>
+    public void OnShown()
+    {
+        if (LeagueChoices.Count == 0 && !LoadingLeagues && _shell.Prices is not null && _shell.Session is { IsDemo: false, LivePricesOn: true })
+        {
+            LoadLeaguesCommand.Execute(null);
+        }
+    }
+
+    /// <summary>One request for poe.ninja's league list. Offline, the typed name still works.</summary>
+    [RelayCommand]
+    private async Task LoadLeagues()
+    {
+        if (_shell.Prices is not { } prices)
+        {
+            LeagueListStatus = "Type the league name exactly as the game shows it.";
+            return;
+        }
+
+        LoadingLeagues = true;
+        LeagueListStatus = "Asking poe.ninja for its leagues…";
+        try
+        {
+            var leagues = await prices.LeaguesAsync();
+            LeagueChoices = [.. leagues.Select(l => l.Name)];
+            LeagueListStatus = leagues.Count > 0
+                ? "Leagues poe.ninja has prices for. Pick one or type a name, then confirm."
+                : "poe.ninja listed no leagues. Type the league name exactly as the game shows it.";
+        }
+        catch (Exception e) when (e is HttpRequestException or ProviderHoldException or OperationCanceledException or System.Text.Json.JsonException)
+        {
+            LeagueListStatus = "Couldn't get the league list from poe.ninja. Type the league name exactly as the game shows it.";
+        }
+        finally
+        {
+            LoadingLeagues = false;
+        }
+    }
+
+    /// <summary>A league from poe.ninja's list goes into the name box; it is used only after "Confirm league".</summary>
+    [RelayCommand]
+    private void PickLeague(string league) => LeagueDraft = league;
+
     [RelayCommand]
     private Task CheckForUpdates() => Updates.CheckAsync(userInitiated: true);
 
@@ -249,8 +405,16 @@ public sealed partial class SettingsViewModel : ObservableObject
         _shell.ReloadSession();
     }
 
+    /// <summary>Onboarding's "A live league": shows the league box and asks poe.ninja for its leagues.</summary>
     [RelayCommand]
-    private void ChooseLive() => ShowLeagueInput = true;
+    private void ChooseLive()
+    {
+        ShowLeagueInput = true;
+        if (LeagueChoices.Count == 0 && !LoadingLeagues)
+        {
+            LoadLeaguesCommand.Execute(null);
+        }
+    }
 
     [RelayCommand]
     private void ConfirmLeague()
@@ -262,11 +426,18 @@ public sealed partial class SettingsViewModel : ObservableObject
             return;
         }
 
+        // poe.ninja's own spelling when only the case differs ("standard" → "Standard").
+        league = LeagueChoices.FirstOrDefault(l => l.Equals(league, StringComparison.OrdinalIgnoreCase)) ?? league;
+        var listed = LeagueChoices.Count == 0 || LeagueChoices.Contains(league, StringComparer.Ordinal);
         S.LiveLeague = league;
         S.Profile = ProfileKind.Live;
         ConfirmedLeague = league;
         LiveSelected = true;
-        Message = $"Live profile on {league}. Demo prices are never shown here.";
+        Message = !listed
+            ? $"Live profile on {league}. poe.ninja lists no league by that name, so prices may not load: check the spelling."
+            : S.LivePrices
+                ? $"Live profile on {league}. Its prices come from poe.ninja and refresh every hour. Demo prices are never shown here."
+                : $"Live profile on {league}. Live prices are off, so it has no prices until you switch them on. Demo prices are never shown here.";
         _shell.ReloadSession();
     }
 

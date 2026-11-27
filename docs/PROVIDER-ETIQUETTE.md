@@ -1,6 +1,6 @@
 # Provider etiquette
 
-This page explains how SSE's market client treats poe.ninja, GGG and any other price provider. The code is in `StillSaneExile.Domain.Market`. Nothing calls it yet. The economy cache service (#11) and live prices in the app (#13) will use it. Until then the update check is still the only request SSE makes (see [Capture and privacy](CAPTURE-AND-PRIVACY.md#network)).
+This page explains how SSE's market client treats poe.ninja, GGG and any other price provider. The code is in `StillSaneExile.Domain.Market`. Live prices in the app (#13) send every poe.ninja request through it; [poe.ninja](#poeninja) below says how. No GGG endpoint is called yet. What SSE requests, and how to turn it off, is in [Capture and privacy](CAPTURE-AND-PRIVACY.md#network).
 
 ## The rule
 
@@ -8,6 +8,19 @@ This page explains how SSE's market client treats poe.ninja, GGG and any other p
 - **Nothing retries automatically.** A 4xx or 5xx goes back to the caller unchanged. The governor then decides when the next attempt may go, and that is always later, never sooner.
 - **When a provider says slow down or stop, we do.** That includes routes it did not name, if they might share the limit.
 - **The defaults are deliberately slow.** Prices refresh hourly, so SSE never needs to get close to a provider's limits.
+
+## poe.ninja
+
+**Each SSE install fetches poe.ninja itself, hourly.** That is the owner's choice: the shared economy cache (#11), which would fetch once for many players, is not being built now. So each install has to be light on its own:
+
+- **Only when asked for.** Prices are fetched only for a live profile with a confirmed league and "Live prices from poe.ninja" on. The demo never fetches. A key press never fetches: the HUD reads the local price book and has no network client.
+- **Hourly.** The first refresh comes 5–15 s after start (random, so installs don't line up), or an hour after the last refresh if that is sooner than an hour ago; then every hour, plus up to a minute of jitter. A refresh that fails waits at least 10 minutes, longer if the governor says so. A league switch starts the new league's schedule and cancels the refresh in flight.
+- **Light.** One request per category in `data/poe-ninja.json`: 12 exchange types and 8 unique types, about 20 requests per refresh. poe.ninja sends no rate-limit headers, so its routes stay in conservative mode: one request at a time, at least 5 s apart, about two minutes for a whole refresh. A type that comes back empty or 404 is skipped (poe.ninja renames types between leagues); a 429, a 5xx or a hold ends the refresh at once, and the last good snapshot stays.
+- **Cache headers honoured.** The exchange overview says `max-age=1800`, so a second refresh within 30 min reuses it without a request. The item overview says `no-cache`, so it is fetched at most once per refresh, conditionally (`If-None-Match`) when poe.ninja sent an `ETag`. The league list says `max-age=300`.
+- **Identified, and nothing more.** Requests carry `league=` and `type=` only, no cookies, and the User-Agent `StillSaneExile/<version> (+https://github.com/AutumnTrace/still-sane-exile)`, so poe.ninja can see who is asking and where to complain.
+- **Routes.** `poe.ninja` is the integration; the routes are `poe2/api/data/index-state`, `poe2/api/economy/exchange/current/overview` and `poe2/api/economy/stash/current/item/overview`, one each whatever the league or type.
+
+**What the numbers are.** poe.ninja's values are its own aggregates for the whole league: exchange lines become exchange estimates and unique lines category baselines, in Divine Orbs, with `core.rates` for Exalted and Chaos Orbs. SSE does not look at individual listings here. The owner's rule is that prices should mainly come from instant buyout listings, because players who list at 1 ex without instant buyout are often unsure of the price; that rule belongs to listing-level searches, not to poe.ninja's estimates, which SSE shows as they are and labels as poe.ninja's.
 
 ## How a request goes
 
@@ -71,7 +84,7 @@ A route with no rate-limit headers, or with any value that cannot be read in ful
 
 ## Persistence
 
-`ICooldownStore` keeps the governor's state between runs. `JsonFileCooldownStore` writes it to one JSON file, replaced whole on each save. The state is saved after every answer and holds:
+`ICooldownStore` keeps the governor's state between runs. `JsonFileCooldownStore` writes it to one JSON file, replaced whole on each save; the app keeps it as `provider-cooldowns.json` in its data folder. The state is saved after every answer and holds:
 
 - each policy's windows, with the send times of hits still inside them, and when its restriction ends;
 - which policy each route reported;

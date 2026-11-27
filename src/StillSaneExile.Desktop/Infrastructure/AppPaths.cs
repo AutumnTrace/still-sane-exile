@@ -36,6 +36,15 @@ public sealed class AppPaths
     /// <summary>The last route pack that passed its checks, so a broken pack in an update cannot take
     /// the route away.</summary>
     public string RouteCache => Path.Combine(DataDir, "route-cache");
+
+    /// <summary>Live price snapshots from poe.ninja, one folder per league, the newest few kept.</summary>
+    public string Prices => Path.Combine(DataDir, "prices");
+
+    /// <summary>The market client's cooldowns and holds, so a restart keeps waiting out a provider's hold.</summary>
+    public string ProviderState => Path.Combine(DataDir, "provider-cooldowns.json");
+
+    /// <summary>Which poe.ninja categories a refresh asks for. Ships with the app like the route packs.</summary>
+    public string PoeNinjaCategories => Path.Combine(AppDir, "data", "poe-ninja.json");
 }
 
 /// <summary>Clock for the demo profile: starts at a fixed instant so every demo run shows the same ages.</summary>

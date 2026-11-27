@@ -18,7 +18,7 @@ On first start, pick **Practice with demo data**, then **Done — try a price ch
 
 Doom Thirst has a T1 physical damage prefix. Its 175% roll is 56% of the way through that tier's 170–179%, four short of the best. The attack-speed roll reads 17%, a third of the way through its 16–19% range. Both bars sit under **How good are your rolls?**: each shows how close a roll is to the best number in its tier; tier 1 is the best a stat can be.
 
-All of this is demo data: made-up tiers, ranges and listings. On a live item, an advanced copy (`Ctrl+Alt+C`) gives the game's own tiers and ranges, drawn as a position marker until a verified data pack confirms which end is better. Live market prices and a real-game test run are still to come; until then, a live league prices items only from asks you write down.
+All of this is demo data: made-up tiers, ranges and listings. On a live item, an advanced copy (`Ctrl+Alt+C`) gives the game's own tiers and ranges, drawn as a position marker until a verified data pack confirms which end is better. In a live league, currency, other exchange items and uniques get poe.ninja's prices for that league, with their age (see [Live prices](#live-prices)). Rares have no price list: their search opens on the trade site, and you can write down the asks you find. A real-game test run is still to come.
 
 ## Choose what you're comparing
 
@@ -52,9 +52,15 @@ An advanced copy (`Ctrl+Alt+C`) prints each affix on its own with its tier and r
 
 Settings can change every key, including to a side mouse button (Mouse 4 or 5), and **Press again to hide** can replace holding. A side button isn't the game's copy key, so the game copies nothing when you press it: the card shows the last item you copied with `Ctrl+C`, which may not be the one under your cursor.
 
-The game copies the item. SSE reads the changed clipboard once for that press and draws a click-through card that doesn't take focus; releasing the key hides it. While you hold the key, SSE checks where the mouse cursor is (its position, not the screen); when the cursor reaches the card, the card starts taking clicks and stays after you let go, without another read. Clicking it gives it the focus, and closing it hands the focus back to the game. Ticking stats on it reads nothing. `F3` reopens the saved item without another read, and takes focus so you can type until you close it. SSE never sends input to the game. Its only network request is the update check against this repository's GitHub releases, which Settings can switch off. Details: [Capture and privacy](docs/CAPTURE-AND-PRIVACY.md).
+The game copies the item. SSE reads the changed clipboard once for that press and draws a click-through card that doesn't take focus; releasing the key hides it. While you hold the key, SSE checks where the mouse cursor is (its position, not the screen); when the cursor reaches the card, the card starts taking clicks and stays after you let go, without another read. Clicking it gives it the focus, and closing it hands the focus back to the game. Ticking stats on it reads nothing. `F3` reopens the saved item without another read, and takes focus so you can type until you close it. SSE never sends input to the game, and a key press never makes a network request: the card only reads prices already on your computer. Details: [Capture and privacy](docs/CAPTURE-AND-PRIVACY.md).
 
 Every control in SSE works from the keyboard and has a name for screen readers, and its windows follow the Windows text size setting as far as they fit your screen. Details and contrast measurements: [Accessibility](docs/ACCESSIBILITY.md).
+
+## Live prices
+
+Pick a live league in Settings and confirm it: SSE offers poe.ninja's leagues (one request for the list), or you type the name. From then on, SSE asks [poe.ninja](https://poe.ninja/poe2) for that league's prices a few seconds after it starts, then every hour: exchange prices for currency, fragments, essences, runes, soul cores, idols, uncut gems, lineage supports, omens, delirium, expedition and verisium, and unique item prices. That is about 20 requests per hour, one at a time and at least 5 seconds apart, following poe.ninja's cache headers. Each request names the league, the category and SSE's version, and nothing about you, your account or your items. The last few refreshes are kept in the data folder, so prices still show offline, with their age; they are marked stale after two missed hourly refreshes.
+
+The prices are poe.ninja's own estimates for the whole league. A unique's price is a baseline for that unique, not for your rolls. Switch **Live prices from poe.ninja** off in Settings and SSE asks poe.ninja for nothing. The only other request SSE makes is the update check against this repository's GitHub releases, which Settings can also switch off.
 
 ## Is it allowed?
 
@@ -68,7 +74,7 @@ GGG doesn't approve or guarantee any third-party tool, and its rules can change,
 
 ## What's next
 
-Shared market data comes next, bringing prices to live leagues and held-key price labels to stash and Aldur reward panels. Wealth history, the rest of the campaign route and crafting plans follow; see the [roadmap](docs/ROADMAP.md). Players can help with two open issues: [English item copies to check the parser against](https://github.com/AutumnTrace/still-sane-exile/issues/1) and [how the card behaves on your screen](https://github.com/AutumnTrace/still-sane-exile/issues/5). Item text and measurements are enough; leave out account names and stash screenshots.
+Held-key price labels for stash and Aldur reward panels come next. Wealth history, the rest of the campaign route and crafting plans follow; see the [roadmap](docs/ROADMAP.md). Players can help with two open issues: [English item copies to check the parser against](https://github.com/AutumnTrace/still-sane-exile/issues/1) and [how the card behaves on your screen](https://github.com/AutumnTrace/still-sane-exile/issues/5). Item text and measurements are enough; leave out account names and stash screenshots.
 
 ## Build from source
 
@@ -86,6 +92,6 @@ Run the tests:
 dotnet test
 ```
 
-Add `-- --data <empty folder>` for a clean profile. `src/StillSaneExile.Domain` owns parsing and the comparison rules, with no Windows or network code; `src/StillSaneExile.Desktop` owns WPF, foreground detection and clipboard access. See also [data sources and coverage](docs/SOURCES.md), [cutting a release](docs/RELEASING.md) and [third-party licences](docs/THIRD-PARTY.md).
+Add `-- --data <empty folder>` for a clean profile. `src/StillSaneExile.Domain` owns parsing, pricing and the comparison rules, plus the market client's rules (rate limits, cache, poe.ninja's answers), with no Windows code and no connection of its own: the app hands it the `HttpClient`. `src/StillSaneExile.Desktop` owns WPF, foreground detection, clipboard access and the hourly price schedule. See also [data sources and coverage](docs/SOURCES.md), [cutting a release](docs/RELEASING.md) and [third-party licences](docs/THIRD-PARTY.md).
 
 Path of Exile and Path of Exile 2 are trademarks of Grinding Gear Games. This product isn't affiliated with or endorsed by Grinding Gear Games in any way.

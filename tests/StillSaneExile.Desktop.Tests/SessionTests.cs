@@ -64,6 +64,61 @@ public sealed class SessionTests : IDisposable
     }
 
     [Fact]
+    public void A_live_profile_loads_the_newest_poe_ninja_snapshot_of_its_own_league()
+    {
+        var archive = new PriceBookArchive(_paths.Prices);
+        var now = DateTimeOffset.UtcNow;
+        archive.Save(NinjaFixtures.Book("Standard", now - TimeSpan.FromHours(2)));
+        archive.Save(NinjaFixtures.Book("Standard", now - TimeSpan.FromHours(1)));
+        archive.Save(NinjaFixtures.Book("Hardcore", now));
+        _settings.LiveLeague = "Standard";
+        _settings.Profile = ProfileKind.Live;
+
+        var session = Session.Create(_store, _settings, _paths);
+
+        Assert.Equal("Standard", session.Book.League);
+        Assert.Equal(PoeNinjaBook.SnapshotIdFor(now - TimeSpan.FromHours(1)), session.Book.SnapshotId);
+        Assert.All(session.Book.Quotes, q => Assert.Equal("Standard", q.League));
+        Assert.StartsWith("Prices from poe.ninja, fetched ", session.FooterStatus, StringComparison.Ordinal);
+        Assert.StartsWith("poe.ninja prices for Standard, fetched ", session.PriceStatus, StringComparison.Ordinal);
+        Assert.Null(session.Listings(Crossbow(session, out var worksheet), worksheet)); // no listings fetched for rares
+    }
+
+    [Fact]
+    public void A_fresh_book_for_another_league_is_never_used()
+    {
+        _settings.LiveLeague = "Standard";
+        _settings.Profile = ProfileKind.Live;
+
+        var session = Session.Create(_store, _settings, _paths, NinjaFixtures.Book("Hardcore", DateTimeOffset.UtcNow));
+
+        Assert.Equal("Standard", session.League);
+        Assert.Empty(session.Book.Quotes);
+        Assert.Equal("No prices yet: they load from poe.ninja (see Settings)", session.FooterStatus);
+    }
+
+    [Fact]
+    public void With_live_prices_off_a_live_profile_shows_no_poe_ninja_prices()
+    {
+        new PriceBookArchive(_paths.Prices).Save(NinjaFixtures.Book("Standard", DateTimeOffset.UtcNow));
+        _settings.LiveLeague = "Standard";
+        _settings.Profile = ProfileKind.Live;
+        _settings.LivePrices = false;
+
+        var session = Session.Create(_store, _settings, _paths);
+
+        Assert.Empty(session.Book.Quotes);
+        Assert.False(session.LivePricesOn);
+        Assert.Equal("Live prices are off: switch them on in Settings", session.FooterStatus);
+    }
+
+    [Fact]
+    public void Live_prices_are_on_by_default()
+    {
+        Assert.True(_settings.LivePrices);
+    }
+
+    [Fact]
     public void The_demo_session_brings_its_synthetic_listings()
     {
         var session = Session.Create(_store, _settings, _paths);

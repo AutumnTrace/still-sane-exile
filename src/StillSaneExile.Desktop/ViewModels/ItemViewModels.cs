@@ -540,7 +540,7 @@ public sealed partial class ItemViewModel : ObservableObject
         }
         else if (Price.Kind == PriceKind.UniqueBaseline)
         {
-            Answer = PriceAnswer.Baseline(Price);
+            Answer = PriceAnswer.Baseline(Price, _session.IsDemo ? null : _session.Now);
         }
         else
         {

@@ -20,11 +20,12 @@ public sealed class Session
 
     private Session(Store store, ProfileKind kind, string league, string displayCurrency, string? listingDenomination,
         PriceBook book, DataPack? pack, string packStatus, TimeProvider clock, IReadOnlyList<(string, Comparable)> seeded,
-        TradeData trade, IReadOnlySet<string>? practiceTexts = null)
+        TradeData trade, IReadOnlySet<string>? practiceTexts = null, bool livePrices = false)
     {
         _store = store;
         _practiceTexts = practiceTexts ?? new HashSet<string>();
         Trade = trade;
+        LivePricesOn = livePrices;
         Kind = kind;
         League = league;
         DisplayCurrency = displayCurrency;
@@ -57,12 +58,30 @@ public sealed class Session
     /// whose league is made up.</summary>
     public string TradeLeague => IsDemo ? TradeLink.DemoLeague : League;
 
-    public string PriceStatus => Book.Quotes.Count == 0
-        ? "No market data (economy cache arrives in Milestone 2)"
-        : $"{(Book.IsSynthetic ? "Synthetic prices" : "Prices")} · snapshot {ValueFormat.Age(Now - Book.CreatedAt)}";
+    /// <summary>A live profile with "Live prices from poe.ninja" switched on (always false for the demo).</summary>
+    public bool LivePricesOn { get; }
 
-    /// <summary>The status bar's one line about where prices come from.</summary>
-    public string FooterStatus => IsDemo ? "Demo prices, made up for practice" : "No live prices yet: they come in a later update";
+    /// <summary>The status bar's tooltip line about the price book in use.</summary>
+    public string PriceStatus => IsDemo
+        ? $"{(Book.IsSynthetic ? "Synthetic prices" : "Prices")} · snapshot {ValueFormat.Age(Now - Book.CreatedAt)}"
+        : Book.Quotes.Count > 0
+            ? $"poe.ninja prices for {League}, fetched {LocalTime(Book.CreatedAt, Now)} · {Book.Quotes.Count} prices · snapshot {Book.SnapshotId}"
+            : LivePricesOn ? $"No poe.ninja prices for {League} yet" : "Live prices are off";
+
+    /// <summary>The status bar's one line about where prices come from. Clock times rather than ages, so
+    /// the line stays true however long it sits there.</summary>
+    public string FooterStatus => IsDemo ? "Demo prices, made up for practice"
+        : Book.Quotes.Count > 0 ? $"Prices from poe.ninja, fetched {LocalTime(Book.CreatedAt, Now)}"
+        : LivePricesOn ? "No prices yet: they load from poe.ninja (see Settings)"
+        : "Live prices are off: switch them on in Settings";
+
+    /// <summary>"14:05", or "26 Nov 14:05" when it was not today.</summary>
+    public static string LocalTime(DateTimeOffset at, DateTimeOffset now)
+    {
+        var local = at.ToLocalTime();
+        var format = local.Date == now.ToLocalTime().Date ? "HH:mm" : "d MMM HH:mm";
+        return local.ToString(format, System.Globalization.CultureInfo.InvariantCulture);
+    }
 
     /// <summary>Whether this session's prices may be shown for <paramref name="item"/>. The demo's prices
     /// are made up, so they cover its practice items only: an item copied from the game gets no price
@@ -108,7 +127,9 @@ public sealed class Session
         };
     }
 
-    public static Session Create(Store store, Settings settings, AppPaths paths)
+    /// <param name="fresh">A book that just arrived from poe.ninja. Used only when it is for the confirmed
+    /// league; otherwise the newest snapshot on disk for that league is loaded, so prices work offline.</param>
+    public static Session Create(Store store, Settings settings, AppPaths paths, PriceBook? fresh = null)
     {
         var kind = settings.Profile;
         if (kind == ProfileKind.Live && string.IsNullOrWhiteSpace(settings.LiveLeague))
@@ -122,10 +143,19 @@ public sealed class Session
         }
 
         var league = settings.LiveLeague!;
-        var empty = PriceBook.Empty(league);
-        PriceBookGuard.EnsureAllowed(ProfileKind.Live, league, empty);
-        return new Session(store, kind, league, settings.DisplayCurrency(kind), settings.ListingDenomination(kind), empty,
-            pack: null, "No verified data pack yet: ranges come from advanced copies only", TimeProvider.System, [], TradeDataFile.Load(paths));
+        var book = settings.LivePrices ? LiveBook(league, fresh, paths) ?? PriceBook.Empty(league) : PriceBook.Empty(league);
+        PriceBookGuard.EnsureAllowed(ProfileKind.Live, league, book);
+        return new Session(store, kind, league, settings.DisplayCurrency(kind), settings.ListingDenomination(kind), book,
+            pack: null, "No verified data pack yet: ranges come from advanced copies only", TimeProvider.System, [], TradeDataFile.Load(paths), livePrices: settings.LivePrices);
+    }
+
+    /// <summary>The live book for exactly <paramref name="league"/>: never synthetic, never another league's.</summary>
+    private static PriceBook? LiveBook(string league, PriceBook? fresh, AppPaths paths)
+    {
+        var book = fresh is not null && string.Equals(fresh.League, league, StringComparison.Ordinal)
+            ? fresh
+            : new PriceBookArchive(paths.Prices).Newest(league);
+        return book is { IsSynthetic: false } && string.Equals(book.League, league, StringComparison.Ordinal) ? book : null;
     }
 
     /// <summary>The demo profile's session, whatever profile is active (onboarding shows a demo sample).</summary>

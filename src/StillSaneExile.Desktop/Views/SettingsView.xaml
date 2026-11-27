@@ -51,15 +51,59 @@
             <Button Style="{StaticResource ChoiceButton}" Content="Practice with demo data" Command="{Binding UseDemoCommand}" Margin="0,0,8,0"
                     Tag="{Binding LiveSelected, Converter={StaticResource Active}, ConverterParameter=False}" />
             <TextBlock Text="or a live league:" VerticalAlignment="Center" Foreground="{StaticResource TextDim}" Margin="4,0,8,0" />
-            <TextBox Width="220" Text="{Binding LeagueDraft, UpdateSourceTrigger=PropertyChanged}" VerticalContentAlignment="Center" AutomationProperties.Name="Live league name" ToolTip="Type the league name exactly as the game shows it" />
+            <TextBox Width="220" Text="{Binding LeagueDraft, UpdateSourceTrigger=PropertyChanged}" VerticalContentAlignment="Center" AutomationProperties.Name="Live league name" ToolTip="Pick a league below or type its name exactly as the game shows it" />
             <Button Content="Confirm league" Command="{Binding ConfirmLeagueCommand}" Margin="8,0,0,0" />
           </WrapPanel>
+          <!-- poe.ninja's leagues: a pick fills the name box; "Confirm league" still decides. -->
+          <WrapPanel Margin="0,10,0,0">
+            <ItemsControl ItemsSource="{Binding LeagueChoices}" Focusable="False" AutomationProperties.Name="Leagues on poe.ninja">
+              <ItemsControl.ItemsPanel>
+                <ItemsPanelTemplate>
+                  <WrapPanel />
+                </ItemsPanelTemplate>
+              </ItemsControl.ItemsPanel>
+              <ItemsControl.ItemTemplate>
+                <DataTemplate>
+                  <Button Style="{StaticResource ChoiceButton}" MinHeight="36" Padding="14,0" Margin="0,0,8,6" Content="{Binding}"
+                          Command="{Binding DataContext.PickLeagueCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{Binding}">
+                    <Button.Tag>
+                      <MultiBinding Converter="{StaticResource PillActive}">
+                        <Binding />
+                        <Binding Path="DataContext.LeagueDraft" RelativeSource="{RelativeSource AncestorType=UserControl}" />
+                      </MultiBinding>
+                    </Button.Tag>
+                  </Button>
+                </DataTemplate>
+              </ItemsControl.ItemTemplate>
+            </ItemsControl>
+            <Button Style="{StaticResource LinkButton}" FontSize="12.5" Content="Get the league list from poe.ninja" Command="{Binding LoadLeaguesCommand}"
+                    Visibility="{Binding CanLoadLeagues, Converter={StaticResource Vis}}" ToolTip="One request to poe.ninja for the leagues it has prices for" />
+          </WrapPanel>
+          <TextBlock Text="{Binding LeagueListStatus}" FontSize="12" Foreground="{StaticResource TextDim}" TextWrapping="Wrap" Margin="0,2,0,0"
+                     Visibility="{Binding LeagueListStatus, Converter={StaticResource Vis}}" />
           <TextBlock FontSize="12" Foreground="{StaticResource TextFaint}" TextWrapping="Wrap" Margin="0,8,0,0">
-            <Run Text="The demo profile uses synthetic prices, ranges and listings so you can practice; they never appear in a live profile. A live league must be confirmed once and is remembered. Switching league swaps prices, comparables and holdings together. Live market data (poe.ninja and GGG's exchange history, through a shared cache) arrives in Milestone 2; until then a live profile has no prices and says so." />
+            <Run Text="The demo profile uses synthetic prices, ranges and listings so you can practice; they never appear in a live profile. A live league must be confirmed once and is remembered. Switching league swaps prices, comparables and holdings together, and never shows the previous league's prices, even while a refresh is running." />
           </TextBlock>
           <TextBlock FontSize="12" Margin="0,6,0,0" Visibility="{Binding ConfirmedLeague, Converter={StaticResource Vis}}">
             <Run Text="Confirmed live league: " Foreground="{StaticResource TextDim}" /><Run Text="{Binding ConfirmedLeague, Mode=OneWay}" FontWeight="SemiBold" />
           </TextBlock>
+        </StackPanel>
+      </Border>
+
+      <!-- Live prices: what is fetched, how often, from where, and the switch. -->
+      <TextBlock Text="LIVE PRICES" Style="{StaticResource SectionTitle}" />
+      <Border Style="{StaticResource Card}">
+        <StackPanel>
+          <CheckBox IsChecked="{Binding LivePricesOn}" Content="Live prices from poe.ninja for your live league, refreshed every hour" />
+          <TextBlock Text="{Binding LiveStatus}" TextWrapping="Wrap" FontSize="12.5" Foreground="{StaticResource TextDim}" Margin="0,8,0,0" />
+          <TextBlock Text="{Binding LiveHold}" TextWrapping="Wrap" FontSize="12.5" Foreground="{StaticResource Warn}" Margin="0,4,0,0"
+                     Visibility="{Binding LiveHold, Converter={StaticResource Vis}}" />
+          <TextBlock Text="{Binding LiveProblem}" TextWrapping="Wrap" FontSize="12.5" Foreground="{StaticResource Warn}" Margin="0,4,0,0"
+                     Visibility="{Binding LiveProblem, Converter={StaticResource Vis}}" />
+          <TextBlock FontSize="12" Foreground="{StaticResource TextFaint}" TextWrapping="Wrap" Margin="0,8,0,0"
+                     Text="With a live league confirmed, SSE asks poe.ninja a few seconds after it starts, then every hour, for that league's exchange prices (currency, fragments, essences, runes, soul cores, idols, uncut gems, lineage supports, omens, delirium, expedition, verisium) and unique item prices: about 20 requests, one at a time, at least 5 seconds apart, following poe.ninja's cache headers. Each request names the league, the category and SSE's version, nothing about you, your account or your items. The last few refreshes stay in the data folder, so prices still show when you're offline, with their age." />
+          <TextBlock FontSize="12" Foreground="{StaticResource TextFaint}" TextWrapping="Wrap" Margin="0,6,0,0"
+                     Text="The prices are poe.ninja's own estimates for the whole league. Unique prices are a baseline for the item, not for your rolls. Prices are marked stale after two missed hourly refreshes, and too old to rank after 24 hours. A key press never asks poe.ninja for anything: the card over the game only reads what is already here. Rares have no price list: check them on the trade site." />
         </StackPanel>
       </Border>
 
@@ -219,7 +263,7 @@
             <Run Text="Data folder: " /><Run Text="{Binding DataFolder, Mode=OneWay}" Foreground="{StaticResource Text}" />
           </TextBlock>
           <TextBlock TextWrapping="Wrap" FontSize="12" Foreground="{StaticResource TextDim}" Margin="0,6,0,0"
-                     Text="Clipboard text is kept in memory only while it is a parsed item, and saved to disk only with a comparison set you create. Anything that is not an item is discarded at once. The only network request SSE makes is the update check to GitHub (switch it off above); the trade site opens in your browser when you ask." />
+                     Text="Clipboard text is kept in memory only while it is a parsed item, and saved to disk only with a comparison set you create. Anything that is not an item is discarded at once. SSE makes two kinds of network request: the update check to GitHub, and for a live league with live prices on, that league's prices from poe.ninja every hour (plus poe.ninja's league list when you pick a league). Neither sends anything about you, and each has its switch above. The trade site opens in your browser when you ask." />
           <TextBlock TextWrapping="Wrap" FontSize="12" Foreground="{StaticResource TextFaint}" Margin="0,6,0,0"
                      Text="This product isn't affiliated with or endorsed by Grinding Gear Games in any way." />
         </StackPanel>

@@ -59,10 +59,10 @@
                 </Button>
                 <Button Style="{StaticResource ChoiceButton}" v:Ui.Radius="10" MinHeight="64" Padding="14,10" HorizontalContentAlignment="Left" Margin="5,0,0,0"
                         Command="{Binding ChooseLiveCommand}" Tag="{Binding ProfileChoice, Converter={StaticResource Active}, ConverterParameter=live}"
-                        AutomationProperties.Name="A live league" AutomationProperties.HelpText="Real prices come in a later update">
+                        AutomationProperties.Name="A live league" AutomationProperties.HelpText="Prices from poe.ninja, refreshed every hour">
                   <StackPanel>
                     <TextBlock Text="A live league" FontSize="14.5" FontWeight="SemiBold" Foreground="{StaticResource Text}" />
-                    <TextBlock Text="Real prices come in a later update" FontSize="12.5" Foreground="{StaticResource TextDim}" Margin="0,2,0,0" />
+                    <TextBlock Text="Prices from poe.ninja, refreshed every hour" FontSize="12.5" Foreground="{StaticResource TextDim}" Margin="0,2,0,0" />
                   </StackPanel>
                 </Button>
               </UniformGrid>
@@ -72,10 +72,32 @@
                     <ColumnDefinition Width="*" />
                     <ColumnDefinition Width="Auto" />
                   </Grid.ColumnDefinitions>
-                  <TextBox Text="{Binding LeagueDraft, UpdateSourceTrigger=PropertyChanged}" MinHeight="40" AutomationProperties.Name="League name" ToolTip="Type the league name exactly as the game shows it" />
+                  <TextBox Text="{Binding LeagueDraft, UpdateSourceTrigger=PropertyChanged}" MinHeight="40" AutomationProperties.Name="League name" ToolTip="Pick a league below or type its name exactly as the game shows it" />
                   <Button Grid.Column="1" Content="Confirm league" Command="{Binding ConfirmLeagueCommand}" Margin="8,0,0,0" />
                 </Grid>
-                <TextBlock Style="{StaticResource Small}" Margin="0,6,0,0" Text="Type the league name exactly as the game shows it. Until live prices arrive, a live league shows no prices and says so." />
+                <ItemsControl ItemsSource="{Binding LeagueChoices}" Margin="0,10,0,0" Focusable="False" AutomationProperties.Name="Leagues on poe.ninja"
+                              Visibility="{Binding LeagueChoices, Converter={StaticResource Vis}}">
+                  <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate>
+                      <WrapPanel />
+                    </ItemsPanelTemplate>
+                  </ItemsControl.ItemsPanel>
+                  <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                      <Button Style="{StaticResource ChoiceButton}" MinHeight="36" Padding="14,0" Margin="0,0,8,6" Content="{Binding}"
+                              Command="{Binding DataContext.PickLeagueCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{Binding}">
+                        <Button.Tag>
+                          <MultiBinding Converter="{StaticResource PillActive}">
+                            <Binding />
+                            <Binding Path="DataContext.LeagueDraft" RelativeSource="{RelativeSource AncestorType=UserControl}" />
+                          </MultiBinding>
+                        </Button.Tag>
+                      </Button>
+                    </DataTemplate>
+                  </ItemsControl.ItemTemplate>
+                </ItemsControl>
+                <TextBlock Style="{StaticResource Small}" Margin="0,6,0,0" Text="{Binding LeagueListStatus}" Visibility="{Binding LeagueListStatus, Converter={StaticResource Vis}}" />
+                <TextBlock Style="{StaticResource Small}" Margin="0,6,0,0" Text="Once confirmed, SSE fetches that league's prices from poe.ninja every hour, sending nothing about you. Settings can switch it off." />
               </StackPanel>
               <TextBlock Style="{StaticResource Small}" Margin="0,8,0,0" Visibility="{Binding ConfirmedLeague, Converter={StaticResource Vis}}">
                 <Run Text="Live league: " /><Run Text="{Binding ConfirmedLeague, Mode=OneWay}" Foreground="{StaticResource Text}" FontWeight="SemiBold" />
