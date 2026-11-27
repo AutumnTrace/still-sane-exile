@@ -20,7 +20,7 @@ public sealed partial class ShellViewModel : ObservableObject
         Session = Session.Create(store, settings, paths);
         Inspect = new InspectViewModel(this, clipboard);
         Craft = PlaceholderViewModel.Craft();
-        Wealth = PlaceholderViewModel.Wealth();
+        Wealth = new WealthViewModel(this);
         Guide = PlaceholderViewModel.Guide();
         WhatsNew = new WhatsNewViewModel(settings, updates);
         SettingsPage = new SettingsViewModel(this);
@@ -42,7 +42,7 @@ public sealed partial class ShellViewModel : ObservableObject
 
     public InspectViewModel Inspect { get; }
     public PlaceholderViewModel Craft { get; }
-    public PlaceholderViewModel Wealth { get; }
+    public WealthViewModel Wealth { get; }
     public PlaceholderViewModel Guide { get; }
     public SettingsViewModel SettingsPage { get; }
     public WhatsNewViewModel WhatsNew { get; }
@@ -69,6 +69,7 @@ public sealed partial class ShellViewModel : ObservableObject
     public string PageName => CurrentPage switch
     {
         InspectViewModel => "Price check",
+        WealthViewModel => "My wealth",
         PlaceholderViewModel p => p.Title,
         SettingsViewModel => "Settings",
         _ => "",
@@ -120,11 +121,13 @@ public sealed partial class ShellViewModel : ObservableObject
         Navigate(Craft);
     }
 
-    /// <summary>Rebuilds the session from settings and swaps it in one assignment, then re-reads items against it.</summary>
+    /// <summary>Rebuilds the session from settings and swaps it in one assignment, then re-reads items and
+    /// holdings against it.</summary>
     public void ReloadSession()
     {
         Session = Session.Create(Store, Settings, Paths);
         Inspect.Rebuild();
+        Wealth.Reload();
         SettingsPage.Load();
     }
 

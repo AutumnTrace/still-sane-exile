@@ -1,0 +1,344 @@
+<UserControl x:Class="StillSaneExile.Desktop.Views.WealthView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="clr-namespace:StillSaneExile.Desktop.ViewModels"
+             xmlns:v="clr-namespace:StillSaneExile.Desktop.Views"
+             mc:Ignorable="d"
+             d:DataContext="{d:DesignInstance Type=vm:WealthViewModel}">
+  <UserControl.Resources>
+    <!-- A list that builds only the rows in view: holdings and previews can run to thousands of rows. -->
+    <Style x:Key="RowList" TargetType="ItemsControl">
+      <Setter Property="Focusable" Value="False" />
+      <Setter Property="VirtualizingPanel.IsVirtualizing" Value="True" />
+      <Setter Property="VirtualizingPanel.ScrollUnit" Value="Pixel" />
+      <Setter Property="ScrollViewer.CanContentScroll" Value="True" />
+      <Setter Property="ItemsPanel">
+        <Setter.Value>
+          <ItemsPanelTemplate>
+            <VirtualizingStackPanel />
+          </ItemsPanelTemplate>
+        </Setter.Value>
+      </Setter>
+      <Setter Property="Template">
+        <Setter.Value>
+          <ControlTemplate TargetType="ItemsControl">
+            <ScrollViewer CanContentScroll="True" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Focusable="False">
+              <ItemsPresenter />
+            </ScrollViewer>
+          </ControlTemplate>
+        </Setter.Value>
+      </Setter>
+    </Style>
+    <Style x:Key="ColumnHead" TargetType="TextBlock">
+      <Setter Property="FontSize" Value="11" />
+      <Setter Property="FontWeight" Value="SemiBold" />
+      <Setter Property="Foreground" Value="{StaticResource TextFaint}" />
+    </Style>
+    <Style x:Key="FieldLabel" TargetType="TextBlock">
+      <Setter Property="FontSize" Value="12.5" />
+      <Setter Property="Foreground" Value="{StaticResource TextDim}" />
+      <Setter Property="VerticalAlignment" Value="Center" />
+    </Style>
+    <Style x:Key="Cell" TargetType="TextBlock">
+      <Setter Property="FontSize" Value="13" />
+      <Setter Property="TextTrimming" Value="CharacterEllipsis" />
+      <Setter Property="VerticalAlignment" Value="Center" />
+      <Setter Property="Margin" Value="0,0,10,0" />
+    </Style>
+    <Style x:Key="Problem" TargetType="Border">
+      <Setter Property="Background" Value="{StaticResource Surface3}" />
+      <Setter Property="BorderBrush" Value="{StaticResource Warn}" />
+      <Setter Property="BorderThickness" Value="1" />
+      <Setter Property="CornerRadius" Value="8" />
+      <Setter Property="Padding" Value="12,8" />
+      <Setter Property="Margin" Value="0,12,0,0" />
+    </Style>
+  </UserControl.Resources>
+
+  <Grid Margin="28,24,28,8" MaxWidth="1480">
+    <Grid.ColumnDefinitions>
+      <ColumnDefinition Width="*" />
+      <ColumnDefinition Width="20" />
+      <ColumnDefinition Width="380" />
+    </Grid.ColumnDefinitions>
+    <Grid.RowDefinitions>
+      <RowDefinition Height="Auto" />
+      <RowDefinition Height="Auto" />
+      <RowDefinition Height="*" />
+    </Grid.RowDefinitions>
+
+    <StackPanel Grid.ColumnSpan="3" Margin="0,0,0,16">
+      <StackPanel Orientation="Horizontal">
+        <TextBlock Text="My wealth" FontSize="28" FontWeight="ExtraBold" />
+        <Border Style="{StaticResource DemoBadge}" Margin="14,4,0,0" Visibility="{Binding IsDemo, Converter={StaticResource Vis}}"
+                ToolTip="Holdings saved here belong to the demo profile and never appear in a live league. Their prices are made up.">
+          <TextBlock Text="DEMO PROFILE" FontSize="11" FontWeight="Bold" />
+        </Border>
+      </StackPanel>
+      <TextBlock TextWrapping="Wrap" Foreground="{StaticResource TextDim}" FontSize="15" Margin="0,8,0,0" MaxWidth="980" HorizontalAlignment="Left"
+                 Text="Keep count of what you own, tab by tab: type a count or import a CSV file. Every count is kept, the list shows the latest, and it is valued with this league's prices where there are any. Saving a stash tab straight from the game, and your value over time, come later." />
+    </StackPanel>
+
+    <Border Grid.Row="1" Grid.ColumnSpan="3" BorderBrush="{StaticResource Edge}" BorderThickness="1" CornerRadius="8" Padding="12,8" Margin="0,0,0,16"
+            Visibility="{Binding Message, Converter={StaticResource Vis}}">
+      <TextBlock Text="{Binding Message}" TextWrapping="Wrap" />
+    </Border>
+
+    <!-- Left: what you hold, or the preview of a file being imported -->
+    <Border Grid.Row="2" Grid.Column="0" Style="{StaticResource Card}" VerticalAlignment="Top"
+            Visibility="{Binding HasPreview, Converter={StaticResource Vis}, ConverterParameter=invert}">
+      <DockPanel>
+        <DockPanel DockPanel.Dock="Top">
+          <StackPanel DockPanel.Dock="Right" Margin="20,0,0,0" Visibility="{Binding Holdings, Converter={StaticResource Vis}}"
+                      ToolTip="The sum of the priced holdings. Unpriced ones are counted, never guessed.">
+            <TextBlock Text="{Binding TotalText}" FontSize="22" FontWeight="Bold" HorizontalAlignment="Right" />
+            <TextBlock Text="{Binding PricedText}" FontSize="12" Foreground="{StaticResource TextFaint}" HorizontalAlignment="Right" Margin="0,2,0,0" />
+          </StackPanel>
+          <StackPanel>
+            <TextBlock Text="What you hold" Style="{StaticResource CardTitle}" />
+            <TextBlock Style="{StaticResource CardLead}" Text="{Binding HoldingsLead}" />
+          </StackPanel>
+        </DockPanel>
+        <TextBlock DockPanel.Dock="Top" FontSize="13" Foreground="{StaticResource TextFaint}" TextWrapping="Wrap" Margin="0,16,0,4"
+                   Visibility="{Binding Holdings, Converter={StaticResource Vis}, ConverterParameter=invert}"
+                   Text="Nothing counted yet. Type a quantity on the right, or import a CSV file." />
+        <Grid DockPanel.Dock="Top" Margin="11,16,11,6" Visibility="{Binding Holdings, Converter={StaticResource Vis}}">
+          <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="150" />
+            <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="110" />
+            <ColumnDefinition Width="90" />
+            <ColumnDefinition Width="96" />
+            <ColumnDefinition Width="110" />
+          </Grid.ColumnDefinitions>
+          <TextBlock Grid.Column="0" Text="TAB" Style="{StaticResource ColumnHead}" />
+          <TextBlock Grid.Column="1" Text="ITEM" Style="{StaticResource ColumnHead}" />
+          <TextBlock Grid.Column="2" Text="VARIANT" Style="{StaticResource ColumnHead}" />
+          <TextBlock Grid.Column="3" Text="QUANTITY" Style="{StaticResource ColumnHead}" HorizontalAlignment="Right" Margin="0,0,10,0" />
+          <TextBlock Grid.Column="4" Text="AS OF" Style="{StaticResource ColumnHead}" Margin="14,0,0,0" />
+          <TextBlock Grid.Column="5" Text="VALUE" Style="{StaticResource ColumnHead}" HorizontalAlignment="Right" />
+        </Grid>
+        <ListBox ItemsSource="{Binding Holdings}" SelectedItem="{Binding SelectedHolding}" VirtualizingPanel.ScrollUnit="Pixel"
+                 Visibility="{Binding Holdings, Converter={StaticResource Vis}}" AutomationProperties.Name="What you hold">
+          <ListBox.ItemTemplate>
+            <DataTemplate DataType="{x:Type vm:HoldingRowViewModel}">
+              <Grid>
+                <Grid.ColumnDefinitions>
+                  <ColumnDefinition Width="150" />
+                  <ColumnDefinition Width="*" />
+                  <ColumnDefinition Width="110" />
+                  <ColumnDefinition Width="90" />
+                  <ColumnDefinition Width="96" />
+                  <ColumnDefinition Width="110" />
+                </Grid.ColumnDefinitions>
+                <TextBlock Grid.Column="0" Style="{StaticResource Cell}" Text="{Binding Tab}" Foreground="{StaticResource TextSoft}" ToolTip="{Binding Tab}" />
+                <TextBlock Grid.Column="1" Style="{StaticResource Cell}"><Run Text="{Binding Name, Mode=OneWay}" FontWeight="SemiBold" Foreground="{Binding Rarity, Mode=OneWay, Converter={StaticResource RarityBrush}}" /><Run Text="{Binding IdHint, Mode=OneWay}" FontSize="12" Foreground="{StaticResource TextFaint}" /></TextBlock>
+                <TextBlock Grid.Column="2" Style="{StaticResource Cell}" Text="{Binding Variant}" Foreground="{StaticResource TextDim}" />
+                <TextBlock Grid.Column="3" Style="{StaticResource Cell}" Text="{Binding Quantity}" FontWeight="SemiBold" HorizontalAlignment="Right" />
+                <TextBlock Grid.Column="4" Style="{StaticResource Cell}" Text="{Binding AsOf}" Foreground="{StaticResource TextDim}" FontSize="12.5" ToolTip="{Binding AsOfDetail}" Margin="14,0,10,0" />
+                <TextBlock Grid.Column="5" Text="{Binding ValueText}" ToolTip="{Binding ValueDetail}" HorizontalAlignment="Right" VerticalAlignment="Center" TextTrimming="CharacterEllipsis">
+                  <TextBlock.Style>
+                    <Style TargetType="TextBlock">
+                      <Setter Property="FontSize" Value="13" />
+                      <Setter Property="FontWeight" Value="SemiBold" />
+                      <Style.Triggers>
+                        <DataTrigger Binding="{Binding Priced}" Value="False">
+                          <Setter Property="FontSize" Value="12.5" />
+                          <Setter Property="FontWeight" Value="Normal" />
+                          <Setter Property="Foreground" Value="{StaticResource TextFaint}" />
+                        </DataTrigger>
+                      </Style.Triggers>
+                    </Style>
+                  </TextBlock.Style>
+                </TextBlock>
+              </Grid>
+            </DataTemplate>
+          </ListBox.ItemTemplate>
+        </ListBox>
+      </DockPanel>
+    </Border>
+
+    <Border Grid.Row="2" Grid.Column="0" Style="{StaticResource Card}" VerticalAlignment="Top" DataContext="{Binding Preview}"
+            Visibility="{Binding Converter={StaticResource Vis}}">
+      <DockPanel>
+        <StackPanel DockPanel.Dock="Top">
+          <TextBlock Style="{StaticResource CardTitle}"><Run Text="Preview: " /><Run Text="{Binding FileName, Mode=OneWay}" /></TextBlock>
+          <TextBlock Style="{StaticResource CardLead}" Text="Every row is checked against the league you're on and what is already stored. Nothing is stored until you apply." />
+          <Border Style="{StaticResource Problem}" Visibility="{Binding FileError, Converter={StaticResource Vis}}">
+            <TextBlock Text="{Binding FileError}" TextWrapping="Wrap" />
+          </Border>
+          <Border Style="{StaticResource Problem}" Visibility="{Binding Headline, Converter={StaticResource Vis}}">
+            <TextBlock Text="{Binding Headline}" TextWrapping="Wrap" />
+          </Border>
+          <TextBlock Margin="0,14,0,0" TextWrapping="Wrap" Visibility="{Binding Rows, Converter={StaticResource Vis}}">
+            <Run Text="{Binding Summary, Mode=OneWay}" FontSize="15" FontWeight="Bold" /><Run Text="   " /><Run Text="{Binding Detail, Mode=OneWay}" FontSize="12.5" Foreground="{StaticResource TextFaint}" />
+          </TextBlock>
+        </StackPanel>
+
+        <StackPanel DockPanel.Dock="Bottom" Margin="0,14,0,0">
+          <StackPanel Orientation="Horizontal">
+            <Button Style="{StaticResource PrimaryButton}" Content="Apply" MinWidth="110"
+                    Command="{Binding DataContext.ApplyImportCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" />
+            <Button Content="Cancel" MinHeight="44" MinWidth="90" Margin="10,0,0,0" v:Ui.Radius="8"
+                    Command="{Binding DataContext.CancelImportCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" />
+          </StackPanel>
+          <TextBlock Text="{Binding ApplyNote}" FontSize="12.5" Foreground="{StaticResource TextDim}" TextWrapping="Wrap" Margin="0,8,0,0" />
+        </StackPanel>
+
+        <Grid DockPanel.Dock="Top" Margin="0,14,10,6" Visibility="{Binding Rows, Converter={StaticResource Vis}}">
+          <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="60" />
+            <ColumnDefinition Width="110" />
+            <ColumnDefinition Width="120" />
+            <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="90" />
+            <ColumnDefinition Width="80" />
+            <ColumnDefinition Width="150" />
+            <ColumnDefinition Width="72" />
+          </Grid.ColumnDefinitions>
+          <TextBlock Grid.Column="0" Text="ROW" Style="{StaticResource ColumnHead}" />
+          <TextBlock Grid.Column="1" Text="STATUS" Style="{StaticResource ColumnHead}" />
+          <TextBlock Grid.Column="2" Text="TAB" Style="{StaticResource ColumnHead}" />
+          <TextBlock Grid.Column="3" Text="ITEM" Style="{StaticResource ColumnHead}" />
+          <TextBlock Grid.Column="4" Text="VARIANT" Style="{StaticResource ColumnHead}" />
+          <TextBlock Grid.Column="5" Text="QUANTITY" Style="{StaticResource ColumnHead}" HorizontalAlignment="Right" Margin="0,0,10,0" />
+          <TextBlock Grid.Column="6" Text="SNAPSHOT TIME" Style="{StaticResource ColumnHead}" Margin="10,0,0,0" />
+          <TextBlock Grid.Column="7" Text="PRICE" Style="{StaticResource ColumnHead}" />
+        </Grid>
+        <ItemsControl Style="{StaticResource RowList}" ItemsSource="{Binding Rows}" Visibility="{Binding Rows, Converter={StaticResource Vis}}">
+          <ItemsControl.ItemTemplate>
+            <DataTemplate DataType="{x:Type vm:ImportRowViewModel}">
+              <Border BorderBrush="{StaticResource RowLine}" BorderThickness="0,1,0,0" Padding="0,7" Margin="0,0,10,0">
+                <StackPanel>
+                  <Grid>
+                    <Grid.ColumnDefinitions>
+                      <ColumnDefinition Width="60" />
+                      <ColumnDefinition Width="110" />
+                      <ColumnDefinition Width="120" />
+                      <ColumnDefinition Width="*" />
+                      <ColumnDefinition Width="90" />
+                      <ColumnDefinition Width="80" />
+                      <ColumnDefinition Width="150" />
+                      <ColumnDefinition Width="72" />
+                    </Grid.ColumnDefinitions>
+                    <TextBlock Grid.Column="0" Style="{StaticResource Cell}" Text="{Binding RowText}" FontSize="12.5" Foreground="{StaticResource TextFaint}" />
+                    <TextBlock Grid.Column="1" Text="{Binding Status}" FontSize="12.5" FontWeight="SemiBold" VerticalAlignment="Center">
+                      <TextBlock.Style>
+                        <Style TargetType="TextBlock">
+                          <Setter Property="Foreground" Value="{StaticResource Text}" />
+                          <Style.Triggers>
+                            <DataTrigger Binding="{Binding IsQuiet}" Value="True">
+                              <Setter Property="Foreground" Value="{StaticResource TextFaint}" />
+                            </DataTrigger>
+                            <DataTrigger Binding="{Binding IsError}" Value="True">
+                              <Setter Property="Foreground" Value="{StaticResource Warn}" />
+                            </DataTrigger>
+                          </Style.Triggers>
+                        </Style>
+                      </TextBlock.Style>
+                    </TextBlock>
+                    <TextBlock Grid.Column="2" Style="{StaticResource Cell}" Text="{Binding Tab}" Foreground="{StaticResource TextSoft}" ToolTip="{Binding Tab}" />
+                    <TextBlock Grid.Column="3" Style="{StaticResource Cell}" Text="{Binding Item}" ToolTip="{Binding Item}" />
+                    <TextBlock Grid.Column="4" Style="{StaticResource Cell}" Text="{Binding Variant}" Foreground="{StaticResource TextDim}" />
+                    <TextBlock Grid.Column="5" Style="{StaticResource Cell}" Text="{Binding Quantity}" FontWeight="SemiBold" HorizontalAlignment="Right" />
+                    <TextBlock Grid.Column="6" Style="{StaticResource Cell}" Text="{Binding Time}" FontSize="12.5" Foreground="{StaticResource TextDim}" Margin="10,0,10,0" />
+                    <TextBlock Grid.Column="7" Style="{StaticResource Cell}" Text="{Binding PricedText}" FontSize="12.5" Foreground="{StaticResource TextFaint}" />
+                    <TextBlock Grid.Column="2" Grid.ColumnSpan="6" Style="{StaticResource Cell}" Text="{Binding Raw}" FontSize="12.5" Foreground="{StaticResource TextFaint}"
+                               ToolTip="{Binding Raw}" Visibility="{Binding Raw, Converter={StaticResource Vis}}" />
+                  </Grid>
+                  <ItemsControl ItemsSource="{Binding Errors}" Margin="170,4,0,0" Focusable="False" Visibility="{Binding Errors, Converter={StaticResource Vis}}">
+                    <ItemsControl.ItemTemplate>
+                      <DataTemplate>
+                        <TextBlock Text="{Binding}" FontSize="12.5" Foreground="{StaticResource Warn}" TextWrapping="Wrap" Margin="0,0,0,2" />
+                      </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                  </ItemsControl>
+                  <TextBlock Text="{Binding Note}" FontSize="12" Foreground="{StaticResource TextFaint}" TextWrapping="Wrap" Margin="170,3,0,0"
+                             Visibility="{Binding Note, Converter={StaticResource Vis}}" />
+                </StackPanel>
+              </Border>
+            </DataTemplate>
+          </ItemsControl.ItemTemplate>
+        </ItemsControl>
+      </DockPanel>
+    </Border>
+
+    <!-- Right: type a count, import a file, and what comes later -->
+    <ScrollViewer Grid.Row="2" Grid.Column="2" VerticalScrollBarVisibility="Auto" Focusable="False">
+      <StackPanel>
+        <Border Style="{StaticResource Card}">
+          <StackPanel>
+            <TextBlock Text="Type a count" Style="{StaticResource CardTitle}" />
+            <TextBlock Style="{StaticResource CardLead}" Text="How many you have now, not how many you gained; 0 means none left. Pick a row on the left to update it." />
+            <Grid Margin="0,12,0,0">
+              <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="80" />
+                <ColumnDefinition Width="*" />
+              </Grid.ColumnDefinitions>
+              <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+              </Grid.RowDefinitions>
+              <TextBlock Grid.Row="0" Text="Tab" Style="{StaticResource FieldLabel}" />
+              <TextBox Grid.Row="0" Grid.Column="1" Margin="0,3" Text="{Binding NewTab, UpdateSourceTrigger=PropertyChanged}" AutomationProperties.Name="Tab"
+                       ToolTip="The stash tab's name, e.g. Currency" />
+              <TextBlock Grid.Row="1" Text="Item id" Style="{StaticResource FieldLabel}" />
+              <TextBox Grid.Row="1" Grid.Column="1" Margin="0,3" Text="{Binding NewItemId, UpdateSourceTrigger=PropertyChanged}" AutomationProperties.Name="Item id"
+                       ToolTip="The price book's id, e.g. divine or greater-iron-rune. Ids it doesn't know are counted but not valued." />
+              <TextBlock Grid.Row="2" Text="Variant" Style="{StaticResource FieldLabel}" />
+              <TextBox Grid.Row="2" Grid.Column="1" Margin="0,3" Text="{Binding NewVariant, UpdateSourceTrigger=PropertyChanged}" AutomationProperties.Name="Variant"
+                       ToolTip="Optional. Leave it empty for none." />
+              <TextBlock Grid.Row="3" Text="Quantity" Style="{StaticResource FieldLabel}" />
+              <TextBox Grid.Row="3" Grid.Column="1" Margin="0,3" Width="120" HorizontalAlignment="Left" Text="{Binding NewQuantity, UpdateSourceTrigger=PropertyChanged}"
+                       AutomationProperties.Name="Quantity" ToolTip="A whole number, digits only, e.g. 1200" />
+            </Grid>
+            <ItemsControl ItemsSource="{Binding FormErrors}" Margin="80,6,0,0" Focusable="False" Visibility="{Binding FormErrors, Converter={StaticResource Vis}}">
+              <ItemsControl.ItemTemplate>
+                <DataTemplate>
+                  <TextBlock Text="{Binding}" FontSize="12.5" Foreground="{StaticResource Warn}" TextWrapping="Wrap" Margin="0,0,0,3" />
+                </DataTemplate>
+              </ItemsControl.ItemTemplate>
+            </ItemsControl>
+            <Button Content="Save count" Command="{Binding SaveManualCommand}" FontWeight="SemiBold" HorizontalAlignment="Left" Margin="80,8,0,0" />
+          </StackPanel>
+        </Border>
+
+        <Border Style="{StaticResource Card}">
+          <StackPanel>
+            <TextBlock Text="Import a CSV file" Style="{StaticResource CardTitle}" />
+            <TextBlock Style="{StaticResource CardLead}" Text="One row per holding, with the columns league, tab, item_id, variant, quantity and snapshot_time. Every row is checked and shown to you first." />
+            <StackPanel Orientation="Horizontal" Margin="0,12,0,0">
+              <Button Content="Import CSV…" Command="{Binding ImportCsvCommand}" FontWeight="SemiBold" />
+              <Button Style="{StaticResource LinkButton}" Content="How to write the file" Command="{Binding OpenFormatCommand}" Margin="14,0,0,0" VerticalAlignment="Center" FontSize="12.5"
+                      ToolTip="Opens the format description (docs/WEALTH-CSV.md) on GitHub in your browser" />
+            </StackPanel>
+            <StackPanel Visibility="{Binding IsDemo, Converter={StaticResource Vis}}">
+              <TextBlock Style="{StaticResource SectionTitle}" Text="PRACTICE FILES (MADE UP)" />
+              <Button Style="{StaticResource LinkButton}" Content="example.csv · eight demo holdings" FontSize="13" Padding="4,3" HorizontalAlignment="Stretch"
+                      Command="{Binding PreviewPracticeCommand}" CommandParameter="example.csv" />
+              <Button Style="{StaticResource LinkButton}" Content="needs-fixing.csv · common mistakes" FontSize="13" Padding="4,3" HorizontalAlignment="Stretch"
+                      Command="{Binding PreviewPracticeCommand}" CommandParameter="needs-fixing.csv" />
+            </StackPanel>
+          </StackPanel>
+        </Border>
+
+        <Border Style="{StaticResource Card}">
+          <StackPanel>
+            <TextBlock Text="Coming later" Style="{StaticResource CardTitle}" />
+            <ItemsControl ItemsSource="{Binding Later}" Margin="0,8,0,0" Focusable="False">
+              <ItemsControl.ItemTemplate>
+                <DataTemplate>
+                  <TextBlock Text="{Binding StringFormat='•  {0}'}" FontSize="12.5" Foreground="{StaticResource TextDim}" TextWrapping="Wrap" LineHeight="19" Margin="0,0,0,6" />
+                </DataTemplate>
+              </ItemsControl.ItemTemplate>
+            </ItemsControl>
+          </StackPanel>
+        </Border>
+      </StackPanel>
+    </ScrollViewer>
+  </Grid>
+</UserControl>

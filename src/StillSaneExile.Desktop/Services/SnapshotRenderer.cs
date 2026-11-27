@@ -48,6 +48,25 @@ public static class SnapshotRenderer
         Save(main, Path.Combine(dir, "craft.png"));
         shell.GoGuideCommand.Execute(null);
         Save(main, Path.Combine(dir, "guide.png"));
+
+        // Wealth with demo holdings: the practice file applied (idempotent, so a re-run adds nothing),
+        // one count typed in, then a preview of the practice file with mistakes.
+        var wealth = shell.Wealth;
+        shell.GoWealthCommand.Execute(null);
+        wealth.PreviewPracticeCommand.Execute("example.csv");
+        wealth.ApplyImportCommand.Execute(null);
+        wealth.NewTab = "Currency";
+        wealth.NewItemId = "vaal";
+        wealth.NewQuantity = "6";
+        wealth.SaveManualCommand.Execute(null);
+        wealth.NewTab = "";
+        wealth.Message = null;
+        Save(main, Path.Combine(dir, "wealth.png"));
+        wealth.PreviewPracticeCommand.Execute("needs-fixing.csv");
+        Save(main, Path.Combine(dir, "wealth-import.png"));
+        wealth.CancelImportCommand.Execute(null);
+        wealth.Message = null;
+
         shell.GoSettingsCommand.Execute(null);
         Save(main, Path.Combine(dir, "settings.png"));
 

@@ -290,7 +290,7 @@ public sealed partial class SettingsViewModel : ObservableObject
     private void ResetDemoData()
     {
         _shell.Store.ResetDemo();
-        Message = "Demo comparables you added were removed. The seeded demo data stays.";
+        Message = "Demo prices and holdings you added were removed. The seeded demo data stays.";
         _shell.ReloadSession();
     }
 

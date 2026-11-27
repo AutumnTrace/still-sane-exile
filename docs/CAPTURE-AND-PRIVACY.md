@@ -15,6 +15,7 @@
 
 - **Settings** (`sse.db`, SQLite) in `%APPDATA%\StillSaneExile`, or in `data\` beside the portable build. Program files live separately in `%LOCALAPPDATA%\StillSaneExile` and are replaced on each update; uninstalling removes them but keeps your settings.
 - **Comparison sets** you create by adding a comparable: the asks you typed and the item text they compare against.
+- **Holdings** you type in or import on My wealth: league, tab, item id, variant, quantity and snapshot time, plus the file's name (not its folder) for an import. The CSV file itself is only read when you pick it, never copied or uploaded. Format: [Wealth CSV import](WEALTH-CSV.md).
 - **Not stored:** clipboard text that is not an item (discarded immediately), recent items (memory only, cleared on exit), key presses, screen pixels.
 
 ## Network
