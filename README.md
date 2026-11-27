@@ -26,7 +26,7 @@ All of this is demo data: made-up tiers, ranges and listings. On a live item, an
 
 Tick what a weapon like yours must have, set the numbers, and the price follows.
 
-Press `F3` after a peek and this price check opens over the game. Tick **Physical DPS** and step its minimum: the price, the count and the cheapest matches update as you go. **Open this search on the trade site** opens the official site in your browser; it has no documented link format, so **Copy search** gives you the filters to set there. Asks worth keeping go under **Write down a price**.
+Press `F3` after a peek and this price check opens over the game. Tick **Physical DPS** and step its minimum: the price, the count and the cheapest matches update as you go. **Open this search on the trade site** opens the official site in your browser with the same search filled in: the base, the rarity, the stats you ticked with their numbers, and instant buyout only unless you untick **Buy-now listings only**. Anything the link can't carry is listed under the button, to set by hand there. The demo's league is made up, so its links search Standard. **Copy search** copies the link and the filters as text. Asks worth keeping go under **Write down a price**.
 
 The demo's 1.8–2.6 div runs from just above the cheapest of the 29 matching listings to the middle one: made-up asking prices, not sales or a league quote. Eight or more matches read *Good price guess*, three to seven a *Rough price*, one or two *too few to trust*.
 

@@ -261,10 +261,12 @@
             <ColumnDefinition Width="Auto" />
           </Grid.ColumnDefinitions>
           <Button Style="{StaticResource PrimaryButton}" Content="Open this search on the trade site" Command="{Binding OpenTradeCommand}"
-                  ToolTip="Opens the official trade site in your browser. Copy search lists the filters to set there." />
+                  ToolTip="{Binding TradeTooltip}" />
           <Button Grid.Column="1" Style="{StaticResource GhostButton}" Content="Copy search" Command="{Binding CopySearchCommand}" FontSize="14" MinHeight="44" Padding="14,0" Margin="8,0,0,0"
-                  ToolTip="Copies the filters as text, to set the same search on the trade site." />
+                  ToolTip="Copies the trade site link and the same filters as text." />
         </Grid>
+        <!-- What the link can't carry: the player sets these on the trade site. -->
+        <TextBlock Text="{Binding ByHand}" FontSize="12.5" Foreground="{StaticResource TextSoft}" Margin="16,8,16,0" TextWrapping="Wrap" Visibility="{Binding HasByHand, Converter={StaticResource Vis}}" />
         <TextBlock Text="{Binding SearchStatus}" FontSize="12" Foreground="{StaticResource TextDim}" Margin="16,8,16,0" TextWrapping="Wrap" Visibility="{Binding SearchStatus, Converter={StaticResource Vis}}" />
       </StackPanel>
 

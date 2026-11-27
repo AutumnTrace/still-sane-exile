@@ -1,4 +1,5 @@
 using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.Globalization;
 using System.Runtime.InteropServices;
@@ -63,7 +64,7 @@ public sealed partial class SearchRowViewModel : ObservableObject
         IsAmbiguous ? AmbiguousHint
         : Row.Id == ComparisonWorksheet.PhysicalDpsId ? "Damage per second from physical hits. Best single number for a weapon."
         : Row.Kind == RowKind.Rune ? "From a rune — buyers rarely care"
-        : !Row.Supported ? "No trade filter for this one: set it by hand on the trade site"
+        : !Row.Supported ? "Not in the trade site link: set it by hand there"
         : Reading?.Line.Components.Count > 1 && Row.Actual is { } a ? $"Searched by the average ({RollQuality.Num(Math.Round(a, 1))})"
         : null;
 
@@ -425,6 +426,22 @@ public sealed partial class ItemViewModel : ObservableObject
     [ObservableProperty]
     public partial string? SearchStatus { get; set; }
 
+    /// <summary>The search on the official trade site, rebuilt whenever the search changes.</summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(TradeUrl), nameof(ByHand), nameof(HasByHand))]
+    public partial TradeSearch? Trade { get; set; }
+
+    public string TradeUrl => Trade?.Url ?? TradeLink.Site;
+
+    /// <summary>"Set by hand: +18% to Fire Resistance", when the link can't carry everything ticked.</summary>
+    public string? ByHand => Trade is { ByHand.Count: > 0 } t ? $"Set by hand: {string.Join(", ", t.ByHand)}" : null;
+
+    public bool HasByHand => ByHand is not null;
+
+    public string TradeTooltip => IsDemo
+        ? "Opens this search on the official trade site in your browser. The demo league is made up, so the link searches Standard."
+        : $"Opens this search on the official trade site in your browser, in {_session.TradeLeague}.";
+
     public int TotalCount => SearchRows.Count + (IsUnique ? 1 : 0);
 
     public bool BuyNowOnly
@@ -481,7 +498,8 @@ public sealed partial class ItemViewModel : ObservableObject
     private void OnSearchChanged()
     {
         OnCount = SearchRows.Count(r => r.IsOn) + (IsUnique ? 1 : 0);
-        Instructions = Worksheet.ToManualInstructions(_session.League);
+        Trade = TradeQuery.Build(Worksheet, Item, _session.TradeLeague, _session.Trade);
+        Instructions = $"Trade site link: {Trade.Url}{Environment.NewLine}{Environment.NewLine}{Worksheet.ToManualInstructions(_session.TradeLeague)}";
         SearchStatus = null;
         UpdateAnswer();
     }
@@ -574,11 +592,20 @@ public sealed partial class ItemViewModel : ObservableObject
         OnSearchChanged();
     }
 
-    /// <summary>Opens the official trade site in the browser. No result-link format is documented, so
-    /// the site opens as-is and the copied search lists the filters to set.</summary>
+    /// <summary>Opens this search on the official trade site in the default browser, only on a click.
+    /// SSE itself sends nothing to the site: the browser opens the link.</summary>
     [RelayCommand]
-    private void OpenTrade() =>
-        Process.Start(new ProcessStartInfo(TradeHandoff.OfficialTradeUrl) { UseShellExecute = true });
+    private void OpenTrade()
+    {
+        try
+        {
+            Process.Start(new ProcessStartInfo(TradeUrl) { UseShellExecute = true });
+        }
+        catch (Win32Exception)
+        {
+            SearchStatus = "Windows couldn't open your browser. Copy search has the link.";
+        }
+    }
 
     [RelayCommand]
     private void CopySearch()
@@ -586,7 +613,7 @@ public sealed partial class ItemViewModel : ObservableObject
         try
         {
             Clipboard.SetText(Instructions);
-            SearchStatus = "Search copied. Set the same filters on the trade site.";
+            SearchStatus = "Search copied: the trade site link, then the same filters as text.";
         }
         catch (ExternalException)
         {
@@ -596,7 +623,7 @@ public sealed partial class ItemViewModel : ObservableObject
 
     private ComparisonWorksheet NewWorksheet()
     {
-        var w = WorksheetFactory.Create(Reading);
+        var w = WorksheetFactory.Create(Reading, trade: _session.Trade);
         w.ListingDenomination = _session.ListingDenomination;
         return w;
     }

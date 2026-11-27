@@ -49,6 +49,32 @@ public class MarketSearchTests
     }
 
     [Fact]
+    public void An_ask_without_instant_buyout_never_sets_the_price_by_default()
+    {
+        // A seller asking 1 div without instant buyout is often unsure of the price: by default the
+        // price comes from instant-buyout listings only, so the cheapest ask here is left out entirely.
+        var w = Crossbow();
+        Assert.True(w.BuyNowOnly);
+        List<Listing> listings =
+        [
+            L("unsure", 1, "divine", 330, 16, buyNow: false),
+            L("a", 2, "divine", 330, 16),
+            L("b", 3, "divine", 330, 16),
+            L("c", 4, "divine", 330, 16),
+        ];
+
+        var r = MarketSearch.Run(w, listings, Converter(), "divine", Fixtures.DemoNow);
+
+        Assert.Equal(["a", "b", "c"], r.Matches.Select(m => m.Listing.Id));
+        Assert.Equal("a", r.Cheapest!.Listing.Id);
+        Assert.True(r.Low >= 2, $"{r.Low}");
+
+        // Unticking "Buy-now listings only" is the player asking for in-person asks too.
+        w.BuyNowOnly = false;
+        Assert.Equal(4, MarketSearch.Run(w, listings, Converter(), "divine", Fixtures.DemoNow).Count);
+    }
+
+    [Fact]
     public void Results_are_sorted_cheapest_first_in_the_display_currency()
     {
         var w = Crossbow();

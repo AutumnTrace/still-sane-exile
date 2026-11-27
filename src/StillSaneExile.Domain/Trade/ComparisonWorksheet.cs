@@ -46,7 +46,8 @@ public sealed class WorksheetRow
     public MatchType Match { get; set; }
     public FilterGroup Group { get; set; }
 
-    /// <summary>False when the official site has no matching filter we have verified. Shown as a manual instruction.</summary>
+    /// <summary>False when the trade site link cannot carry this row (no stat id for it in the trade
+    /// data). Shown as a stat to set by hand.</summary>
     public bool Supported { get; init; } = true;
 
     /// <summary>Templates whose value this derived row already includes.</summary>
@@ -157,7 +158,7 @@ public sealed class ComparisonWorksheet
 
         foreach (var r in selected.Where(r => !r.Supported))
         {
-            yield return $"\"{r.Label}\" has no verified trade filter: set it by hand on the trade site.";
+            yield return $"\"{r.Label}\" isn't in the trade site link: set it by hand on the trade site.";
         }
 
         if (selected.Count == 0)
@@ -228,7 +229,7 @@ public sealed class ComparisonWorksheet
                     MatchType.Maximum => $"max {RollQuality.Num(r.Max)}",
                     _ => $"{RollQuality.Num(r.Min)} to {RollQuality.Num(r.Max)}",
                 };
-                var manual = r.Supported ? "" : "  (manual: no verified filter)";
+                var manual = r.Supported ? "" : "  (set by hand: not in the link)";
                 sb.AppendLine($"  - {r.Label}: {bounds}{manual}");
             }
         }
@@ -263,7 +264,9 @@ public static class WorksheetFactory
         return [];
     }
 
-    public static ComparisonWorksheet Create(ItemReading reading, decimal tolerance = 0.1m)
+    /// <param name="trade">The trade site's ids. With them, a row is <see cref="WorksheetRow.Supported"/>
+    /// only when the trade site link can carry it; without, explicit and implicit lines are assumed to be.</param>
+    public static ComparisonWorksheet Create(ItemReading reading, decimal tolerance = 0.1m, TradeData? trade = null)
     {
         var item = reading.Item;
         var w = new ComparisonWorksheet
@@ -320,7 +323,7 @@ public static class WorksheetFactory
                 continue;
             }
 
-            // Multi-number lines ("Adds # to #") compare on their average, as the trade site does for pseudo values.
+            // Multi-number lines ("Adds # to #") compare on their average, as the trade site's stat filters do.
             var actual = l.Line.Components.Count == 1 ? l.Line.Components[0].Value : l.Line.Components.Average(c => c.Value);
             w.Rows.Add(new WorksheetRow
             {
@@ -330,7 +333,9 @@ public static class WorksheetFactory
                 Template = l.Line.Template,
                 Actual = actual,
                 Direction = l.Components.FirstOrDefault()?.Direction ?? StatDirection.Unknown,
-                Supported = kind is RowKind.Explicit or RowKind.Implicit or RowKind.Derived,
+                Supported = trade is null
+                    ? kind is RowKind.Explicit or RowKind.Implicit
+                    : TradeQuery.CanLink(kind, id, l.Line.Template, item.ItemClass, trade),
             });
         }
 
@@ -348,11 +353,4 @@ public static class WorksheetFactory
 
         return w;
     }
-}
-
-public static class TradeHandoff
-{
-    /// <summary>The official PoE2 trade site. No result-link format is documented, so the site is
-    /// opened as-is and the player sets filters from the worksheet.</summary>
-    public const string OfficialTradeUrl = "https://www.pathofexile.com/trade2";
 }

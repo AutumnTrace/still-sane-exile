@@ -30,6 +30,9 @@ public sealed class AppPaths
     /// <summary>Route packs that ship with the app. Replaced on every update like the program files.</summary>
     public string RoutePacks => Path.Combine(AppDir, "data", "routes");
 
+    /// <summary>The trade site's filter ids (GGG's public trade metadata) that trade site links are built from.</summary>
+    public string TradeData => Path.Combine(AppDir, "data", "trade", "trade-data.json");
+
     /// <summary>The last route pack that passed its checks, so a broken pack in an update cannot take
     /// the route away.</summary>
     public string RouteCache => Path.Combine(DataDir, "route-cache");
