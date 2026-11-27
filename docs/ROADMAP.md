@@ -54,6 +54,6 @@ Open work is tracked as [issues](https://github.com/AutumnTrace/still-sane-exile
 - [x] Installer and portable build (Velopack), per tag `vX.Y.Z` on main that matches `<Version>` ([RELEASING.md](RELEASING.md))
 - [x] Automatic updates from GitHub releases; install on close, never mid-game
 - [ ] Code signing (#23)
-- [x] Pack the installer on every pull request (#24); Dependabot (#25)
+- [x] Pack the installer in CI (#24; now on every push to `main`); Dependabot (#25)
 - [x] "What's new" after an update (#26); desktop tests (#27); accessibility and UI polish (#28) ([ACCESSIBILITY.md](ACCESSIBILITY.md))
 - [ ] Changelog listing tested patches, layouts, languages and sources

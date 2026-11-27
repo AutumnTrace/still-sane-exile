@@ -1,9 +1,11 @@
 name: CI
 
+# Runs on every push to main (the owner's choice: pull requests are not built by CI; build and test
+# locally before merging). "Run workflow" in the Actions tab runs it on any branch by hand.
 on:
   push:
     branches: [main]
-  pull_request:
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -38,9 +40,9 @@ jobs:
           name: test-results
           path: '**/TestResults/*.trx'
 
-  # Packaging problems used to surface only when a release tag was pushed. This packs the installer
-  # with the same script the Release workflow uses, into the runner's temp folder, uploads nothing,
-  # then starts the packed app once (unattended, rendering the demo screens) to prove it runs.
+  # Packaging problems used to surface only when a release tag was pushed. On every push to main this
+  # packs the installer with the same script the Release workflow uses, into the runner's temp folder,
+  # uploads nothing, then starts the packed app once (unattended, rendering the demo screens) to prove it runs.
   pack:
     runs-on: windows-latest
     timeout-minutes: 20

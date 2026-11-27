@@ -103,7 +103,10 @@ When behaviour changes, update the doc that describes it in the same change:
 - Issues live on GitHub (`gh issue list --repo AutumnTrace/still-sane-exile`), grouped by milestone and
   labelled `area: …`, `P1`/`P2`/`P3`, `needs: decision` and `needs: real game data`. Don't start an issue
   labelled `needs: …` without the owner.
-- Work on a branch, open a pull request, and merge with a rebase once CI (`build-test` and `pack`) is green;
+- Work on a branch, open a pull request, and merge with a rebase. CI does not run on pull requests: before
+  merging, build with 0 warnings and run every test suite locally (and the pack scripts if packaging
+  changed). CI (`build-test` and `pack`) runs on every push to `main`; if it fails after a merge, fixing
+  `main` comes first. It can also be started by hand on any branch from the Actions tab.
   `main` keeps a linear history with one commit per change. Commit subjects are plain sentences
   ("Pinned card takes clicks without taking the focus"); the body says why, and ends with `Closes #N` or
   `Refs #N` when there is an issue. Use `Refs` when the issue's acceptance still needs a person or the game.
