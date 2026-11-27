@@ -27,7 +27,7 @@ On the tag push (`.github/workflows/release.yml`, Windows runner):
 1. Checks the release rule.
 2. Builds and runs all tests in Release.
 3. Downloads the previous release so Velopack can make a small delta package.
-4. Publishes a self-contained win-x64 build with that version and packs it with Velopack (`vpk pack`), both through `scripts/pack-local.ps1`.
+4. Publishes a self-contained win-x64 build with that version and packs it with Velopack (`vpk pack --runtime win-x64`, so the installer and `Update.exe` are x64 like the app), both through `scripts/pack-local.ps1`.
 5. Starts the packed portable build once, unattended (`scripts/smoke-packed.ps1`, which renders the demo screens with `--render-snapshots`), so a build that cannot start is never published.
 6. Publishes the GitHub release with:
    - `StillSaneExile-win-Setup.exe`: the installer (per-user, no admin rights, Start menu and desktop shortcuts),
