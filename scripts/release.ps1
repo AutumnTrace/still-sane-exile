@@ -35,7 +35,15 @@ try {
         [System.IO.File]::WriteAllText($changelog, $text, [System.Text.UTF8Encoding]::new($false))
     }
 
-    function Invoke-Git { & git.exe @args; if ($LASTEXITCODE -ne 0) { throw "git $($args -join ' ') failed" } }
+    # Windows PowerShell 5.1 turns anything git writes to stderr (such as its line-ending warnings) into
+    # an error under 'Stop'. Judge git by its exit code only.
+    function Invoke-Git {
+        $previous = $ErrorActionPreference
+        $ErrorActionPreference = 'Continue'
+        try { & git.exe @args 2>&1 | ForEach-Object { Write-Host $_ } }
+        finally { $ErrorActionPreference = $previous }
+        if ($LASTEXITCODE -ne 0) { throw "git $($args -join ' ') failed" }
+    }
 
     Invoke-Git add Directory.Build.props CHANGELOG.md
     git diff --cached --quiet
