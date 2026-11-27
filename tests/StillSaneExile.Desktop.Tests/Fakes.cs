@@ -143,6 +143,8 @@ internal sealed class FakeShellWindow : IShellWindow
 
     public nint Handle => MainWindow;
 
+    public bool IsTyping { get; set; }
+
     public int BroughtToFront { get; private set; }
 
     public void BringToFront() => BroughtToFront++;

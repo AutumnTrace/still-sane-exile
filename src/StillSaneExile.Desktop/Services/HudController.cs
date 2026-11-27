@@ -83,7 +83,9 @@ public sealed class HudController : IDisposable
         if (e.Down && _peekKey.Matches(e.Vk, e.Mods))
         {
             var fg = _foreground.Current;
-            var practice = fg == ForegroundKind.ThisApp && _shell.Session.IsDemo && _shell.CurrentPage is InspectViewModel;
+            // Practice: the demo's Price check page with SSE in front, but not while the player types in
+            // one of its boxes. There Ctrl+C copies their own text, and that press is only a copy.
+            var practice = fg == ForegroundKind.ThisApp && _shell.Session.IsDemo && _shell.CurrentPage is InspectViewModel && !_main.IsTyping;
             var decision = _gate.KeyDown(PeekCommand, e.Injected, fg == ForegroundKind.Game || practice);
             if (decision.Action == GateAction.Read)
             {
