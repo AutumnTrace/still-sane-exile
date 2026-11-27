@@ -1,6 +1,6 @@
 # Provider etiquette
 
-This page explains how SSE's market client treats poe.ninja, GGG and any other price provider. The code is in `StillSaneExile.Domain.Market`. Live prices in the app (#13) send every poe.ninja request through it; [poe.ninja](#poeninja) below says how. No GGG endpoint is called yet. What SSE requests, and how to turn it off, is in [Capture and privacy](CAPTURE-AND-PRIVACY.md#network).
+This page explains how SSE's market client treats poe.ninja, GGG and any other price provider. The code is in `StillSaneExile.Domain.Market`. Live prices in the app (#13) send every poe.ninja request through it, and so does the trade site search behind **Search**; [poe.ninja](#poeninja) and [The trade site](#the-trade-site) below say how. Both share one governor, so one cooldown file remembers both. What SSE requests, and how to turn it off, is in [Capture and privacy](CAPTURE-AND-PRIVACY.md#network).
 
 ## The rule
 
@@ -20,7 +20,26 @@ This page explains how SSE's market client treats poe.ninja, GGG and any other p
 - **Identified, and nothing more.** Requests carry `league=` and `type=` only, no cookies, and the User-Agent `StillSaneExile/<version> (+https://github.com/AutumnTrace/still-sane-exile)`, so poe.ninja can see who is asking and where to complain.
 - **Routes.** `poe.ninja` is the integration; the routes are `poe2/api/data/index-state`, `poe2/api/economy/exchange/current/overview` and `poe2/api/economy/stash/current/item/overview`, one each whatever the league or type.
 
-**What the numbers are.** poe.ninja's values are its own aggregates for the whole league: exchange lines become exchange estimates and unique lines category baselines, in Divine Orbs, with `core.rates` for Exalted and Chaos Orbs. SSE does not look at individual listings here. The owner's rule is that prices should mainly come from instant buyout listings, because players who list at 1 ex without instant buyout are often unsure of the price; that rule belongs to listing-level searches, not to poe.ninja's estimates, which SSE shows as they are and labels as poe.ninja's.
+**What the numbers are.** poe.ninja's values are its own aggregates for the whole league: exchange lines become exchange estimates and unique lines category baselines, in Divine Orbs, with `core.rates` for Exalted and Chaos Orbs. SSE does not look at individual listings here. The owner's rule is that prices should mainly come from instant buyout listings, because players who list at 1 ex without instant buyout are often unsure of the price; that rule belongs to listing-level searches ([the trade site](#the-trade-site)), not to poe.ninja's estimates, which SSE shows as they are and labels as poe.ninja's.
+
+## The trade site
+
+**Search** asks the official trade site (`www.pathofexile.com`) for listings. This search API is what the site's own page calls; it is **not part of GGG's documented developer API**, so it has no published terms or stability promise and may change or close at any time. SSE uses it the way the website does, for one player's own clicks, within the limits the site announces:
+
+- **Only on a click.** One click on Search (the card's or the price check's) is one search and one fetch. Ticking a stat, stepping a number, a key press, opening a card or switching league send nothing; the demo never sends anything. "Search the trade site from SSE" in Settings turns it off.
+- **Two requests per click.** `POST /api/trade2/search/poe2/<league>` with the query (the same JSON as the trade site link) plus `"sort":{"price":"asc"}`, then `GET /api/trade2/fetch/<ten ids>?query=<id>&realm=poe2` for the ten cheapest. One fetch, not more: ten listings are enough for the price, and each extra fetch would count against the site's limits.
+- **Routes.** `trade` is the integration; `search` and `fetch` are the routes, one each whatever the league or query. The site sends GGG's headers on both, with separate policies (as seen on 27 Nov 2026):
+
+  | Route | `X-Rate-Limit-Policy` | `X-Rate-Limit-Ip` (hits:seconds:penalty) |
+  |---|---|---|
+  | search | `trade-search-request-limit` | `5:10:60,15:60:300,30:300:1800,600:21600:3600` |
+  | fetch | `trade-fetch-request-limit` | `12:4:10,16:12:300,50:300:300,1000:21600:1800` |
+
+  So with the headroom below, SSE sends at most 4 searches in 10 s, 13 a minute and 27 in 5 minutes, fewer if the site counts other searches from the same address (the browser's, other tools'). Until a route has answered once, it is in conservative mode, so the very first fetch waits 5 s after the very first search; after that the limits are known and remembered.
+- **Holds are shown, not slept through.** The handler waits out a pacing hold of up to 6 s; anything longer, a 429 or a remembered cooldown ends the click at once with *The trade site asks to wait N s* under the price, and the last result stays. Nothing is retried by itself: the player clicks again later, and the governor says whether that may go.
+- **Nothing about the player.** No login, no account, no `POESESSID`: the connection keeps no cookies, so the session cookie the site hands out is never sent back. The User-Agent is the same as for poe.ninja. The answer's `account` and `stash` fields are never read.
+- **No cache.** Every Search asks afresh (the site sends no cache headers for these answers); results live in memory with the item only.
+- **Instant buyout first.** With "Buy-now listings only" ticked (the default) the search asks for `securable` listings only. Unticked, it asks for `available` ones and shows the in-person listings in the list, but only instant buyout listings (those carrying the merchant's gold `fee`) set the price: from the second-cheapest of them to the middle one of the ten.
 
 ## How a request goes
 
@@ -106,4 +125,4 @@ All defaults are in `GovernorOptions`.
 | Circuit | opens after 3 × 4xx with no success in between; 5 min, doubling to 1 h |
 | 5xx backoff | 10 s, doubling to 15 min |
 | Jitter | 1–5 s, added once to each cooldown and backoff |
-| Pacing wait inside the handler | up to 30 s |
+| Pacing wait inside the handler | up to 30 s (poe.ninja's refresh); 6 s for the trade site, so a Search never hangs |
