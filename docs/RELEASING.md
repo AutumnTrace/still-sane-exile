@@ -36,9 +36,9 @@ On the tag push (`.github/workflows/release.yml`, Windows runner):
 
 Release notes come from the version's `CHANGELOG.md` section, or the commit subjects since the previous tag.
 
-## Packaging is checked on every pull request
+## Packaging is checked on every push to main
 
-The CI workflow's `pack` job runs steps 4 and 5 on every pull request and every push to `main`, into the runner's temp folder, and uploads nothing. Packaging problems therefore show up before a tag is pushed. Because the Release workflow packs with the same script, a change to the packaging only has to be made in `scripts/pack-local.ps1`.
+The CI workflow's `pack` job runs steps 4 and 5 on every push to `main` (and on any branch when you start the workflow by hand from the Actions tab), into the runner's temp folder, and uploads nothing. Packaging problems therefore show up before a tag is pushed. CI does not run on pull requests: run `./scripts/pack-local.ps1` and `./scripts/smoke-packed.ps1` locally when a change touches packaging. Because the Release workflow packs with the same script, a change to the packaging only has to be made in `scripts/pack-local.ps1`.
 
 ## How installed copies update
 
