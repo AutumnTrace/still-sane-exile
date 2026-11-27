@@ -11,8 +11,9 @@ namespace StillSaneExile.Desktop.Services;
 
 /// <summary>Decides when the pinned guide lines show: only while the game is in front with the lines
 /// switched on, or for a short preview the player asked for. They step aside while the item peek card
-/// is up (by watching the card's visibility, so the item HUD needs no changes) and hide on minimize and
-/// lock like the card. A zone change only updates the text: nothing opens, nothing takes focus.
+/// is up, held or pinned (by watching the card's visibility, so the item HUD needs no changes: a pinned
+/// card may sit where the lines go, and the player closes it when done) and hide on minimize and lock
+/// like the card. A zone change only updates the text: nothing opens, nothing takes focus.
 /// Like the item HUD, it reads window titles only and never the game's memory or files.</summary>
 public sealed class GuideHud : IDisposable
 {

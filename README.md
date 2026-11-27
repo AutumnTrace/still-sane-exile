@@ -1,6 +1,6 @@
 # Still Sane, Exile?
 
-Hold `Ctrl+C` over a Path of Exile 2 item to see what items like it sell for, and exactly which of its stats that price searched with. Release to get back to the game. `F3` opens the full price check over the game, where you choose the stats and numbers to search for and see how good each roll is.
+Hold `Ctrl+C` over a Path of Exile 2 item to see what items like it sell for, and exactly which of its stats that price searched with. Let go and it hides. Move the mouse onto the card while you hold, and it stays open so you can tick stats and watch the price change. `F3` opens the full price check over the game, where you choose the stats and numbers to search for and see how good each roll is.
 
 [Download for Windows](https://github.com/AutumnTrace/still-sane-exile/releases/latest) · [Changelog](CHANGELOG.md)
 
@@ -45,13 +45,14 @@ An advanced copy (`Ctrl+Alt+C`) prints each affix on its own with its tier and r
 
 | Key | What it does |
 |---|---|
-| Hold `Ctrl+C` | Shows the card for the item under your cursor; let go to hide it |
+| Hold `Ctrl+C` | Shows the card for the item under your cursor. Move the mouse onto the card to keep it open and change the search; let go without moving and it hides |
 | Hold `Ctrl+Alt+C` | The same card from the game's advanced copy, with tiers and ranges |
+| `Esc` or **×** | Closes a card you kept open (`Esc` once you have clicked it). Checking another item replaces it |
 | `F3` | Opens the price check for your last item over the game; `Esc` closes it |
 
-Settings can change every key, including to a side mouse button (Mouse 4 or 5), and a toggle mode can replace holding. A side button isn't the game's copy key, so the game copies nothing when you press it: the card shows the last item you copied with `Ctrl+C`, which may not be the one under your cursor.
+Settings can change every key, including to a side mouse button (Mouse 4 or 5), and **Press again to hide** can replace holding. A side button isn't the game's copy key, so the game copies nothing when you press it: the card shows the last item you copied with `Ctrl+C`, which may not be the one under your cursor.
 
-The game copies the item. SSE reads the changed clipboard once for that press and draws a click-through card that never takes focus; releasing the key hides it. `F3` reopens the saved item without another read, and takes focus so you can type until you close it. SSE never sends input to the game. Its only network request is the update check against this repository's GitHub releases, which Settings can switch off. Details: [Capture and privacy](docs/CAPTURE-AND-PRIVACY.md).
+The game copies the item. SSE reads the changed clipboard once for that press and draws a click-through card that doesn't take focus; releasing the key hides it. While you hold the key, SSE checks where the mouse cursor is (its position, not the screen); when the cursor reaches the card, the card starts taking clicks and stays after you let go, without another read. Clicking it gives it the focus, and closing it hands the focus back to the game. Ticking stats on it reads nothing. `F3` reopens the saved item without another read, and takes focus so you can type until you close it. SSE never sends input to the game. Its only network request is the update check against this repository's GitHub releases, which Settings can switch off. Details: [Capture and privacy](docs/CAPTURE-AND-PRIVACY.md).
 
 Every control in SSE works from the keyboard and has a name for screen readers, and its windows follow the Windows text size setting as far as they fit your screen. Details and contrast measurements: [Accessibility](docs/ACCESSIBILITY.md).
 

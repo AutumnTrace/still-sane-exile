@@ -9,7 +9,7 @@
         d:DataContext="{d:DesignInstance Type=vm:PeekViewModel}"
         Title="Still Sane, Exile? HUD"
         WindowStyle="None" AllowsTransparency="True" Background="Transparent"
-        Topmost="True" ShowInTaskbar="False" ShowActivated="False" Focusable="False"
+        Topmost="True" ShowInTaskbar="False" ShowActivated="False"
         ResizeMode="NoResize" SizeToContent="WidthAndHeight"
         Foreground="{StaticResource Text}" FontFamily="Segoe UI" FontSize="14"
         Typography.NumeralAlignment="Tabular"
@@ -24,7 +24,7 @@
           <DropShadowEffect Color="Black" BlurRadius="28" ShadowDepth="8" Direction="270" Opacity="0.55" />
         </Border.Effect>
       </Border>
-      <v:PeekCard />
+      <v:PeekCard x:Name="CardView" />
     </Grid>
   </Border>
 </Window>

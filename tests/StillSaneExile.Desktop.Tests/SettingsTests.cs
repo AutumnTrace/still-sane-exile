@@ -63,6 +63,23 @@ public class SettingsTests
         Assert.Equal("divine", after.DisplayCurrency(ProfileKind.Demo));
     }
 
+    [Theory]
+    [InlineData(null, HoldMode.Hold)]
+    [InlineData("hold", HoldMode.Hold)]
+    [InlineData("toggle", HoldMode.Toggle)]
+    [InlineData("sideways", HoldMode.Hold)]
+    public void A_stored_quick_price_mode_still_loads(string? stored, HoldMode expected)
+    {
+        using var dir = new TempDir();
+        var store = new Store(dir.Sub("sse.db"));
+        if (stored is not null)
+        {
+            store.Set("peek.mode", stored);
+        }
+
+        Assert.Equal(expected, new Settings(store).PeekMode);
+    }
+
     [Fact]
     public void Unreadable_or_out_of_range_values_fall_back_safely()
     {

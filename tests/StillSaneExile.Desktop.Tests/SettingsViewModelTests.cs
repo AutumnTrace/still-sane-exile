@@ -1,5 +1,6 @@
 using System.Windows.Input;
 using StillSaneExile.Desktop.Infrastructure;
+using StillSaneExile.Domain.Capture;
 
 namespace StillSaneExile.Desktop.Tests;
 
@@ -92,6 +93,30 @@ public class SettingsViewModelTests
         Assert.Contains("the last item you copied with Ctrl+C", page.ReadsExplanation);
         Assert.DoesNotContain("hovered", page.ReadsExplanation);
         Assert.DoesNotContain("Hover", page.PeekHowTo);
+    });
+
+    [Fact]
+    public void The_quick_price_card_offers_two_ways_to_hide() => Sta.Run(() =>
+    {
+        using var app = new TestApp();
+        var page = app.Shell.SettingsPage;
+        Assert.False(page.ToggleMode); // a new player holds, and pins by moving onto the card
+        Assert.Contains("Move onto the card to keep it open", page.PeekHowTo);
+        Assert.Contains("where the mouse cursor is", page.ReadsExplanation);
+        Assert.Equal("Let go to hide · move onto it to keep it", page.SamplePeek.ReleaseHint);
+
+        page.SetPeekModeCommand.Execute("toggle");
+
+        Assert.Equal(HoldMode.Toggle, app.Settings.PeekMode);
+        Assert.Contains("Press again to hide", page.PeekHowTo);
+        Assert.DoesNotContain("cursor", page.ReadsExplanation);
+        Assert.Equal("Press again to hide", page.SamplePeek.ReleaseHint);
+        Assert.Contains(page.GuideSteps, s => s.Title == "Press again to hide");
+
+        page.SetPeekModeCommand.Execute("hold");
+
+        Assert.Equal(HoldMode.Hold, app.Settings.PeekMode);
+        Assert.Contains(page.GuideSteps, s => s.Title == "Move onto it to keep it");
     });
 
     [Fact]

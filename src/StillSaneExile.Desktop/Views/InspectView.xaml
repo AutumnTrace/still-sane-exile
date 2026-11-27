@@ -62,7 +62,7 @@
       <StackPanel>
         <TextBlock Text="No item yet" Style="{StaticResource CardTitle}" FontSize="18" />
         <TextBlock Style="{StaticResource CardLead}" FontSize="14" LineHeight="21" Margin="0,8,0,0"
-                   Text="In game, hover an item and hold Ctrl+C: the game copies it and the price shows while you hold. Or copy an item and press Paste an item. A Ctrl+Alt+C copy also shows tiers and ranges." />
+                   Text="In game, hover an item and hold Ctrl+C: the game copies it and the price shows while you hold. Move onto the card to keep it open. Or copy an item and press Paste an item. A Ctrl+Alt+C copy also shows tiers and ranges." />
       </StackPanel>
     </Border>
     <ScrollViewer Grid.Row="1" Grid.Column="2" VerticalScrollBarVisibility="Auto" Visibility="{Binding HasSelection, Converter={StaticResource Vis}}" Focusable="False">

@@ -99,6 +99,118 @@ public class AccessibilityTests
         Assert.Contains("Copy search", stops);
     });
 
+    /// <summary>The crossbow's card, pinned: the player moved onto it while holding the key.</summary>
+    private static ViewModels.PeekViewModel PinnedCard(TestApp app)
+    {
+        var item = app.Shell.Inspect.AddFromText(app.ItemText(Crossbow), "test")!;
+        var card = ViewModels.PeekViewModel.From(item, true, ViewModels.PeekViewModel.ReleaseHintFor(Domain.Capture.HoldMode.Hold), "F3");
+        card.IsPinned = true;
+        return card;
+    }
+
+    [Fact]
+    public void The_pinned_quick_price_card_works_from_the_keyboard() => UiThread.Run(() =>
+    {
+        using var app = new TestApp();
+        var view = new PeekCard
+        {
+            DataContext = PinnedCard(app),
+            CloseCommand = new CommunityToolkit.Mvvm.Input.RelayCommand(() => { }),
+            MoreCommand = new CommunityToolkit.Mvvm.Input.RelayCommand(() => { }),
+        };
+
+        var stops = Check(view);
+
+        Assert.Equal("Close the price card", stops[0]);
+        Assert.Equal(new[] { "Physical DPS 355.3", "Lower the minimum for Physical DPS 355.3", "Raise the minimum for Physical DPS 355.3" }, stops[1..4]);
+        Assert.Contains("+18% to Fire Resistance", stops);
+        Assert.Equal("All filters", stops[^1]);
+    });
+
+    [Fact]
+    public void The_held_quick_price_card_has_nothing_to_tab_to() => UiThread.Run(() =>
+    {
+        using var app = new TestApp();
+        var card = PinnedCard(app);
+        card.IsPinned = false;
+        var window = Show(new PeekCard { DataContext = card });
+        try
+        {
+            Flush(window);
+            Assert.DoesNotContain(Descendants<ButtonBase>(window), b => b.IsVisible);
+        }
+        finally
+        {
+            window.Close();
+        }
+    });
+
+    [Fact]
+    public void Ticking_a_stat_on_the_pinned_card_updates_its_price() => UiThread.Run(() =>
+    {
+        using var app = new TestApp();
+        var card = PinnedCard(app);
+        var view = new PeekCard { DataContext = card };
+        var window = Show(view);
+        try
+        {
+            Flush(window);
+            var count = (TextBlock)view.FindName("CountText");
+            var price = (TextBlock)view.FindName("BigText");
+            var before = (count.Text, price.Text);
+            var dps = Descendants<CheckBox>(window).Single(c => SpokenName(c) == "Physical DPS 355.3");
+            Assert.True(dps.IsChecked);
+
+            ((System.Windows.Automation.Provider.IToggleProvider)Peer(dps).GetPattern(PatternInterface.Toggle)).Toggle();
+            Flush(window);
+
+            Assert.False(dps.IsChecked);
+            Assert.NotEqual(before, (count.Text, price.Text));
+            Assert.Equal(card.Answer!.Count?.ToString(System.Globalization.CultureInfo.InvariantCulture), count.Text);
+            Assert.Equal(1, card.OnCount);
+        }
+        finally
+        {
+            window.Close();
+        }
+    });
+
+    [Fact]
+    public void Esc_the_close_button_and_All_filters_on_the_pinned_card_reach_the_HUD() => UiThread.Run(() =>
+    {
+        using var app = new TestApp();
+        var window = new PeekWindow { Left = -20000, Top = 0, DataContext = PinnedCard(app) };
+        var closed = 0;
+        var more = 0;
+        window.CloseRequested += () => closed++;
+        window.MoreRequested += () => more++;
+        window.Show();
+        try
+        {
+            window.SetPinned(true);
+            EnsureActive(window);
+            Flush(window);
+
+            var close = Descendants<Button>(window).Single(b => SpokenName(b) == "Close the price card");
+            ((System.Windows.Automation.Provider.IInvokeProvider)Peer(close).GetPattern(PatternInterface.Invoke)).Invoke();
+            Sta.Drain();
+            Assert.Equal(1, closed);
+
+            var all = Descendants<Button>(window).Single(b => SpokenName(b) == "All filters");
+            ((System.Windows.Automation.Provider.IInvokeProvider)Peer(all).GetPattern(PatternInterface.Invoke)).Invoke();
+            Sta.Drain();
+            Assert.Equal(1, more);
+
+            Descendants<CheckBox>(window).First().Focus();
+            Press(Key.Escape);
+            Assert.Equal(2, closed);
+        }
+        finally
+        {
+            window.Close();
+        }
+    });
+
     [Fact]
     public void Settings_work_from_the_keyboard() => UiThread.Run(() =>
     {
@@ -108,6 +220,8 @@ public class AccessibilityTests
 
         Assert.Contains("Live league name", stops);
         Assert.Contains("Change the quick price key", stops);
+        Assert.Contains("Hide when I let go, unless I move onto the card", stops);
+        Assert.Contains("Press again to hide (accessibility)", stops);
         Assert.Contains("Quick price card scale", stops);
         Assert.Contains("Days until prices you write down expire", stops);
         Assert.True(stops.IndexOf("Practice with demo data") < stops.IndexOf("Divine Orb"));
