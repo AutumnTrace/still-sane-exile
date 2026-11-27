@@ -48,4 +48,25 @@ internal static class Sta
         Dispatcher.CurrentDispatcher.BeginInvoke(DispatcherPriority.Background, () => frame.Continue = false);
         Dispatcher.PushFrame(frame);
     }
+
+    /// <summary>Pumps this thread's dispatcher until <paramref name="condition"/> holds, for work that
+    /// finishes on another thread and posts back (a refresh, an awaited request).</summary>
+    public static void Until(Func<bool> condition, string what)
+    {
+        var deadline = DateTime.UtcNow + TimeSpan.FromSeconds(20);
+        while (!condition())
+        {
+            if (DateTime.UtcNow > deadline)
+            {
+                throw new TimeoutException($"Timed out waiting for {what}.");
+            }
+
+            Drain();
+            Thread.Sleep(5);
+        }
+    }
+
+    /// <summary>Makes <c>await</c> in code under test resume on this thread's dispatcher, as it does in the app.</summary>
+    public static void UseDispatcherContext() =>
+        SynchronizationContext.SetSynchronizationContext(new DispatcherSynchronizationContext(Dispatcher.CurrentDispatcher));
 }

@@ -53,17 +53,23 @@ public sealed record PriceAnswer(string Lead, string Big, string? Line, string N
         };
     }
 
-    /// <param name="noMarketData">The profile has no prices at all yet (a live league before live prices).</param>
+    /// <param name="noMarketData">The profile has no prices at all (a live league before its first poe.ninja
+    /// refresh, or with live prices off).</param>
     /// <param name="searchable">The item has a search to open on the trade site.</param>
-    /// <param name="canWriteDown">Asking prices can be written down for it (rare, magic, normal).</param>
+    /// <param name="canWriteDown">Asking prices can be written down for it (rare, magic, normal). SSE fetches
+    /// no listings for these, so they point to the trade site whether or not the league has prices.</param>
     public static PriceAnswer NoPrice(bool noMarketData, bool searchable = false, bool canWriteDown = false)
     {
         var note = canWriteDown ? "Open the search on the trade site, then write down what you find."
             : searchable ? "Open the search on the trade site to compare."
             : noMarketData ? "There is no price list for this league yet."
             : "This item is not in the price list.";
-        return new(searchable ? "Items like yours" : "Price", "No price yet", noMarketData ? "Live prices come in a later update." : null,
-            note, false, null, noMarketData ? "No price yet · live prices come later" : "Not in the price list");
+        var line = noMarketData && !canWriteDown ? "No prices for this league yet: see Settings, Live prices." : null;
+        var peek = canWriteDown ? "No price yet · compare on trade"
+            : noMarketData ? "No price yet · no prices loaded"
+            : searchable ? "No price yet · compare on trade"
+            : "Not in the price list";
+        return new(searchable ? "Items like yours" : "Price", "No price yet", line, note, false, null, peek);
     }
 
     /// <summary>An item copied from the game while the demo profile is on: the demo's prices are made up
@@ -108,9 +114,15 @@ public sealed record PriceAnswer(string Lead, string Big, string? Line, string N
             note, line.Freshness is not (Freshness.Fresh or null), null, note);
     }
 
-    /// <summary>A price book baseline (e.g. a unique) when there are no listings to search.</summary>
-    public static PriceAnswer Baseline(PriceLine line) =>
-        new("This usually sells for about", line.Headline, null, line.Detail ?? "Rolls can change the price.", true, null, "Typical price · rolls can change it");
+    /// <summary>A price book baseline (e.g. a unique) when there are no listings to search. The card says
+    /// how old the figure is, and when it may be out of date.</summary>
+    public static PriceAnswer Baseline(PriceLine line, DateTimeOffset? now = null)
+    {
+        var age = line.ObservedTo is { } at && now is { } n ? $" · {ValueFormat.Age(n - at)}" : "";
+        var stale = line.Freshness is Freshness.Stale or Freshness.RankingSuppressed ? " · may be out of date" : "";
+        return new("This usually sells for about", line.Headline, null, line.Detail ?? "Rolls can change the price.", true, null,
+            $"Typical price · rolls can change it{age}{stale}");
+    }
 
     private static string Join(params string?[] parts) => string.Join(" · ", parts.Where(p => !string.IsNullOrEmpty(p)));
 }

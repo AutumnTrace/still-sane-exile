@@ -36,6 +36,61 @@ public sealed partial class ShellViewModel : ObservableObject
     public HudController? Hud { get; set; }
     public string VersionLabel => $"v{Updates.CurrentVersion}";
 
+    private LivePrices? _prices;
+
+    /// <summary>The hourly poe.ninja refresh. Null in tests and while rendering snapshots, so neither ever
+    /// fetches. Setting it starts tracking the session's league.</summary>
+    public LivePrices? Prices
+    {
+        get => _prices;
+        set
+        {
+            if (ReferenceEquals(_prices, value))
+            {
+                return;
+            }
+
+            if (_prices is not null)
+            {
+                _prices.BookReady -= OnLiveBook;
+            }
+
+            _prices = value;
+            if (value is not null)
+            {
+                value.BookReady += OnLiveBook;
+            }
+
+            SettingsPage.UsePrices(value);
+            TrackPrices();
+        }
+    }
+
+    /// <summary>The league to keep prices for: the session's, when it is live and live prices are on.</summary>
+    private string? LiveLeague => !Session.IsDemo && Session.LivePricesOn ? Session.League : null;
+
+    private void TrackPrices() => Prices?.Track(LiveLeague, Session.Book);
+
+    private void OnLiveBook(PriceBook book) => ApplyLiveBook(book);
+
+    /// <summary>Swaps in a book that just arrived, in one assignment, if it is still for this session's
+    /// league; a late book for a league the player has left returns false and changes nothing. Unlike
+    /// <see cref="ReloadSession"/> it leaves Settings alone, so a refresh never wipes what is being typed there.</summary>
+    public bool ApplyLiveBook(PriceBook book)
+    {
+        if (LiveLeague is not { } league || !string.Equals(book.League, league, StringComparison.Ordinal)
+            || !string.Equals(Settings.LiveLeague, league, StringComparison.Ordinal))
+        {
+            return false;
+        }
+
+        Session = Session.Create(Store, Settings, Paths, book);
+        Inspect.Rebuild();
+        Wealth.Reload();
+        SettingsPage.OnPricesChanged();
+        return true;
+    }
+
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(IsDemo), nameof(League), nameof(LeagueLabel), nameof(DisplayCurrency), nameof(CurrencyWord), nameof(PackStatus), nameof(PriceStatus), nameof(FooterStatus), nameof(FooterDetail))]
     public partial Session Session { get; private set; }
@@ -103,7 +158,7 @@ public sealed partial class ShellViewModel : ObservableObject
 
     /// <summary>Every capture counter, for the status bar's tooltip.</summary>
     [ObservableProperty]
-    public partial string Diagnostics { get; set; } = "Reads 0 · game inputs sent 0 · market requests 0";
+    public partial string Diagnostics { get; set; } = "Reads 0 · game inputs sent 0 · market requests from keys 0";
 
     public void Navigate(object page)
     {
@@ -114,6 +169,10 @@ public sealed partial class ShellViewModel : ObservableObject
 
         _back.Push(CurrentPage);
         CurrentPage = page;
+        if (page == SettingsPage)
+        {
+            SettingsPage.OnShown();
+        }
     }
 
     public void OpenCraftWith(ItemViewModel? item)
@@ -127,6 +186,7 @@ public sealed partial class ShellViewModel : ObservableObject
     public void ReloadSession()
     {
         Session = Session.Create(Store, Settings, Paths);
+        TrackPrices();
         Inspect.Rebuild();
         Wealth.Reload();
         SettingsPage.Load();

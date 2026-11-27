@@ -11,8 +11,9 @@ namespace StillSaneExile.Desktop.Services;
 
 /// <summary>Keeps an installed copy up to date from GitHub Releases. Checks at startup and every few
 /// hours, downloads in the background, and installs when the app closes, so it never restarts in
-/// the middle of a game unless the player presses "Restart now". The only network request this app
-/// makes is this check (to github.com), and it can be turned off.</summary>
+/// the middle of a game unless the player presses "Restart now". This check (to github.com) and the
+/// hourly poe.ninja prices (<see cref="LivePrices"/>) are the app's only network requests; each can be
+/// turned off.</summary>
 public sealed partial class UpdateService : ObservableObject
 {
     public const string RepoUrl = "https://github.com/AutumnTrace/still-sane-exile";

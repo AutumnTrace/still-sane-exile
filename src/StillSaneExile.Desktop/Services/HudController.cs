@@ -389,7 +389,7 @@ public sealed class HudController : IDisposable
         var c = _gate.Counters;
         _shell.KeysSent = c.GameActionsSent;
         _shell.ItemsRead = c.Reads;
-        _shell.Diagnostics = $"Reads {c.Reads} · auto-repeat ignored {c.AutoRepeatIgnored} · synthetic ignored {c.InjectedIgnored} · late results dropped {c.StaleResultsDropped} · game inputs sent {c.GameActionsSent} · market requests 0";
+        _shell.Diagnostics = $"Reads {c.Reads} · auto-repeat ignored {c.AutoRepeatIgnored} · synthetic ignored {c.InjectedIgnored} · late results dropped {c.StaleResultsDropped} · game inputs sent {c.GameActionsSent} · market requests from keys 0";
     }
 
     /// <summary>The settings page's press/hold/release tester. Only while this app is in front, so keys

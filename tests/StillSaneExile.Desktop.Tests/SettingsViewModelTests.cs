@@ -1,6 +1,7 @@
 using System.Windows.Input;
 using StillSaneExile.Desktop.Infrastructure;
 using StillSaneExile.Domain.Capture;
+using StillSaneExile.Domain.Pricing;
 
 namespace StillSaneExile.Desktop.Tests;
 
@@ -117,6 +118,101 @@ public class SettingsViewModelTests
 
         Assert.Equal(HoldMode.Hold, app.Settings.PeekMode);
         Assert.Contains(page.GuideSteps, s => s.Title == "Move onto it to keep it");
+    });
+
+    [Fact]
+    public void poe_ninja_s_leagues_are_offered_and_a_pick_still_needs_confirming() => Sta.Run(() =>
+    {
+        Sta.UseDispatcherContext();
+        using var app = new TestApp();
+        using var prices = LivePricesRig.For(app, new FakeNinja());
+        app.Shell.Prices = prices;
+        var page = app.Shell.SettingsPage;
+
+        page.LoadLeaguesCommand.Execute(null);
+        Sta.Until(() => page.LeagueChoices.Count > 0, "the league list");
+
+        Assert.Equal(["Runes of Aldur", "HC Runes of Aldur", "Standard", "Hardcore"], page.LeagueChoices);
+        Assert.False(page.CanLoadLeagues);
+        page.PickLeagueCommand.Execute("HC Runes of Aldur");
+        Assert.Equal("HC Runes of Aldur", page.LeagueDraft);
+        Assert.Null(app.Settings.LiveLeague); // not until "Confirm league"
+        Assert.True(app.Shell.Session.IsDemo);
+
+        page.ConfirmLeagueCommand.Execute(null);
+
+        Assert.Equal("HC Runes of Aldur", app.Settings.LiveLeague);
+        Assert.Equal("HC Runes of Aldur", app.Shell.Session.League);
+        Assert.Equal("HC Runes of Aldur", prices.League);
+        Assert.StartsWith("Live profile on HC Runes of Aldur. Its prices come from poe.ninja and refresh every hour", page.Message, StringComparison.Ordinal);
+    });
+
+    [Fact]
+    public void A_league_typed_in_another_case_takes_poe_ninja_s_spelling_and_an_unknown_one_is_flagged() => Sta.Run(() =>
+    {
+        Sta.UseDispatcherContext();
+        using var app = new TestApp();
+        using var prices = LivePricesRig.For(app, new FakeNinja());
+        app.Shell.Prices = prices;
+        var page = app.Shell.SettingsPage;
+        page.LoadLeaguesCommand.Execute(null);
+        Sta.Until(() => page.LeagueChoices.Count > 0, "the league list");
+
+        page.LeagueDraft = "standard";
+        page.ConfirmLeagueCommand.Execute(null);
+        Assert.Equal("Standard", app.Settings.LiveLeague);
+
+        page.LeagueDraft = "Runes of Aldor";
+        page.ConfirmLeagueCommand.Execute(null);
+        Assert.Equal("Runes of Aldor", app.Settings.LiveLeague);
+        Assert.Contains("poe.ninja lists no league by that name", page.Message, StringComparison.Ordinal);
+    });
+
+    [Fact]
+    public void Offline_the_league_can_still_be_typed() => Sta.Run(() =>
+    {
+        Sta.UseDispatcherContext();
+        using var app = new TestApp(s => s.Onboarded = false);
+        using var prices = LivePricesRig.For(app, new FakeNinja { Offline = true });
+        app.Shell.Prices = prices;
+        var page = app.Shell.SettingsPage;
+
+        page.ChooseLiveCommand.Execute(null); // onboarding's "A live league" asks for the list
+        Sta.Until(() => !page.LoadingLeagues && page.LeagueListStatus?.StartsWith("Couldn't", StringComparison.Ordinal) == true, "the failed list");
+
+        Assert.Empty(page.LeagueChoices);
+        Assert.Equal("Couldn't get the league list from poe.ninja. Type the league name exactly as the game shows it.", page.LeagueListStatus);
+        page.LeagueDraft = "Runes of Aldur";
+        page.ConfirmLeagueCommand.Execute(null);
+        Assert.Equal("Runes of Aldur", app.Settings.LiveLeague);
+    });
+
+    [Fact]
+    public void Opening_Settings_asks_for_leagues_only_when_live_prices_are_already_in_use() => Sta.Run(() =>
+    {
+        Sta.UseDispatcherContext();
+        var ninja = new FakeNinja();
+        using (var demo = new TestApp())
+        {
+            using var prices = LivePricesRig.For(demo, ninja);
+            demo.Shell.Prices = prices;
+            demo.Shell.GoSettingsCommand.Execute(null);
+            Sta.Drain();
+            Assert.Empty(ninja.Requests);
+        }
+
+        using var live = new TestApp(s =>
+        {
+            s.LiveLeague = "Standard";
+            s.Profile = ProfileKind.Live;
+        });
+        using var livePrices = LivePricesRig.For(live, ninja);
+        live.Shell.Prices = livePrices;
+        live.Shell.GoSettingsCommand.Execute(null);
+        Sta.Until(() => live.Shell.SettingsPage.LeagueChoices.Count > 0, "the league list");
+
+        Assert.Single(ninja.Requests);
+        Assert.EndsWith("/poe2/api/data/index-state", ninja.Requests[0].RequestUri!.AbsolutePath, StringComparison.Ordinal);
     });
 
     [Fact]

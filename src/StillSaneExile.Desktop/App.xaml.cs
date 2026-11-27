@@ -16,6 +16,7 @@ public partial class App : Application
     private GuideHud? _guideHud;
     private AppPaths? _paths;
     private UpdateService? _updates;
+    private LivePrices? _prices;
     private TextScale? _textScale;
     private bool _renderingSnapshots;
 
@@ -68,12 +69,18 @@ public partial class App : Application
         _guideHud = new GuideHud(shell.Guide, _peek, main);
         _guideHud.Start();
         _updates.Start(settings.AutoUpdate);
+
+        // Hourly poe.ninja prices for a confirmed live league with live prices on; it does nothing until
+        // then. Never created for --render-snapshots (returned above), and the HUD holds no reference to it.
+        _prices = LivePrices.Create(_paths, _updates.CurrentVersion, Dispatcher);
+        shell.Prices = _prices;
     }
 
     protected override void OnExit(ExitEventArgs e)
     {
         _hud?.Dispose();
         _guideHud?.Dispose();
+        _prices?.Dispose();
         _textScale?.Dispose();
         _peek?.Close();
         _priceCheck?.Close();
