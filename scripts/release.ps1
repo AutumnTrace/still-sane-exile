@@ -35,20 +35,20 @@ try {
         [System.IO.File]::WriteAllText($changelog, $text, [System.Text.UTF8Encoding]::new($false))
     }
 
-    function Git { git @args; if ($LASTEXITCODE -ne 0) { throw "git $($args -join ' ') failed" } }
+    function Invoke-Git { & git.exe @args; if ($LASTEXITCODE -ne 0) { throw "git $($args -join ' ') failed" } }
 
-    Git add Directory.Build.props CHANGELOG.md
+    Invoke-Git add Directory.Build.props CHANGELOG.md
     git diff --cached --quiet
     if ($LASTEXITCODE -ne 0) {
-        Git commit -m "chore: release $Version"
-        Git push origin main
+        Invoke-Git commit -m "chore: release $Version"
+        Invoke-Git push origin main
     }
     else {
         Write-Host "Version and changelog already say $Version; tagging the current commit."
     }
 
-    Git tag -a $tag -m "Still Sane, Exile $Version"
-    Git push origin $tag
+    Invoke-Git tag -a $tag -m "Still Sane, Exile $Version"
+    Invoke-Git push origin $tag
     Write-Host "Pushed $tag. Watch the Release workflow: gh run watch"
 }
 finally {
