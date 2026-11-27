@@ -1,49 +1,47 @@
-# Draws the app icon (a roll-quality bar on charcoal, "SSE" at larger sizes) and writes a
-# multi-size .ico: 32-bit DIB entries for 16-128 px, PNG for 256 px.
-# Usage: ./scripts/make-icon.ps1   → src/StillSaneExile.Desktop/Assets/sse.ico
+# Builds the app icon from src/StillSaneExile.Desktop/Assets/sse.svg ("Clear quartz" from the
+# "UI & overlay" design) and writes a multi-size .ico: 32-bit DIB entries for 16-128 px, PNG for 256 px.
+# The SVG uses gradients and blur filters that WPF cannot draw, so each size is rasterized by a local
+# headless Chrome or Edge (set SSE_BROWSER to a chrome.exe or msedge.exe path to choose one).
+# Usage: ./scripts/make-icon.ps1   → src/StillSaneExile.Desktop/Assets/sse.ico and docs/screenshots/icon.png
 $ErrorActionPreference = 'Stop'
-Add-Type -AssemblyName PresentationCore, WindowsBase, PresentationFramework
+Add-Type -AssemblyName PresentationCore, WindowsBase
 
 $root = Split-Path -Parent $PSScriptRoot
+$svgFile = Join-Path $root 'src/StillSaneExile.Desktop/Assets/sse.svg'
 $outFile = Join-Path $root 'src/StillSaneExile.Desktop/Assets/sse.ico'
-New-Item -ItemType Directory -Force (Split-Path $outFile) | Out-Null
 
-function Brush([string]$hex) {
-    $c = [System.Windows.Media.ColorConverter]::ConvertFromString($hex)
-    $b = New-Object System.Windows.Media.SolidColorBrush $c
-    $b.Freeze()
-    return $b
-}
+$candidates = @(
+    $env:SSE_BROWSER,
+    (Join-Path $env:ProgramFiles 'Google\Chrome\Application\chrome.exe'),
+    (Join-Path ${env:ProgramFiles(x86)} 'Google\Chrome\Application\chrome.exe'),
+    (Join-Path $env:LOCALAPPDATA 'Google\Chrome\Application\chrome.exe'),
+    (Join-Path ${env:ProgramFiles(x86)} 'Microsoft\Edge\Application\msedge.exe'),
+    (Join-Path $env:ProgramFiles 'Microsoft\Edge\Application\msedge.exe')
+) | Where-Object { $_ -and (Test-Path $_) }
+$browser = $candidates | Select-Object -First 1
+if (-not $browser) { throw 'No Chrome or Edge found. Set SSE_BROWSER to the path of chrome.exe or msedge.exe.' }
 
-$bg = Brush '#1A1B1E'; $amber = Brush '#D9A84E'; $track = Brush '#3A3C41'; $white = Brush '#F2ECE2'
+$work = Join-Path ([System.IO.Path]::GetTempPath()) ("sse-icon-" + [Guid]::NewGuid().ToString('N'))
+New-Item -ItemType Directory -Force $work | Out-Null
+Copy-Item $svgFile (Join-Path $work 'icon.svg')
 
+# Renders the SVG at exactly $s x $s pixels with a transparent background.
 function Render([int]$s) {
-    $dv = New-Object System.Windows.Media.DrawingVisual
-    $dc = $dv.RenderOpen()
-    $pen = [System.Windows.Media.Pen]::new($amber, [Math]::Max(1.0, [Math]::Round($s * 0.05)))
-    $inset = $pen.Thickness / 2 + [Math]::Max(0, [Math]::Round($s * 0.02))
-    $radius = $s * 0.2
-    $dc.DrawRoundedRectangle($bg, $pen, ([System.Windows.Rect]::new($inset, $inset, $s - 2 * $inset, $s - 2 * $inset)), $radius, $radius)
+    $html = Join-Path $work "icon-$s.html"
+    $png = Join-Path $work "icon-$s.png"
+    Set-Content -Encoding UTF8 $html "<!doctype html><html><body style='margin:0;background:transparent'><img src='icon.svg' width='$s' height='$s' style='display:block'></body></html>"
+    $url = 'file:///' + ($html -replace '\\', '/')
+    $browserArgs = @('--headless=new', '--disable-gpu', '--hide-scrollbars', '--force-device-scale-factor=1',
+        '--default-background-color=00000000', "--user-data-dir=$work\profile", "--screenshot=$png", "--window-size=$s,$s", $url)
+    Start-Process -FilePath $browser -ArgumentList $browserArgs -Wait -NoNewWindow -RedirectStandardError (Join-Path $work 'browser.log')
+    if (-not (Test-Path $png)) { throw "The browser did not render $s px (see $work\browser.log)." }
 
-    if ($s -ge 48) {
-        $tf = [System.Windows.Media.Typeface]::new([System.Windows.Media.FontFamily]::new('Segoe UI'), [System.Windows.FontStyles]::Normal, [System.Windows.FontWeights]::Bold, [System.Windows.FontStretches]::Normal)
-        $ft = [System.Windows.Media.FormattedText]::new('SSE', [Globalization.CultureInfo]::InvariantCulture, [System.Windows.FlowDirection]::LeftToRight, $tf, ($s * 0.30), $white, 1.0)
-        $dc.DrawText($ft, ([System.Windows.Point]::new((($s - $ft.Width) / 2), ($s * 0.17))))
-        $barTop = [Math]::Round($s * 0.62); $barH = [Math]::Max(2, [Math]::Round($s * 0.11))
-    } else {
-        $barTop = [Math]::Round($s * 0.40); $barH = [Math]::Max(2, [Math]::Round($s * 0.20))
+    $decoder = [System.Windows.Media.Imaging.PngBitmapDecoder]::new([Uri]$png, 'PreservePixelFormat', 'OnLoad')
+    $frame = $decoder.Frames[0]
+    if ($frame.PixelWidth -ne $s -or $frame.PixelHeight -ne $s) {
+        $frame = [System.Windows.Media.Imaging.CroppedBitmap]::new($frame, [System.Windows.Int32Rect]::new(0, 0, $s, $s))
     }
-
-    $x0 = [Math]::Round($s * 0.2); $x1 = [Math]::Round($s * 0.76); $fill = [Math]::Round($s * 0.56)
-    $tickW = [Math]::Max(1, [Math]::Round($s * 0.06)); $tickExtra = [Math]::Max(1, [Math]::Round($s * 0.05))
-    $dc.DrawRectangle($track, $null, ([System.Windows.Rect]::new($x0, $barTop, ($x1 - $x0), $barH)))
-    $dc.DrawRectangle($amber, $null, ([System.Windows.Rect]::new($x0, $barTop, ($fill - $x0), $barH)))
-    $dc.DrawRectangle($white, $null, ([System.Windows.Rect]::new($x1, ($barTop - $tickExtra), $tickW, ($barH + 2 * $tickExtra))))
-    $dc.Close()
-
-    $rtb = [System.Windows.Media.Imaging.RenderTargetBitmap]::new($s, $s, 96, 96, [System.Windows.Media.PixelFormats]::Pbgra32)
-    $rtb.Render($dv)
-    return $rtb
+    return $frame
 }
 
 function DibBytes($bmp, [int]$s) {
@@ -71,27 +69,33 @@ function PngBytes($bmp) {
     return , $ms.ToArray()
 }
 
-$sizes = 16, 20, 24, 32, 40, 48, 64, 128, 256
-$images = foreach ($s in $sizes) {
-    $bmp = Render $s
-    , ($(if ($s -eq 256) { PngBytes $bmp } else { DibBytes $bmp $s }))
-}
+try {
+    $sizes = 16, 20, 24, 32, 40, 48, 64, 128, 256
+    $bitmaps = @{}
+    $images = foreach ($s in $sizes) {
+        $bitmaps[$s] = Render $s
+        , ($(if ($s -eq 256) { PngBytes $bitmaps[$s] } else { DibBytes $bitmaps[$s] $s }))
+    }
 
-$out = New-Object System.IO.MemoryStream
-$w = New-Object System.IO.BinaryWriter $out
-$w.Write([int16]0); $w.Write([int16]1); $w.Write([int16]$sizes.Count)
-$offset = 6 + 16 * $sizes.Count
-for ($i = 0; $i -lt $sizes.Count; $i++) {
-    $s = $sizes[$i]; $len = $images[$i].Length
-    $dim = [byte]$(if ($s -ge 256) { 0 } else { $s })
-    $w.Write($dim); $w.Write($dim); $w.Write([byte]0); $w.Write([byte]0)
-    $w.Write([int16]1); $w.Write([int16]32); $w.Write([int]$len); $w.Write([int]$offset)
-    $offset += $len
-}
-foreach ($img in $images) { $w.Write($img) }
-$w.Flush()
-[System.IO.File]::WriteAllBytes($outFile, $out.ToArray())
+    $out = New-Object System.IO.MemoryStream
+    $w = New-Object System.IO.BinaryWriter $out
+    $w.Write([int16]0); $w.Write([int16]1); $w.Write([int16]$sizes.Count)
+    $offset = 6 + 16 * $sizes.Count
+    for ($i = 0; $i -lt $sizes.Count; $i++) {
+        $s = $sizes[$i]; $len = $images[$i].Length
+        $dim = [byte]$(if ($s -ge 256) { 0 } else { $s })
+        $w.Write($dim); $w.Write($dim); $w.Write([byte]0); $w.Write([byte]0)
+        $w.Write([int16]1); $w.Write([int16]32); $w.Write([int]$len); $w.Write([int]$offset)
+        $offset += $len
+    }
+    foreach ($img in $images) { $w.Write($img) }
+    $w.Flush()
+    [System.IO.File]::WriteAllBytes($outFile, $out.ToArray())
 
-# Preview PNG for the README.
-[System.IO.File]::WriteAllBytes((Join-Path $root 'docs/screenshots/icon.png'), (PngBytes (Render 256)))
-Write-Host "Wrote $outFile ($($out.Length) bytes)"
+    # Preview PNG for the docs.
+    [System.IO.File]::WriteAllBytes((Join-Path $root 'docs/screenshots/icon.png'), (PngBytes $bitmaps[256]))
+    Write-Host "Wrote $outFile ($($out.Length) bytes) using $browser"
+}
+finally {
+    Remove-Item -Recurse -Force $work -ErrorAction SilentlyContinue
+}

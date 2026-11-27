@@ -11,6 +11,7 @@ Every release is a tag `vX.Y.Z` on `main` that matches `<Version>` in `Directory
 - "How good are your rolls?" with tier bars and open affix slots, and "Prices you write down" next to the price check.
 - New first-start screen with a labelled sample card ("How to read a price check").
 - Demo profile: synthetic listings made around each practice item, so the search can be practised before live prices exist.
+- New app icon: a clear quartz crystal. `scripts/make-icon.ps1` now builds the `.ico` from `Assets/sse.svg`.
 
 ## [0.1.1] - 2026-11-27
 
