@@ -1,38 +1,65 @@
 # Still Sane, Exile?
 
-A Path of Exile 2 companion for Windows. Hover an item, hold a key, and see which rolls are good and what comparable items ask. Later milestones add held-key price labels on stash and Aldur reward panels, crafting plans, wealth history and campaign guidance (SSE for short).
+Hold `Ctrl+C` over a Path of Exile 2 item to see what items like it sell for, and exactly which of its stats that price searched with. Release to get back to the game. `F3` opens the full price check over the game, where you choose the stats and numbers to search for and see how good each roll is.
 
-> This product isn't affiliated with or endorsed by Grinding Gear Games in any way.
+[Download for Windows](https://github.com/AutumnTrace/still-sane-exile/releases/latest) · [Changelog](CHANGELOG.md)
 
-![Inspect view with the demo crossbow](docs/screenshots/inspect-advanced.png)
+Windows 10/11 · x64 · Windowed or borderless
 
-## Status: v0.1.0 (Milestone 1 foundation, demo-first)
+<img src="docs/screenshots/peek-advanced.png" width="384" alt="Demo card for Doom Thirst: items like it sell for about 1.8 to 2.6 divine, 29 for sale, searched with physical DPS of at least 319 and attack speed of at least 15">
 
-| Area | State in this version |
+Doom Thirst in the demo profile: items like it ask about 1.8–2.6 div, with 29 for sale. The search wanted physical DPS of at least 319 and attack speed of at least 15, 10% under its own rolls.
+
+## Try it on a crossbow
+
+You don't need the game running. Run `StillSaneExile-win-Setup.exe` from the [latest release](https://github.com/AutumnTrace/still-sane-exile/releases/latest) (it installs for your user, no admin rights) or unzip `StillSaneExile-win-Portable.zip` anywhere. The build isn't code-signed yet, so SmartScreen may warn you: choose **More info → Run anyway**. Installed copies apply downloaded updates when you close the app.
+
+On first start, pick **Practice with demo data**, then **Done — try a price check**. SSE opens Doom Thirst, a made-up crossbow.
+
+Doom Thirst has a T1 physical damage prefix. Its 175% roll is 56% of the way through that tier's 170–179%, four short of the best. The attack-speed roll reads 17%, a third of the way through its 16–19% range. Both bars sit under **How good are your rolls?**: each shows how close a roll is to the best number in its tier; tier 1 is the best a stat can be.
+
+All of this is demo data: made-up tiers, ranges and listings. On a live item, an advanced copy (`Ctrl+Alt+C`) gives the game's own tiers and ranges, drawn as a position marker until a verified data pack confirms which end is better. Live market prices and a real-game test run are still to come; until then, a live league prices items only from asks you write down.
+
+## Choose what you're comparing
+
+[![The price check page for Doom Thirst: the price and its search in the middle, roll tiers and written-down prices on the right](docs/screenshots/inspect-advanced.png)](docs/screenshots/inspect-advanced.png)
+
+Tick what a weapon like yours must have, set the numbers, and the price follows.
+
+Press `F3` after a peek and this price check opens over the game. Tick **Physical DPS** and step its minimum: the price, the count and the cheapest matches update as you go. **Open this search on the trade site** opens the official site in your browser; it has no documented link format, so **Copy search** gives you the filters to set there. Asks worth keeping go under **Write down a price**.
+
+The demo's 1.8–2.6 div runs from just above the cheapest of the 29 matching listings to the middle one: made-up asking prices, not sales or a league quote. Eight or more matches read *Good price guess*, three to seven a *Rough price*, one or two *too few to trust*.
+
+<details>
+<summary>Why does my 192% physical roll say "Can't tell which stat this is"?</summary>
+
+Storm Mark, the second practice crossbow, is a normal copy. It shows `192% increased Physical Damage` next to `+212 to Accuracy Rating`. A weapon can roll a pure physical damage prefix and a hybrid prefix that adds both physical damage and accuracy, and a normal copy adds them together into one line. From the total alone, more than one pair of tiers fits, so SSE doesn't guess: both lines get no bar, stay out of the starting search, and list the explanations that fit when you hover them.
+
+An advanced copy (`Ctrl+Alt+C`) prints each affix on its own with its tier and range, which settles it. In the demo, those tiers come from the made-up data pack.
+
+[![Storm Mark on the price check page: both merged lines read "Can't tell which stat this is — Ctrl+Alt+C shows it"](docs/screenshots/inspect-hybrid.png)](docs/screenshots/inspect-hybrid.png)
+
+</details>
+
+## What the app reads when you press a key
+
+| Key | What it does |
 |---|---|
-| **Item peek HUD** | Works. Hold `Ctrl+C` over an item in game: the game copies it, SSE reads that copy once and shows a click-through card until you release. |
-| **Inspector** | Works. Roll bars, tiers, hybrid ambiguity, physical DPS, every line kept with its source. |
-| **Comparison worksheet** | Works. Presets, AND/optional groups, double-count warnings, one-step relaxations, official trade-site handoff. |
-| **Manual comparables** | Work. Private asks you record, summarized as median / thin market / one ask. |
-| **Demo profile** | Works. Synthetic items, ranges, prices and listings, labelled DEMO everywhere. |
-| **Live prices** | Not yet. Shared poe.ninja / GGG exchange cache is Milestone 2. A live profile says "no market data". |
-| **Verified game data pack** | Not yet. Live roll bars use advanced-copy ranges only, shown as position markers until directions are verified. |
-| **Stash and Aldur labels** | Not yet (Milestone 2). The key is reserved and nothing reads the screen. |
-| **Wealth / Guide / Craft** | Not yet (Milestones 3, 4, 5). Each page says what is planned. |
-| **Installer and auto-update** | Works. Velopack installer and portable zip on every release; installed copies update themselves from GitHub releases. |
-| **Real-game validation** | Not done. Item text, overlay placement and DPI behaviour are tested on synthetic fixtures and this machine only; see [docs/SOURCES.md](docs/SOURCES.md). |
+| Hold `Ctrl+C` | Shows the card for the item under your cursor; let go to hide it |
+| Hold `Ctrl+Alt+C` | The same card from the game's advanced copy, with tiers and ranges |
+| `F3` | Opens the price check for your last item over the game; `Esc` closes it |
 
-## Install
+Settings can change every key, and a toggle mode can replace holding.
 
-1. Download **`StillSaneExile-win-Setup.exe`** from the [latest release](https://github.com/AutumnTrace/still-sane-exile/releases/latest) and run it. It installs for your user only (no admin rights) and adds Start menu and desktop shortcuts. Prefer no installer? Take `StillSaneExile-win-Portable.zip` instead.
-2. The build is not code-signed yet, so Windows SmartScreen may say "Windows protected your PC". Choose **More info → Run anyway**.
-3. Play in **windowed or borderless** mode. Exclusive fullscreen cannot show an overlay.
+The game copies the item. SSE reads the changed clipboard once for that press and draws a click-through card that never takes focus; releasing the key hides it. `F3` reopens the saved item without another read, and takes focus so you can type until you close it. SSE never sends input to the game. Its only network request is the update check against this repository's GitHub releases, which Settings can switch off. Details: [Capture and privacy](docs/CAPTURE-AND-PRIVACY.md).
 
-**Updates are automatic.** SSE checks GitHub releases at start and every 6 hours, downloads a new version in the background, and installs it when you close the app, so it never restarts mid-game. Settings → Version and updates has "Check now", "Restart now" and an off switch. Uninstall from Windows Settings → Apps. How releases are cut: [docs/RELEASING.md](docs/RELEASING.md).
+## What's next
 
-## Run from source
+Shared market data comes next, bringing prices to live leagues and held-key price labels to stash and Aldur reward panels. Wealth history, the campaign guide and crafting plans follow; see the [roadmap](docs/ROADMAP.md). Players can help with two open issues: [English item copies to check the parser against](https://github.com/AutumnTrace/still-sane-exile/issues/1) and [how the card behaves on your screen](https://github.com/AutumnTrace/still-sane-exile/issues/5). Item text and measurements are enough; leave out account names and stash screenshots.
 
-Requirements: Windows 10 or 11 (x64) and the [.NET 10 SDK](https://dotnet.microsoft.com/download).
+## Build from source
+
+You need Windows 10 or 11 (x64) and the [.NET 10 SDK](https://dotnet.microsoft.com/download).
 
 ```powershell
 git clone https://github.com/AutumnTrace/still-sane-exile.git
@@ -40,101 +67,12 @@ cd still-sane-exile
 dotnet run --project src/StillSaneExile.Desktop
 ```
 
-The first start opens onboarding: pick the demo profile or confirm a live league, pick a display currency, and review the keys. To start over with a clean profile, point SSE at an empty data folder:
-
-```powershell
-dotnet run --project src/StillSaneExile.Desktop -- --data "$env:TEMP\sse-fresh"
-```
-
-Tests (domain logic: parsing, roll math, pricing, evidence, worksheet, capture gate):
+Run the tests:
 
 ```powershell
 dotnet test
 ```
 
-Installer and portable zip, built locally the same way the Release workflow builds them:
+Add `-- --data <empty folder>` for a clean profile. `src/StillSaneExile.Domain` owns parsing and the comparison rules, with no Windows or network code; `src/StillSaneExile.Desktop` owns WPF, foreground detection and clipboard access. See also [data sources and coverage](docs/SOURCES.md), [cutting a release](docs/RELEASING.md) and [third-party licences](docs/THIRD-PARTY.md).
 
-```powershell
-./scripts/pack-local.ps1   # → artifacts/releases
-```
-
-Release a new version (bumps the version, tags `vX.Y.Z` on main, pushes; CI builds and publishes the installer):
-
-```powershell
-./scripts/release.ps1 -Version 0.2.0
-```
-
-Screenshots of the demo screens, rendered offscreen without hooks:
-
-```powershell
-dotnet run --project src/StillSaneExile.Desktop -- --data "$env:TEMP\sse-shots" --render-snapshots docs/screenshots
-```
-
-## Keys and exactly what each one reads
-
-| Key (default) | Does | Reads |
-|---|---|---|
-| `Ctrl+C`, held (also `Ctrl+Alt+C`) | Item peek while held, hides on release | The clipboard, **once**, after the game's own copy changes it. If the game copied nothing within 250 ms, nothing is read. |
-| `F3` | Brings SSE forward with the last item | Nothing |
-| `Right Alt`, held | Reserved for stash and Aldur labels (Milestone 2) | Nothing yet. When built: one frame of the game window per press, with your opt-in. |
-
-All keys can be changed in Settings, which also has a press/hold/release tester and collision warnings (including AltGr layouts). An accessibility **toggle mode** shows a frozen snapshot on the first press and dismisses it on the next.
-
-SSE only reacts to physical key presses while the game (or, for practice, SSE itself) is in front. Auto-repeat never triggers a second read; a result that arrives after release, focus loss or a newer press is dropped. The status bar shows the counters live (reads, ignored repeats, ignored synthetic input, dropped late results, game inputs sent = 0, market requests = 0).
-
-## What SSE never does
-
-- Send keys, clicks, chat, copy shortcuts, currency use or gem choices to the game.
-- Read game memory, game files or network traffic; inject a DLL or driver; hook the renderer.
-- Read the clipboard or screen on a timer, on mouse movement, or more than once per press.
-- Call the official trade site's internal endpoints or collect session cookies. "Open official trade site" opens your browser.
-- Scrape or mirror Mobalytics. Build guides will be saved as links and opened in your browser.
-- Show demo (synthetic) prices in a live profile, or carry rates between leagues.
-- Talk to any server except GitHub for its own update check (which you can switch off).
-
-The keyboard observer is an in-process low-level hook that passes every event on unchanged. The full list of Windows calls is in [`NativeMethods.cs`](src/StillSaneExile.Desktop/Infrastructure/NativeMethods.cs). Details: [docs/CAPTURE-AND-PRIVACY.md](docs/CAPTURE-AND-PRIVACY.md).
-
-## How roll bars stay honest
-
-A bar is drawn only when the **range, value and direction** are defensible for that exact line:
-
-- **Advanced copy** (`Ctrl+Alt+C`): the game prints the tier and range, so they are used as-is. If the loaded pack disagrees, the game wins and the line says so.
-- **Normal copy**: a bar appears only when the data pack has **exactly one** explanation for the value. A line that a pure affix and a hybrid affix could both produce (e.g. `192% increased Physical Damage` next to `+212 to Accuracy Rating`) is marked *ambiguous*, lists the explanations and asks for an advanced copy.
-- No verified direction: an uncoloured position marker, not a "good/bad" fill. Out-of-range values read *Range mismatch* and are excluded. Fixed values read *Fixed*.
-- Item level filters tiers; item level and required level are kept apart.
-
-## Prices and evidence
-
-- One price line per item. **Commodities**: unit and stack value, age, volume. **Uniques**: a category baseline marked "check rolls". **Rares**: whatever your comparables support, or "Compare on trade".
-- Comparables: same league only; duplicate listings removed; each known seller counted once (latest ask); all unknown-seller asks pooled into a single point so they cannot raise confidence. Five or more sellers → median and middle 50%; two to four → "Thin market" span; one → "One ask". Wide spreads and clustered low asks are flagged.
-- Conversion uses decimal math and rounds only for display. It tries a direct quote, then its inverse, then one transparent bridge with fresh, liquid legs. With no rate, the original currency is shown. Quotes go stale after two missed hourly updates and stop being used for ranking after 24 h.
-
-## Data sources and coverage
-
-| Source | Used for | In this version |
-|---|---|---|
-| Your own item copies (clipboard) | Item facts, advanced-copy tiers and ranges | Used |
-| `fixtures/` (synthetic, written for this repo) | Demo profile and all tests | Used, labelled synthetic |
-| Official PoE2 trade site | Comparison handoff in your browser | Link only |
-| poe.ninja PoE2 economy API | League list, exchange and item overviews via a shared cache | Planned (Milestone 2) |
-| GGG currency-exchange digest | Independent check or fallback for covered pairs | Planned (Milestone 2) |
-| PoE2DB, Craft of Exile | Verifying bases, mods and craft odds; link-outs | Planned; no data bundled |
-| Mobalytics | Build guides: saved link plus your own steps | Planned (Milestone 4); no scraping |
-| PoE2Scout | Optional adapter after its terms are checked | Not planned for production |
-
-The full source matrix, with real-capture versus fixture coverage, is in [docs/SOURCES.md](docs/SOURCES.md). The milestone plan is in [docs/ROADMAP.md](docs/ROADMAP.md).
-
-## Layout
-
-```
-src/StillSaneExile.Domain     item parsing, roll math, data packs, pricing, evidence, worksheet, capture gate (no Windows or network)
-src/StillSaneExile.Desktop    WPF app: hooks, foreground detection, one-shot clipboard, HUD card, views, updates
-tests/StillSaneExile.Domain.Tests
-fixtures/                     synthetic items, data pack, price book and comparables
-scripts/                      release, pack-local, verify-release, release-notes, make-icon
-docs/                         sources, roadmap, releasing, capture and privacy notes, screenshots
-```
-
-## Third-party
-
-Path of Exile and Path of Exile 2 are trademarks of Grinding Gear Games. This product isn't affiliated with or endorsed by Grinding Gear Games in any way. Library licences are listed in [docs/THIRD-PARTY.md](docs/THIRD-PARTY.md).
+Path of Exile and Path of Exile 2 are trademarks of Grinding Gear Games. This product isn't affiliated with or endorsed by Grinding Gear Games in any way.
