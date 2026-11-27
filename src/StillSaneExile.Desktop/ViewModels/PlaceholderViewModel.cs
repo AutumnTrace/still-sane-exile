@@ -27,15 +27,4 @@ public sealed partial class PlaceholderViewModel(string title, string milestone,
             "Odds are labelled exact, estimated or unknown. Recommendations stop when unknown odds or prices would change the answer.",
             "After each real step you paste the new item and replan. No button performs a craft in game.",
         ]);
-
-    public static PlaceholderViewModel Guide() => new(
-        "Campaign guide",
-        "Milestone 4 · not available yet",
-        "Campaign route and build steps in two short HUD lines: the next objective and what to do with your next uncut gem.",
-        [
-            "Versioned zone graph with original route text, optional bonuses and backtracking. Manual zone picker works offline.",
-            "Build plans: paste a Mobalytics link to save it and open it in your browser; enter or import the steps yourself. Automatic import only through an authorized export.",
-            "Stage-aware gem actions (cut, upgrade, move support) that never leak later-stage loadouts into early prompts.",
-            "Skip, undo, resume after restart, and a list of missed permanent rewards. Zone entry never marks a quest done.",
-        ]);
 }

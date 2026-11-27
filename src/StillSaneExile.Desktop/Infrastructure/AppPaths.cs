@@ -26,6 +26,13 @@ public sealed class AppPaths
     public bool Portable { get; }
     public string Database => Path.Combine(DataDir, "sse.db");
     public string Fixtures => Path.Combine(AppDir, "fixtures");
+
+    /// <summary>Route packs that ship with the app. Replaced on every update like the program files.</summary>
+    public string RoutePacks => Path.Combine(AppDir, "data", "routes");
+
+    /// <summary>The last route pack that passed its checks, so a broken pack in an update cannot take
+    /// the route away.</summary>
+    public string RouteCache => Path.Combine(DataDir, "route-cache");
 }
 
 /// <summary>Clock for the demo profile: starts at a fixed instant so every demo run shows the same ages.</summary>

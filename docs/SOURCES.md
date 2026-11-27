@@ -17,7 +17,7 @@ The source ledger below comes from the project handoff spec (reviewed 27 Novembe
 | 7 | Craft of Exile (PoE2) | Calculator and emulator; extrapolated weights; its game version can differ | Independent check of craft routes | Milestone 5 |
 | 8 | GGG Return of the Ancients | Aldur Remnant panel with selectable rewards and a common bonus | Row geometry plus per-row reward identity | Milestone 2 |
 | 9 | Aldur Appraiser | Separates selectable rewards from the shared bonus | Design reference | Milestone 2 |
-| 10 | Community campaign guide (0.5.5) | Route structure and optional steps | Structure reference only; original route text | Milestone 4 |
+| 10 | Community campaign guide (0.5.5) | Route structure and optional steps | Structure reference only; original route text | Route engine built. The shipped Act 1 draft was written from general campaign knowledge, copies no prose and is marked unverified until walked in game ([GUIDE.md](GUIDE.md)) |
 | 11 | MisoxShiru's Varashta guide (0.5.5) | Stage-specific gem instructions | Manual acceptance journey; no redistribution of prose or art | Milestone 4 |
 | 12 | Mobalytics Terms of Service | Restrict software access, downloads, mirroring and framing | Save link, open in browser, user-authored steps; import only through an authorized export | Milestone 4 |
 | 13 | Wealthy Exile | Per-tab breakdowns, snapshots, currency per hour | Interaction reference | Milestone 3 |

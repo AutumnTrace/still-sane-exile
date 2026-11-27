@@ -21,7 +21,7 @@ public sealed partial class ShellViewModel : ObservableObject
         Inspect = new InspectViewModel(this, clipboard);
         Craft = PlaceholderViewModel.Craft();
         Wealth = new WealthViewModel(this);
-        Guide = PlaceholderViewModel.Guide();
+        Guide = new GuideViewModel(this);
         WhatsNew = new WhatsNewViewModel(settings, updates);
         SettingsPage = new SettingsViewModel(this);
         _currentPage = settings.Onboarded ? Inspect : SettingsPage;
@@ -43,7 +43,7 @@ public sealed partial class ShellViewModel : ObservableObject
     public InspectViewModel Inspect { get; }
     public PlaceholderViewModel Craft { get; }
     public WealthViewModel Wealth { get; }
-    public PlaceholderViewModel Guide { get; }
+    public GuideViewModel Guide { get; }
     public SettingsViewModel SettingsPage { get; }
     public WhatsNewViewModel WhatsNew { get; }
 
@@ -71,6 +71,7 @@ public sealed partial class ShellViewModel : ObservableObject
         InspectViewModel => "Price check",
         WealthViewModel => "My wealth",
         PlaceholderViewModel p => p.Title,
+        GuideViewModel => "Campaign guide",
         SettingsViewModel => "Settings",
         _ => "",
     };

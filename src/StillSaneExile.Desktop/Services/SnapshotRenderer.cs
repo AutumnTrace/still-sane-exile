@@ -46,6 +46,7 @@ public static class SnapshotRenderer
         shell.Inspect.Selected = shell.Inspect.Recent.First(r => r.Item.CaptureId.Length > 0 && r.Title == "Doom Thirst");
         shell.OpenCraftWith(shell.Inspect.Selected);
         Save(main, Path.Combine(dir, "craft.png"));
+        SeedGuide(shell.Guide);
         shell.GoGuideCommand.Execute(null);
         Save(main, Path.Combine(dir, "guide.png"));
 
@@ -88,6 +89,12 @@ public static class SnapshotRenderer
 
         peek.Close();
 
+        // The pinned guide lines, unpositioned; the click-through window never activates.
+        var guideHud = new GuideHudWindow { Left = -20000, Top = 0, DataContext = shell.Guide };
+        guideHud.Show();
+        Save(guideHud, Path.Combine(dir, "guide-hud.png"));
+        guideHud.Close();
+
         // The in-game price check window (F3), unpositioned and never activated.
         var priceCheck = new PriceCheckWindow { Left = -20000, Top = 0, ShowActivated = false };
         priceCheck.DataContext = shell.Inspect.Recent.First(r => r.Title == "Doom Thirst");
@@ -95,6 +102,24 @@ public static class SnapshotRenderer
         Save(priceCheck, Path.Combine(dir, "price-check-window.png"));
         priceCheck.Close();
         main.Close();
+    }
+
+    /// <summary>A practice character partway into the route, the way a player gets there: the first
+    /// boss ticked, the optional one skipped, and now in the Mud Burrow.</summary>
+    private static void SeedGuide(GuideViewModel guide)
+    {
+        guide.NewCharacterName = "Practice exile";
+        guide.AddCharacterCommand.Execute(null);
+        if (!guide.HasCharacter)
+        {
+            return;
+        }
+
+        guide.ToggleDoneCommand.Execute(guide.Steps.FirstOrDefault());
+        guide.NextCommand.Execute(null);
+        guide.NextCommand.Execute(null);
+        guide.SkipCommand.Execute(guide.Steps.FirstOrDefault());
+        guide.NextCommand.Execute(null);
     }
 
     private static void Shot(ShellViewModel shell, MainWindow main, string dir, string file, string name)

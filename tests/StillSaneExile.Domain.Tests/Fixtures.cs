@@ -21,6 +21,9 @@ internal static class Fixtures
 
     public static string Text(string relative) => File.ReadAllText(Path.Combine(Root.Value, relative));
 
+    /// <summary>A file from the shipped <c>data/</c> folder (route packs), next to <c>fixtures/</c>.</summary>
+    public static string DataText(string relative) => File.ReadAllText(Path.Combine(Root.Value, "..", "data", relative));
+
     public static ItemSnapshot Item(string name)
     {
         var result = ItemTextParser.Parse(Text($"items/{name}.txt"), DemoNow, name);

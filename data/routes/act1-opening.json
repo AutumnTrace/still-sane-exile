@@ -1,0 +1,63 @@
+// UNVERIFIED DRAFT ROUTE. Written for Still Sane, Exile from general campaign knowledge: structure only,
+// no guide prose copied. Zone names, order and connections still have to be walked in the live game, and
+// the whole pack re-checked after the 11 December 2026 full release. Facts we were not sure of are left
+// out rather than guessed: waypoints outside town, quest hand-ins and every permanent reward. See
+// docs/GUIDE.md for the format and for what is missing.
+{
+  "schemaVersion": 1,
+  "id": "sse-act1-opening",
+  "title": "Act 1 opening",
+  "status": "unverified",
+  "game": "Path of Exile 2",
+  "patch": "0.5.x / to be checked after the 11 Dec 2026 full release",
+  "league": "any",
+  "source": "written for SSE from general campaign knowledge; structure only, no guide prose copied",
+  "rights": "Original route text written for Still Sane, Exile. Ships with the app.",
+  "revision": 1,
+  "verifiedDate": null,
+  "acts": [
+    { "act": 1, "title": "Act 1" }
+  ],
+  "zones": [
+    { "id": "a1.riverbank", "act": 1, "name": "The Riverbank", "aliases": ["Riverbank"], "edges": ["a1.clearfell_encampment"] },
+    { "id": "a1.clearfell_encampment", "act": 1, "name": "Clearfell Encampment", "aliases": ["Encampment"], "town": true, "waypoint": true, "edges": ["a1.clearfell"] },
+    { "id": "a1.clearfell", "act": 1, "name": "Clearfell", "edges": ["a1.mud_burrow", "a1.grelwood"] },
+    { "id": "a1.mud_burrow", "act": 1, "name": "Mud Burrow", "aliases": ["The Mud Burrow"] },
+    { "id": "a1.grelwood", "act": 1, "name": "The Grelwood", "aliases": ["Grelwood"], "edges": ["a1.red_vale"] },
+    { "id": "a1.red_vale", "act": 1, "name": "The Red Vale", "aliases": ["Red Vale"] }
+  ],
+  "route": [
+    {
+      "zone": "a1.riverbank",
+      "hint": "Follow the river to the camp.",
+      "steps": [
+        { "id": "a1.riverbank.miller", "kind": "objective", "text": "Defeat the Bloated Miller" }
+      ]
+    },
+    { "zone": "a1.clearfell_encampment", "hint": "Town. Head out to Clearfell." },
+    {
+      "zone": "a1.clearfell",
+      "hint": "Look for the Mud Burrow on the way.",
+      "steps": [
+        { "id": "a1.clearfell.beira", "kind": "bonus", "text": "Defeat Beira of the Rotten Pack" }
+      ]
+    },
+    {
+      "zone": "a1.mud_burrow",
+      "hint": "Side cave. Come back out to Clearfell after.",
+      "steps": [
+        { "id": "a1.mud_burrow.devourer", "kind": "objective", "text": "Defeat the Devourer" }
+      ]
+    },
+    { "zone": "a1.clearfell", "hint": "Back in Clearfell. On to the Grelwood." },
+    { "zone": "a1.grelwood", "hint": "Find the way into the Red Vale." },
+    {
+      "zone": "a1.red_vale",
+      "hint": "Walk back to the Grelwood after.",
+      "steps": [
+        { "id": "a1.red_vale.rust_king", "kind": "objective", "text": "Defeat the Rust King" }
+      ]
+    },
+    { "zone": "a1.grelwood", "hint": "This draft ends here. Carry on in game." }
+  ]
+}
