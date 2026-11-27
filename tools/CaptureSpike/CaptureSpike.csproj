@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Developer tool for issue #4: one frame of one window per key press. Not part of the app, the
+       installer or the portable zip (scripts/pack-local.ps1 publishes src/StillSaneExile.Desktop only).
+       The 22621 projections are needed for GraphicsCaptureSession.IsBorderRequired; every call newer
+       than Windows 10 2004 (19041) is guarded, so it still runs there. -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0-windows10.0.22621.0</TargetFramework>
+    <SupportedOSPlatformVersion>10.0.19041.0</SupportedOSPlatformVersion>
+    <UseWPF>true</UseWPF>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <AssemblyName>CaptureSpike</AssemblyName>
+    <RootNamespace>StillSaneExile.CaptureSpike</RootNamespace>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\StillSaneExile.Domain\StillSaneExile.Domain.csproj" />
+  </ItemGroup>
+
+</Project>
