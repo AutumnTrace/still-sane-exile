@@ -2,7 +2,7 @@
 
 Stash and Aldur labels (#14, #15) and wealth snapshots (#17) will read the stash from the screen, because Path of Exile 2 has no stash API. GGG's policy allows that only "once per manual key press" and only while "the user is aware of what you are doing with that data" ([Sources](SOURCES.md#ggg-third-party-policy-checked-27-november-2026)). This spike checks that a backend can take exactly one frame of the game window per physical key-down, and records which one to use.
 
-Nothing here changes the app. The stash key (Right Alt) is still reserved and inactive, and [Capture and privacy](CAPTURE-AND-PRIVACY.md) still describes everything the shipped app does.
+The spike itself changes nothing in the app. Its Windows.Graphics.Capture backend now runs in the app behind **Collect stash pictures** in Settings (off by default), which saves the pictures #3 needs: see [Bringing WGC into the app](#bringing-wgc-into-the-app) and [What #3 needs](#what-3-needs). [Capture and privacy](CAPTURE-AND-PRIVACY.md) describes everything the shipped app does.
 
 **Result:** Windows.Graphics.Capture (WGC), one session per press. It took one frame per press on every test window, in 9 to 14 ms (p50) and never more than 17.2 ms. Both fallbacks fail the rule and stay disabled. Nothing has been checked in the real game yet; [What to check in the game](#what-to-check-in-the-game) lists the checks.
 
@@ -14,9 +14,9 @@ Nothing here changes the app. The stash key (Right Alt) is still reserved and in
 | `FrameReader` | `src/StillSaneExile.Domain/Capture/FrameReader.cs` | Sits behind `CaptureGate`. A `GateAction.Read` decision allows one `CaptureOnce`. The analysis runs off the hook thread, the frame is discarded right after, and the result comes back only if its generation is still current. A decision can be read once; a second read throws. |
 | `FrameStats` | `src/StillSaneExile.Domain/Capture/FrameStats.cs` | The spike's stand-in for analysis: checksum, average colour, share of black pixels, HDR peak. |
 | `CaptureSpike` | `tools/CaptureSpike` | A developer console tool, built by CI but not packed: the three backends, test windows, `info`, `bench`, `hold` and `live`. Targets `net10.0-windows10.0.22621.0` and runs on Windows 10 2004 (19041) or later. |
-| Tests | `tests/StillSaneExile.Domain.Tests/FrameReaderTests.cs`, `tools/CaptureSpike.Tests` | 12 domain tests with a fake source and the real gate. 5 real-capture tests that skip when there is no GPU, no desktop or no WGC (CI runners). Skipping is not failing. |
+| Tests | `tests/StillSaneExile.Domain.Tests/FrameReaderTests.cs`, `tools/CaptureSpike.Tests` | 12 domain tests with a fake source and the real gate (the in-app collector added 6 more, for `HoldMode.Shot` and `PictureCopy`). 5 real-capture tests that skip when there is no GPU, no desktop or no WGC (CI runners). Skipping is not failing. |
 
-The desktop project is unchanged and still targets `net10.0-windows`, so the installer is unaffected.
+The desktop project still targets `net10.0-windows`: the app calls WGC through raw COM ([below](#bringing-wgc-into-the-app)), so the installer gains no WinRT projection.
 
 Run the tool with `dotnet run --project tools/CaptureSpike -c Release -- <command>`:
 
@@ -133,7 +133,7 @@ So an 8-bit pool on an HDR desktop clips highlights, which is why the code switc
 
 ## What to check in the game
 
-None of this has run against Path of Exile 2. Run `CaptureSpike live` (add `--dump <folder>` to keep the PNGs) and check:
+None of this has run against Path of Exile 2. Run `CaptureSpike live` (add `--dump <folder>` to keep the PNGs) and check the list below. The app's stash picture collector ([What #3 needs](#what-3-needs)) answers items 1 to 3 and 5 as a side effect: each picture's notes record its size, the window mode, HDR and the latency, and a black or missing frame is reported over the game.
 
 1. **Windowed Fullscreen (borderless) at 1920×1080 and at 2560×1440.** Every press prints one `Accepted` line, the frame size equals the game's resolution, it is not `BLACK`, and create→frame stays near the numbers above while the game is rendering at full load.
 2. **Exclusive "Fullscreen" mode.** Does WGC get a frame at all, or does it time out or come back black? If it fails, SSE should ask for Windowed Fullscreen and abstain.
@@ -156,19 +156,23 @@ None of this has run against Path of Exile 2. Run `CaptureSpike live` (add `--du
 10. **Display setups:** the game on a second monitor, mixed DPI (100, 125 and 150%), and G-Sync or FreeSync.
 11. **A loading screen.** A press returns quickly with the last image. The HUD should show nothing then anyway.
 
-## Bringing WGC into the app (#14)
+## Bringing WGC into the app
 
-- The desktop project would need a Windows 10 target (`net10.0-windows10.0.19041.0` or later) for the WinRT projection. That adds `Microsoft.Windows.SDK.NET.dll` (24.9 MB untrimmed) to the publish folder. The other option is to call WGC through raw COM, as the spike already does for D3D11 and DXGI.
-- Either way, run `scripts/pack-local.ps1` and `scripts/smoke-packed.ps1` after the change ([Releasing](RELEASING.md)).
-- Create the D3D device and the capture-item factory when stash labels are switched on, not on the first press.
-- Abstain on no frame (500 ms timeout), on a black frame (`FrameStats.IsBlank`), or on a size that does not match the client area.
-- Add a "screen read" row to [Capture and privacy](CAPTURE-AND-PRIVACY.md) when it ships.
+The app takes pictures with WGC behind **Collect stash pictures** in Settings, off by default (`WgcFrameSource`, `StashCollector` and `StashPictureStore` in `src/StillSaneExile.Desktop`). It collects the pictures for #3 now, with the same key press stash reading will use.
+
+- **Raw COM, no Windows 10 target.** The app keeps `net10.0-windows` and calls WGC through COM vtables (`Infrastructure/CaptureInterop.cs`): `RoGetActivationFactory` for the capture item and frame pool factories, `IGraphicsCaptureItemInterop.CreateForWindow`, and Direct3D 11 for the copy, as the spike did for D3D. A `net10.0-windows10.0.19041.0` target would have put the WinRT projection, `Microsoft.Windows.SDK.NET.dll` (24.9 MB, and WPF can't be trimmed), in the package for about ten calls. The slot numbers were checked against the projection's own ABI code, and the real-capture tests run them.
+- **One acquisition per press, and none after giving up.** The spike took its frame in a `FrameArrived` handler and waited up to 500 ms for it. On a timeout, the handler could still take a frame after the wait had given up: that frame was never disposed, and the handler set an event that was already disposed. The app has no handler. The capturing thread alone calls `TryGetNextFrame`, every 0.5 ms, until one frame is there or 500 ms have passed, then closes frame, session and pool before reading the copy back. A frame is taken by that thread before the deadline, or not at all.
+- **Its own gate.** `StashCollector` listens to the same key and foreground events as the HUD but has its own `CaptureGate`, in the new `HoldMode.Shot`, so the quick price path is untouched. Auto-repeat, synthetic input and another window in front take nothing. A frame that comes back after focus loss, lock, a display change or a newer press is dropped unsaved (`FrameReader` now also disposes a late result, which clears the picture's copy). Letting go doesn't drop it, so a quick tap keeps its picture.
+- **The device ahead of time.** The D3D device and both factories are created on a worker thread when collecting is switched on (or at start, if it is on), and released when it is switched off. Creating them captures nothing.
+- **As in the spike:** the yellow border stays on, the Windows cursor is left out, and an HDR monitor gets a 16-bit frame, reduced to 8-bit sRGB for the PNG.
+- **Abstains** on no frame within 500 ms and on a black frame, and says so in the note over the game. The notes keep both the picture's size and the game window's client size, so a mismatch shows.
+- **Tests.** `RealCaptureTests` (desktop tests) checks the crop to the pixel on a window with a title bar, and holds the stash key through `StashCollector` for 300 auto-repeats: 1 acquisition, 1 session opened and closed, 1 PNG. Both skip without a GPU or a desktop, as on CI.
 
 ## What #3 needs
 
-The screenshots for the M2 recognizers. Take them with the spike, so each one is exactly the frame SSE will get: client area only, no Windows cursor, the same colour handling.
+The screenshots for the M2 recognizers. Take them with SSE itself, so each one is exactly the frame SSE will get: client area only, no Windows cursor, the same colour handling.
 
-`dotnet run --project tools/CaptureSpike -c Release -- live --dump <folder>`, then press Right Alt once per screenshot (`--key F8` if Alt changes what the game shows). Each press saves one PNG and prints its size.
+In SSE, open Settings, find **Stash reading (coming soon): help build it** and tick **Collect stash pictures**. In the game, press Right Alt once per screenshot (under Keys, change the stash key to F8 if Alt changes what the game shows). Each press saves one PNG and its notes in the data folder, under `captures\<date>\`, and a note over the game says "Saved stash picture N". Afterwards, label them on My wealth with **Review and label**.
 
 1. **Tabs.** Take each of these at every resolution and UI scale in item 4:
    - **Dedicated currency tab:** one capture of every subtab, with real stacks in it. Include small (1 to 9) and large (3 to 4 digit) stack counts.
@@ -179,12 +183,9 @@ The screenshots for the M2 recognizers. Take them with the spike, so each one is
    - an item tooltip lying over a stack's quantity;
    - a row that is only partly visible.
 4. **Game settings:** Windowed Fullscreen (borderless) at 1920×1080 and at 2560×1440, each at two in-game UI scales (the default and one other). That is four combinations for every screen above. Windowed Fullscreen uses the desktop resolution, so 1440p needs Windows set to 2560×1440.
-5. **Metadata for every capture**, in a CSV or JSON file next to the PNGs:
-   - file name, resolution, in-game UI scale, game patch, game language;
-   - tab type and subtab (or "Aldur panel");
-   - Windows HDR on or off, renderer (DX11, DX12 or Vulkan), window mode, Windows display scaling and monitor.
+5. **Metadata for every capture.** The JSON file beside each PNG already holds the capture time, SSE's version, the picture's and the game window's size, the window mode, the monitor and its resolution, Windows display scaling, HDR on or off, the pixel format and the latency. On My wealth, add the tab type (and the currency subtab) and the in-game UI scale; put anything else in the note: game patch and language, renderer (DX11, DX12 or Vulkan), a hard case.
 6. **HDR, if you have an HDR monitor:** the same currency subtab with Windows HDR off and with it on.
-7. **A held-out set.** Keep about a third of the captures, taken in a different play session, apart from the set used to tune thresholds, and don't tune against it.
-8. **Before committing anything:** crop or blur character names, chat and account names.
+7. **A held-out set.** Tick **Held out** on about a third of the captures, taken in a different play session. They stay apart from the set used to tune thresholds; don't tune against them.
+8. **Before sharing or committing anything:** crop or blur character names, chat and account names.
 
 Later, scoring needs the truth for each capture: which item, and how many, sits in each visible slot. Notes taken while capturing make that easier.
