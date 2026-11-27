@@ -94,6 +94,11 @@ public sealed partial class SettingsViewModel : ObservableObject
     [NotifyPropertyChangedFor(nameof(LiveStatus), nameof(LiveHold), nameof(LiveProblem))]
     public partial bool LivePricesOn { get; set; }
 
+    /// <summary>"Search the trade site from SSE". On by default; only ever sends anything when the player
+    /// clicks Search on a live item.</summary>
+    [ObservableProperty]
+    public partial bool TradeSearchOn { get; set; }
+
     /// <summary>poe.ninja's economy leagues, offered as choices next to the typed name.</summary>
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(CanLoadLeagues))]
@@ -183,12 +188,13 @@ public sealed partial class SettingsViewModel : ObservableObject
         new(1, "Item name", "Coloured the same as in game: white, blue, yellow or orange."),
         new(2, "What it’s worth", "What items like yours sell for, and in plain words how sure that is."),
         new(3, "How many are for sale", "More for sale means a better price guess."),
-        new(4, "Stats in the search", "How many of your stats were used to find similar items."),
-        new(5, "Ticked = searched", "Ticked stats show the number searched for. Empty boxes were left out."),
+        new(4, "The cheapest listings", "What the cheapest items like yours ask, and how long ago they were listed. Only instant buyout asks set the price."),
+        new(5, "Stats in the search", "How many of your stats were used to find similar items."),
+        new(6, "Ticked = searched", "Ticked stats show the number searched for. Empty boxes were left out."),
         ToggleMode
-            ? new(6, "Press again to hide", "The card stays until you press the key again.")
-            : new(6, "Move onto it to keep it", "Still holding the key, move the mouse onto the card: it stays open, and you can tick or untick stats on it. Let go without moving and it hides."),
-        new(7, $"Press {OpenLastKey} to change it", "Every filter, and your own numbers — like 160 instead of 175."),
+            ? new(7, "Press again to hide", "The card stays until you press the key again.")
+            : new(7, "Move onto it to keep it", "Still holding the key, move the mouse onto the card: it stays open, you can tick or untick stats on it, and Search updates the price and the listings. Let go without moving and it hides."),
+        new(8, $"Press {OpenLastKey} to change it", "Every filter, and your own numbers — like 160 instead of 175."),
     ];
 
     private PeekViewModel? _samplePeek;
@@ -235,7 +241,7 @@ public sealed partial class SettingsViewModel : ObservableObject
             : $"{PeekKey}: reads the clipboard once per press, straight away. It is not the game's copy key, so the game copies nothing: it shows the last item you copied with Ctrl+C (or Ctrl+Alt+C), which may not be the one under your cursor.\n") +
         (ToggleMode
             ? ""
-            : "While you hold it, the app checks where the mouse cursor is (its position, not the screen) to notice you moving onto the card. Ticking stats on the card reads nothing.\n") +
+            : "While you hold it, the app checks where the mouse cursor is (its position, not the screen) to notice you moving onto the card. Ticking stats on the card reads nothing and searches nothing; its Search button does, when you click it.\n") +
         $"{OpenLastKey}: reads nothing; opens the price check for your last item over the game (Esc closes it).\n" +
         (Pictures.IsCollecting
             ? $"{StashKey}: \"Collect stash pictures\" is on, so each press with the game in front takes one picture of the game window and saves it in your data folder. Holding the key takes no more. Stash and Aldur labels come later (Milestone 2)."
@@ -268,6 +274,7 @@ public sealed partial class SettingsViewModel : ObservableObject
         ExpiryDays = S.ComparableExpiryDays.ToString(CultureInfo.InvariantCulture);
         AutoUpdate = S.AutoUpdate;
         LivePricesOn = S.LivePrices;
+        TradeSearchOn = S.TradeSearch;
         OnPricesChanged();
         IsOnboarding = !S.Onboarded;
         _samplePeek = null; // keys or currency may have changed
@@ -322,6 +329,22 @@ public sealed partial class SettingsViewModel : ObservableObject
         }
 
         _shell.ReloadSession();
+    }
+
+    partial void OnTradeSearchOnChanged(bool value)
+    {
+        if (S.TradeSearch == value)
+        {
+            return;
+        }
+
+        S.TradeSearch = value;
+        if (value)
+        {
+            _shell.Listings?.Retry(); // the player's own retry after the trade site refused access
+        }
+
+        _shell.ReloadSession(); // price checks say "Press Search" or point to the trade site
     }
 
     private LivePrices? _watched;

@@ -101,10 +101,18 @@ public static class SnapshotRenderer
 
         // Pinned (the player moved onto it while holding the key): close button, live stats. Never
         // pinned through the window here, so it stays click-through and never activates.
-        var pinned = PeekViewModel.From(shell.Inspect.Recent.First(r => r.Title == "Doom Thirst"), true, PeekViewModel.ReleaseHintFor(shell.Settings.PeekMode), shell.Settings.OpenLastKey.Label);
+        var crossbow = shell.Inspect.Recent.First(r => r.Title == "Doom Thirst");
+        var pinned = PeekViewModel.From(crossbow, true, PeekViewModel.ReleaseHintFor(shell.Settings.PeekMode), shell.Settings.OpenLastKey.Label);
         pinned.IsPinned = true;
         peek.DataContext = pinned;
         Save(peek, Path.Combine(dir, "peek-pinned.png"));
+
+        // The same card after unticking attack speed, before Search: the old result faded, "Search to
+        // update" under it. Ticked back afterwards, so the price check below shows the result as searched.
+        var speed = crossbow.SearchRows.First(r => r.IsOn && r.Row.Template == Domain.Trade.ComparisonWorksheet.LocalAttackSpeed);
+        speed.IsOn = false;
+        Save(peek, Path.Combine(dir, "peek-pinned-changed.png"));
+        speed.IsOn = true;
         peek.Close();
 
         // The pinned guide lines, unpositioned; the click-through window never activates.

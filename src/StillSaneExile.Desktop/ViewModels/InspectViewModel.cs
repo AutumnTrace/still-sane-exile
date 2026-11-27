@@ -84,7 +84,7 @@ public sealed partial class InspectViewModel : ObservableObject
             return null;
         }
 
-        var vm = new ItemViewModel(parsed.Item!, _shell.Session);
+        var vm = new ItemViewModel(parsed.Item!, _shell.Session, _shell.TradeSite);
         Recent.Insert(0, vm);
         while (Recent.Count > MaxRecent)
         {
@@ -96,15 +96,18 @@ public sealed partial class InspectViewModel : ObservableObject
         return vm;
     }
 
-    /// <summary>Same snapshots, new session (profile, league or currency changed).</summary>
+    /// <summary>Same snapshots, new session (profile, league or currency changed). In the same live league a
+    /// trade site result and the search it was found with carry over, re-priced.</summary>
     public void Rebuild()
     {
         var selectedId = Selected?.Item.CaptureId;
-        var items = Recent.Select(r => r.Item).ToList();
+        var old = Recent.ToList();
         Recent.Clear();
-        foreach (var item in items)
+        foreach (var o in old)
         {
-            Recent.Add(new ItemViewModel(item, _shell.Session));
+            var vm = new ItemViewModel(o.Item, _shell.Session, _shell.TradeSite);
+            vm.CarryOver(o);
+            Recent.Add(vm);
         }
 
         Selected = Recent.FirstOrDefault(r => r.Item.CaptureId == selectedId) ?? Recent.FirstOrDefault();

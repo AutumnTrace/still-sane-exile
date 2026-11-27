@@ -18,23 +18,45 @@ public sealed record PriceAnswer(string Lead, string Big, string? Line, string N
     public bool HasCount => Count is not null;
     public bool HasLine => !string.IsNullOrEmpty(Line);
 
+    /// <summary>From a search: the demo's synthetic market, or the trade site's cheapest listings. Only
+    /// instant buyout listings set the price; when some shown listings are not, or the site counted more
+    /// than it sent, the note says how many prices the guess stands on.</summary>
     public static PriceAnswer FromSearch(SearchResult r, PriceText price, bool unique)
     {
         var n = r.Count;
+        var p = r.PricedCount;
+        var seen = r.Matches.Count;
+        var allSeen = n <= seen && p == seen; // every listing for sale is here, and each can be bought at once
+        var some = $"{p} instant buyout price{(p == 1 ? "" : "s")} among the cheapest {seen}";
         var lead = unique ? "This unique sells for about" : "Items like yours sell for about";
         var cheapest = r.Cheapest is { } c ? price.One(c.Value) : "";
         return r.Confidence switch
         {
             SearchConfidence.NoMatches => new("Items like yours", "No matches", "Your search is too strict",
-                "Untick a stat or lower a number to see prices.", true, 0, "No matches · loosen the search"),
+                "Untick a stat or lower a number, then search again.", true, 0, "No matches · loosen the search"),
+            SearchConfidence.NoBuyout when seen == 0 => new("Items like yours", "No usable price", null,
+                "The cheapest listings ask in currencies SSE has no rate for. Open the search on the trade site to see them.", true, n,
+                "No rate for their currencies"),
+            SearchConfidence.NoBuyout => new("Items like yours", "No buyout price", null,
+                "None of the cheapest listings can be bought at once, so none sets a price. Tick Buy-now listings only to see instant buyouts.", true, n,
+                "No instant buyout among them"),
             SearchConfidence.TooFew => new(unique ? "Cheapest one for sale" : "Cheapest item like yours", cheapest, null,
-                $"Only {n} for sale — too few to trust. Try loosening the search.", true, n, $"Only {n} for sale — too few to trust"),
+                allSeen ? $"Only {n} for sale — too few to trust. Try loosening the search." : $"Only {some} — too few to trust.", true, n,
+                allSeen ? $"Only {n} for sale — too few to trust" : $"Only {p} instant buyout — too few to trust"),
             SearchConfidence.Rough => new(lead, price.Range(r.Low!.Value, r.High!.Value), $"Cheapest {cheapest}",
-                $"Rough price — only {n} for sale.", false, n, $"Rough price · only {n} for sale"),
+                allSeen ? $"Rough price — only {n} for sale." : $"Rough price — from {some}.", false, n,
+                allSeen ? $"Rough price · only {n} for sale" : $"Rough price · {p} instant buyout"),
             _ => new(lead, price.Range(r.Low!.Value, r.High!.Value), Join($"Cheapest {cheapest}", price.DivineRate()),
                 $"Good price guess — {n} for sale.", false, n, $"Good price guess · cheapest {cheapest}"),
         };
     }
+
+    /// <summary>A live item with a search and no result yet: nothing is asked of the trade site until the
+    /// player clicks Search.</summary>
+    public static PriceAnswer SearchFirst(bool canWriteDown) =>
+        new("Items like yours", "No price yet", null,
+            canWriteDown ? "Press Search to see what the trade site lists, or write down asks you find there." : "Press Search to see what the trade site lists.",
+            false, null, "Press Search to see listings");
 
     /// <summary>From the asking prices the player wrote down (no listings to search in this profile).</summary>
     public static PriceAnswer? FromWrittenDown(EvidenceSummary e, PriceText price)
@@ -56,8 +78,9 @@ public sealed record PriceAnswer(string Lead, string Big, string? Line, string N
     /// <param name="noMarketData">The profile has no prices at all (a live league before its first poe.ninja
     /// refresh, or with live prices off).</param>
     /// <param name="searchable">The item has a search to open on the trade site.</param>
-    /// <param name="canWriteDown">Asking prices can be written down for it (rare, magic, normal). SSE fetches
-    /// no listings for these, so they point to the trade site whether or not the league has prices.</param>
+    /// <param name="canWriteDown">Asking prices can be written down for it (rare, magic, normal). With trade
+    /// search off SSE fetches no listings for these, so they point to the trade site whether or not the
+    /// league has prices.</param>
     public static PriceAnswer NoPrice(bool noMarketData, bool searchable = false, bool canWriteDown = false)
     {
         var note = canWriteDown ? "Open the search on the trade site, then write down what you find."

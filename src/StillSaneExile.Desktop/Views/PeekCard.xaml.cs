@@ -19,7 +19,9 @@ public partial class PeekCard : UserControl
         nameof(MoreCommand), typeof(ICommand), typeof(PeekCard));
 
     private const double PinSize = 22;
-    private const double PinGutter = 12;
+
+    /// <summary>Room beside the card for the pins, which sit just outside its edges, clear of the text.</summary>
+    private const double PinGutter = PinSize + 4;
 
     public PeekCard()
     {
@@ -88,16 +90,17 @@ public partial class PeekCard : UserControl
 
         UpdateLayout();
         var firstRow = RowsList.ItemContainerGenerator.ContainerFromIndex(0) as FrameworkElement;
-        // Pins straddle the card's left and right edges, clear of the text inside.
-        var left = PinGutter - PinSize / 2;
-        var right = PinGutter + Card.ActualWidth - PinSize / 2;
+        // Pins sit just outside the card's left and right edges, clear of the text inside.
+        var left = PinGutter - PinSize - 1;
+        var right = PinGutter + Card.ActualWidth + 1;
         Pin(1, NameText, left);
         Pin(2, BigText, left);
         Pin(3, CountBlock, right);
-        Pin(4, SearchedWith, left);
-        Pin(5, firstRow, left);
-        Pin(6, FooterText, left);
-        Pin(7, ChangeHint, right);
+        Pin(4, ListingsList, left);
+        Pin(5, SearchedWith, left);
+        Pin(6, firstRow, left);
+        Pin(7, FooterText, left);
+        Pin(8, ChangeHint, right);
     }
 
     /// <summary>Puts pin <paramref name="n"/> level with the middle of <paramref name="target"/>.</summary>

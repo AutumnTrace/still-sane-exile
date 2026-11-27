@@ -20,6 +20,7 @@ public partial class App : Application
     private AppPaths? _paths;
     private UpdateService? _updates;
     private LivePrices? _prices;
+    private LiveListings? _listings;
     private TextScale? _textScale;
     private bool _renderingSnapshots;
 
@@ -84,8 +85,13 @@ public partial class App : Application
         _updates.Start(settings.AutoUpdate);
 
         // Hourly poe.ninja prices for a confirmed live league with live prices on; it does nothing until
-        // then. Never created for --render-snapshots (returned above), and the HUD holds no reference to it.
-        _prices = LivePrices.Create(_paths, _updates.CurrentVersion, Dispatcher);
+        // then. The trade site search runs only when the player clicks Search on a live item. Both share
+        // one governor (one cooldown file). Never created for --render-snapshots (returned above), and the
+        // HUD holds no reference to either.
+        var governor = LivePrices.Governor(_paths);
+        _prices = LivePrices.Create(_paths, _updates.CurrentVersion, Dispatcher, governor);
+        _listings = LiveListings.Create(governor, _updates.CurrentVersion);
+        shell.Listings = _listings;
         shell.Prices = _prices;
     }
 
@@ -97,6 +103,7 @@ public partial class App : Application
         _hud?.Dispose();
         _guideHud?.Dispose();
         _prices?.Dispose();
+        _listings?.Dispose();
         _textScale?.Dispose();
         _peek?.Close();
         _priceCheck?.Close();

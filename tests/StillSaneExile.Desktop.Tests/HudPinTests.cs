@@ -367,22 +367,40 @@ public class HudPinTests
     });
 
     [Fact]
-    public void Ticking_a_stat_on_the_pinned_card_changes_its_price_and_reads_nothing() => Sta.Run(() =>
+    public void Ticking_a_stat_on_the_pinned_card_marks_its_price_old_until_Search_and_reads_nothing() => Sta.Run(() =>
     {
         using var rig = new HudRig();
         var card = PinnedCard(rig);
+        var item = card.Item!;
         var before = card.Answer;
+        var listed = item.Matches;
         var changed = new List<string?>();
         card.PropertyChanged += (_, e) => changed.Add(e.PropertyName);
 
         var dps = card.LiveRows.OfType<SearchRowViewModel>().First(r => r.IsOn);
         dps.IsOn = false;
 
-        Assert.NotEqual(before, card.Answer);
-        Assert.Contains(nameof(PeekViewModel.Answer), changed);
+        Assert.Same(before, card.Answer); // ticking never searches
+        Assert.Same(listed, item.Matches);
+        Assert.True(item.IsStale);
+        Assert.True(item.IsDimmed);
+        Assert.Equal(ItemViewModel.StaleText, item.PeekLine);
         Assert.Contains(nameof(PeekViewModel.OnCount), changed);
         Assert.Equal(1, card.OnCount);
-        Assert.Same(card.Item!.Answer, card.Answer); // the price check page shows the same search
+
+        dps.IsOn = true; // back to the search the result was found with
+        Assert.False(item.IsStale);
+        dps.IsOn = false;
+
+        Assert.True(card.ShowsSearch);
+        item.SearchCommand.Execute(null);
+
+        Assert.NotEqual(before, card.Answer);
+        Assert.NotSame(listed, item.Matches);
+        Assert.Contains(nameof(PeekViewModel.Answer), changed);
+        Assert.False(item.IsStale);
+        Assert.Equal(card.Answer!.PeekNote, item.PeekLine);
+        Assert.Same(item.Answer, card.Answer); // the price check page shows the same search
         Assert.Equal(1, rig.Clipboard.Reads);
         Assert.True(rig.Peek.IsVisible);
     });

@@ -69,7 +69,8 @@ public class AccessibilityTests
         Assert.Contains("Raise the minimum for Physical DPS 355.3", stops);
         Assert.Contains("Asking price", stops);
         Assert.Contains("Divine Orb", stops); // the asking price's currency, shown as "div"
-        Assert.True(stops.IndexOf("Reset to my item") < stops.IndexOf("Open this search on the trade site"));
+        Assert.True(stops.IndexOf("Reset to my item") < stops.IndexOf("Search"));
+        Assert.True(stops.IndexOf("Search") < stops.IndexOf("Open this search on the trade site"));
         Assert.True(stops.IndexOf("Open this search on the trade site") < stops.IndexOf("Asking price"));
     });
 
@@ -124,6 +125,7 @@ public class AccessibilityTests
         Assert.Equal("Close the price card", stops[0]);
         Assert.Equal(new[] { "Physical DPS 355.3", "Lower the minimum for Physical DPS 355.3", "Raise the minimum for Physical DPS 355.3" }, stops[1..4]);
         Assert.Contains("+18% to Fire Resistance", stops);
+        Assert.Equal("Search", stops[^2]);
         Assert.Equal("All filters", stops[^1]);
     });
 
@@ -146,7 +148,7 @@ public class AccessibilityTests
     });
 
     [Fact]
-    public void Ticking_a_stat_on_the_pinned_card_updates_its_price() => UiThread.Run(() =>
+    public void Ticking_a_stat_on_the_pinned_card_marks_its_price_old_and_Search_updates_it() => UiThread.Run(() =>
     {
         using var app = new TestApp();
         var card = PinnedCard(app);
@@ -157,7 +159,9 @@ public class AccessibilityTests
             Flush(window);
             var count = (TextBlock)view.FindName("CountText");
             var price = (TextBlock)view.FindName("BigText");
+            var line = (TextBlock)view.FindName("PeekLineText");
             var before = (count.Text, price.Text);
+            Assert.Equal(1, price.Opacity);
             var dps = Descendants<CheckBox>(window).Single(c => SpokenName(c) == "Physical DPS 355.3");
             Assert.True(dps.IsChecked);
 
@@ -165,9 +169,19 @@ public class AccessibilityTests
             Flush(window);
 
             Assert.False(dps.IsChecked);
+            Assert.Equal(before, (count.Text, price.Text)); // ticking never searches
+            Assert.Equal("Search to update", line.Text);
+            Assert.True(price.Opacity < 1);
+            Assert.Equal(1, card.OnCount);
+
+            var search = Descendants<Button>(window).Single(b => SpokenName(b) == "Search");
+            ((System.Windows.Automation.Provider.IInvokeProvider)Peer(search).GetPattern(PatternInterface.Invoke)).Invoke();
+            Flush(window);
+
             Assert.NotEqual(before, (count.Text, price.Text));
             Assert.Equal(card.Answer!.Count?.ToString(System.Globalization.CultureInfo.InvariantCulture), count.Text);
-            Assert.Equal(1, card.OnCount);
+            Assert.Equal(card.Answer.PeekNote, line.Text);
+            Assert.Equal(1, price.Opacity);
         }
         finally
         {

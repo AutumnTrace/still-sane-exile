@@ -57,11 +57,15 @@ public sealed partial class LivePrices : ObservableObject, IDisposable
         _owned = owned;
     }
 
-    /// <summary>The app's instance: poe.ninja over HTTPS, cooldowns kept in the data folder.</summary>
-    public static LivePrices Create(AppPaths paths, string version, Dispatcher dispatcher)
+    /// <summary>The one governor every market request of the app goes through (poe.ninja and the trade
+    /// site), with its cooldowns kept in the data folder. One instance, so the file has one writer.</summary>
+    public static ProviderGovernor Governor(AppPaths paths) =>
+        new(TimeProvider.System, store: new JsonFileCooldownStore(paths.ProviderState));
+
+    /// <summary>The app's instance: poe.ninja over HTTPS, through <paramref name="governor"/>.</summary>
+    public static LivePrices Create(AppPaths paths, string version, Dispatcher dispatcher, ProviderGovernor governor)
     {
-        var time = TimeProvider.System;
-        var governor = new ProviderGovernor(time, store: new JsonFileCooldownStore(paths.ProviderState));
+        var time = governor.Time;
         var network = new SocketsHttpHandler
         {
             AutomaticDecompression = DecompressionMethods.All,

@@ -85,9 +85,15 @@ public sealed class Settings(Store store)
         set => store.Set("peek.anchor", value.ToString());
     }
 
+    public const double MinPeekScale = 0.5;
+    public const double MaxPeekScale = 1.6;
+
+    /// <summary>The card's size over the game. 0.85 by default: the card is meant to stay small.</summary>
+    public const double DefaultPeekScale = 0.85;
+
     public double PeekScale
     {
-        get => double.TryParse(store.Get("peek.scale"), NumberStyles.Float, CultureInfo.InvariantCulture, out var s) ? Math.Clamp(s, 0.75, 1.6) : 1.0;
+        get => double.TryParse(store.Get("peek.scale"), NumberStyles.Float, CultureInfo.InvariantCulture, out var s) ? Math.Clamp(s, MinPeekScale, MaxPeekScale) : DefaultPeekScale;
         set => store.Set("peek.scale", value.ToString(CultureInfo.InvariantCulture));
     }
 
@@ -97,6 +103,15 @@ public sealed class Settings(Store store)
     {
         get => store.Get("prices.live") != "0";
         set => store.Set("prices.live", value ? "1" : "0");
+    }
+
+    /// <summary>"Search the trade site from SSE": the price check's Search asks the official trade site
+    /// for listings in the live league. On by default; it only ever sends anything when the player clicks
+    /// Search in a live profile.</summary>
+    public bool TradeSearch
+    {
+        get => store.Get("trade.search") != "0";
+        set => store.Set("trade.search", value ? "1" : "0");
     }
 
     /// <summary>Check GitHub Releases for updates at startup and every few hours. On by default.</summary>

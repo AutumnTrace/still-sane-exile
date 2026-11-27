@@ -15,6 +15,15 @@
       <Setter Property="FontWeight" Value="SemiBold" />
       <Setter Property="Foreground" Value="{StaticResource TextFaint}" />
     </Style>
+
+    <!-- The price and listings of a search the player has changed since (or while a new one runs). -->
+    <Style x:Key="Dimmable" TargetType="FrameworkElement">
+      <Style.Triggers>
+        <DataTrigger Binding="{Binding IsDimmed}" Value="True">
+          <Setter Property="Opacity" Value="0.65" />
+        </DataTrigger>
+      </Style.Triggers>
+    </Style>
   </UserControl.Resources>
 
   <!-- Price check: the answer first, then the search that produced it, which you can change. -->
@@ -49,24 +58,27 @@
             <ColumnDefinition Width="*" />
             <ColumnDefinition Width="Auto" />
           </Grid.ColumnDefinitions>
-          <StackPanel>
+          <StackPanel Style="{StaticResource Dimmable}">
             <TextBlock Text="{Binding Answer.Lead}" FontSize="12.5" Foreground="{StaticResource TextDim}" TextWrapping="Wrap" />
             <TextBlock Text="{Binding Answer.Big}" FontSize="30" FontWeight="ExtraBold" TextWrapping="Wrap" Margin="0,2,0,2" />
             <TextBlock Text="{Binding Answer.Line}" FontSize="13" Foreground="{StaticResource TextSoft}" TextWrapping="Wrap" Visibility="{Binding Answer.HasLine, Converter={StaticResource Vis}}" />
           </StackPanel>
-          <StackPanel Grid.Column="1" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="16,0,0,0" Visibility="{Binding Answer.HasCount, Converter={StaticResource Vis}}">
-            <TextBlock Text="{Binding Answer.Count}" FontSize="28" FontWeight="ExtraBold" Foreground="{StaticResource Accent}" HorizontalAlignment="Right" />
+          <StackPanel Grid.Column="1" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="16,0,0,0" Visibility="{Binding Answer.HasCount, Converter={StaticResource Vis}}" Style="{StaticResource Dimmable}">
+            <TextBlock Text="{Binding Answer.Count, StringFormat='{}{0:#,0}'}" FontSize="28" FontWeight="ExtraBold" Foreground="{StaticResource Accent}" HorizontalAlignment="Right" />
             <TextBlock Text="for sale" FontSize="12" Foreground="{StaticResource TextDim}" HorizontalAlignment="Right" />
           </StackPanel>
         </Grid>
       </Border>
       <Border Background="{StaticResource Surface3}" BorderBrush="{StaticResource Line}" BorderThickness="0,1,0,0" Padding="16,8">
-        <TextBlock Text="{Binding Answer.Note}" FontSize="12.5" TextWrapping="Wrap">
+        <TextBlock Text="{Binding NoteLine}" FontSize="12.5" TextWrapping="Wrap">
           <TextBlock.Style>
             <Style TargetType="TextBlock">
               <Setter Property="Foreground" Value="{StaticResource TextSoft}" />
               <Style.Triggers>
-                <DataTrigger Binding="{Binding Answer.NoteIsWarning}" Value="True">
+                <DataTrigger Binding="{Binding IsStale}" Value="True">
+                  <Setter Property="Foreground" Value="{StaticResource Link}" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding NoteLineIsWarning}" Value="True">
                   <Setter Property="Foreground" Value="{StaticResource Warn}" />
                 </DataTrigger>
               </Style.Triggers>
@@ -229,38 +241,74 @@
           </WrapPanel>
         </Border>
 
-        <StackPanel Visibility="{Binding HasListings, Converter={StaticResource Vis}}">
-          <Border BorderBrush="{StaticResource Line}" BorderThickness="0,1,0,0" Padding="16,10,16,4">
-            <TextBlock Text="CHEAPEST MATCHES" Style="{StaticResource ColumnHead}" />
+        <!-- Search: changing the search above never searches by itself. -->
+        <Border BorderBrush="{StaticResource Line}" BorderThickness="0,1,0,0" Padding="16,10,16,6" Visibility="{Binding CanSearch, Converter={StaticResource Vis}}">
+          <DockPanel>
+            <Button DockPanel.Dock="Left" Style="{StaticResource PrimaryButton}" Content="Search" MinWidth="110" Command="{Binding SearchCommand}"
+                    AutomationProperties.HelpText="Runs the search as ticked: the price and the listings follow"
+                    ToolTip="Runs the search as ticked. In a live league SSE asks the official trade site, only when you click." />
+            <TextBlock Text="{Binding SearchLine}" FontSize="12.5" TextWrapping="Wrap" VerticalAlignment="Center" Margin="12,0,0,0"
+                       Visibility="{Binding HasSearchLine, Converter={StaticResource Vis}}">
+              <TextBlock.Style>
+                <Style TargetType="TextBlock">
+                  <Setter Property="Foreground" Value="{StaticResource Link}" />
+                  <Style.Triggers>
+                    <DataTrigger Binding="{Binding SearchLineIsWarning}" Value="True">
+                      <Setter Property="Foreground" Value="{StaticResource Warn}" />
+                    </DataTrigger>
+                  </Style.Triggers>
+                </Style>
+              </TextBlock.Style>
+            </TextBlock>
+          </DockPanel>
+        </Border>
+
+        <!-- The cheapest listings of the last search: price, the listed item's numbers, instant buyout or
+             not, and when it was listed. Never who listed it. -->
+        <StackPanel Visibility="{Binding HasMatches, Converter={StaticResource Vis}}" Style="{StaticResource Dimmable}">
+          <Border Padding="16,6,16,2">
+            <TextBlock Style="{StaticResource ColumnHead}"><Run Text="LISTINGS · " /><Run Text="{Binding ListingsHead, Mode=OneWay}" /></TextBlock>
           </Border>
-          <ItemsControl ItemsSource="{Binding Matches}" Margin="16,0" Focusable="False" AutomationProperties.Name="Cheapest matches">
+          <ItemsControl ItemsSource="{Binding Matches}" Margin="16,0" Focusable="False" AutomationProperties.Name="Cheapest listings">
             <ItemsControl.ItemTemplate>
               <DataTemplate DataType="{x:Type vm:MatchViewModel}">
-                <Border BorderBrush="{StaticResource RowLine}" BorderThickness="0,0,0,1" Padding="0,7">
+                <Border BorderBrush="{StaticResource RowLine}" BorderThickness="0,0,0,1" Padding="0,5">
                   <Grid>
                     <Grid.ColumnDefinitions>
                       <ColumnDefinition Width="72" />
                       <ColumnDefinition Width="*" />
                       <ColumnDefinition Width="Auto" />
                     </Grid.ColumnDefinitions>
-                    <TextBlock Text="{Binding Price}" FontSize="15" FontWeight="Bold" VerticalAlignment="Center" />
+                    <TextBlock Text="{Binding Price}" FontSize="14" FontWeight="Bold" VerticalAlignment="Center" />
                     <TextBlock Grid.Column="1" Text="{Binding Stats}" FontSize="12.5" Foreground="{StaticResource TextSoft}" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" Margin="10,0" ToolTip="{Binding Stats}" />
-                    <TextBlock Grid.Column="2" FontSize="11.5" Foreground="{StaticResource TextDim}" VerticalAlignment="Center"><Run Text="{Binding How, Mode=OneWay}" /><Run Text=" · " /><Run Text="{Binding Age, Mode=OneWay}" /></TextBlock>
+                    <TextBlock Grid.Column="2" FontSize="11.5" VerticalAlignment="Center">
+                      <TextBlock.Style>
+                        <Style TargetType="TextBlock">
+                          <Setter Property="Foreground" Value="{StaticResource TextDim}" />
+                          <Style.Triggers>
+                            <DataTrigger Binding="{Binding InPerson}" Value="True">
+                              <Setter Property="Foreground" Value="{StaticResource Warn}" />
+                            </DataTrigger>
+                          </Style.Triggers>
+                        </Style>
+                      </TextBlock.Style>
+                      <Run Text="{Binding How, Mode=OneWay}" /><Run Text=" · " /><Run Text="{Binding Age, Mode=OneWay}" />
+                    </TextBlock>
                   </Grid>
                 </Border>
               </DataTemplate>
             </ItemsControl.ItemTemplate>
           </ItemsControl>
-          <TextBlock Text="Nothing for sale matches. Untick a stat or lower a number." FontSize="13" Foreground="{StaticResource TextDim}" Margin="16,12,16,0" TextWrapping="Wrap"
-                     Visibility="{Binding NoMatches, Converter={StaticResource Vis}}" />
         </StackPanel>
+        <TextBlock Text="Nothing for sale matches. Untick a stat or lower a number, then search again." FontSize="13" Foreground="{StaticResource TextDim}" Margin="16,8,16,0" TextWrapping="Wrap"
+                   Visibility="{Binding NoMatches, Converter={StaticResource Vis}}" />
 
         <Grid Margin="16,14,16,0">
           <Grid.ColumnDefinitions>
             <ColumnDefinition Width="*" />
             <ColumnDefinition Width="Auto" />
           </Grid.ColumnDefinitions>
-          <Button Style="{StaticResource PrimaryButton}" Content="Open this search on the trade site" Command="{Binding OpenTradeCommand}"
+          <Button Style="{StaticResource GhostButton}" Content="Open this search on the trade site" Command="{Binding OpenTradeCommand}" FontSize="14" MinHeight="44"
                   ToolTip="{Binding TradeTooltip}" />
           <Button Grid.Column="1" Style="{StaticResource GhostButton}" Content="Copy search" Command="{Binding CopySearchCommand}" FontSize="14" MinHeight="44" Padding="14,0" Margin="8,0,0,0"
                   ToolTip="Copies the trade site link and the same filters as text." />
@@ -270,7 +318,7 @@
         <TextBlock Text="{Binding SearchStatus}" FontSize="12" Foreground="{StaticResource TextDim}" Margin="16,8,16,0" TextWrapping="Wrap" Visibility="{Binding SearchStatus, Converter={StaticResource Vis}}" />
       </StackPanel>
 
-      <TextBlock Text="Prices are what sellers are asking right now, not what items sold for." FontSize="11.5" Foreground="{StaticResource TextFaint}" Margin="16,12,16,14" TextWrapping="Wrap" />
+      <TextBlock Text="Prices are what sellers are asking right now, not what items sold for. Only instant buyout asks set the price." FontSize="11.5" Foreground="{StaticResource TextFaint}" Margin="16,12,16,14" TextWrapping="Wrap" />
     </StackPanel>
   </Border>
 </UserControl>

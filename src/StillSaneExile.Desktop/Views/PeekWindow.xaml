@@ -14,14 +14,14 @@
         Foreground="{StaticResource Text}" FontFamily="Segoe UI" FontSize="14"
         Typography.NumeralAlignment="Tabular"
         UseLayoutRounding="True" TextOptions.TextFormattingMode="Display">
-  <Border Padding="12,6,12,18">
+  <Border Padding="10,4,10,14">
     <Border.LayoutTransform>
       <ScaleTransform x:Name="Scale" ScaleX="1" ScaleY="1" />
     </Border.LayoutTransform>
     <Grid>
-      <Border CornerRadius="12" Background="#F715161A">
+      <Border CornerRadius="10" Background="#F715161A">
         <Border.Effect>
-          <DropShadowEffect Color="Black" BlurRadius="28" ShadowDepth="8" Direction="270" Opacity="0.55" />
+          <DropShadowEffect Color="Black" BlurRadius="22" ShadowDepth="6" Direction="270" Opacity="0.55" />
         </Border.Effect>
       </Border>
       <v:PeekCard x:Name="CardView" />
