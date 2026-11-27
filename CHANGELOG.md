@@ -2,6 +2,16 @@
 
 Every release is a tag `vX.Y.Z` on `main` that matches `<Version>` in `Directory.Build.props`. See [docs/RELEASING.md](docs/RELEASING.md).
 
+## [0.4.0] - 2026-11-27
+
+- **Keep the price card open:** hold `Ctrl+C` as before, and move the mouse onto the card while you hold it. The card stays when you let go, so you can tick stats and step the numbers, and the price updates as you go. Let go without moving and it hides, as before. Close it with ×, Esc or your next price check.
+- **Live prices from poe.ninja:** pick your league from poe.ninja's list in Settings. Currency, fragments, runes, omens, essences, soul cores and unique items get prices with their age, refreshed every hour and kept for when you're offline. A key press never makes a request; Settings can switch live prices off.
+- **Open on trade** now opens the official trade site with your search filled in: item category and rarity, physical DPS, the stats you ticked and their numbers, and instant buyout. Stats the link can't carry are listed for you to set by hand.
+- Instant buyout comes first: asks without instant buyout never set the price.
+- The demo no longer invents prices for items copied from the game. Its made-up prices cover the practice items only.
+- Settings → Quick price card: "Hide when I let go, unless I move onto the card", or "Press again to hide".
+- The README explains how SSE follows Grinding Gear Games' rules for third-party tools.
+
 ## [0.3.0] - 2026-11-27
 
 - **My wealth** is open: keep count of what you hold, tab by tab. Type a count, or import a CSV file that you check row by row before anything is saved. Holdings are valued with the league's prices where there are any.

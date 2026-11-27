@@ -11,7 +11,7 @@ Open work is tracked as [issues](https://github.com/AutumnTrace/still-sane-exile
 - [ ] Real English normal and advanced copies; parser validated against them (#1)
 - [ ] Re-check policy, terms, APIs and guides after the 11 December 2026 full release (#2)
 - [ ] Real stash, currency-tab and Aldur captures at two UI scales (#3)
-- [ ] One frame per keypress from the game window (#4)
+- [ ] One frame per keypress from the game window (#4): spike done, Windows.Graphics.Capture chosen ([CAPTURE-SPIKE.md](CAPTURE-SPIKE.md)); to be checked in the real game
 - [ ] HUD measured on real hardware: placement, DPI, resolutions, latency (#5)
 
 ## 1 · Item inspector (v0.1.x)
@@ -30,7 +30,7 @@ Open work is tracked as [issues](https://github.com/AutumnTrace/still-sane-exile
 
 - [ ] Economy cache service: poe.ninja and the GGG exchange digest (#11)
 - [x] Rate limits and cache headers for providers (#12): library and fixture tests, used once the economy cache exists ([PROVIDER-ETIQUETTE.md](PROVIDER-ETIQUETTE.md))
-- [ ] Live prices in the app: league list, atomic league switch, stale states (#13)
+- [x] Live prices in the app: league list, atomic league switch, stale states (#13): each install fetches poe.ninja hourly (the owner's choice over the shared cache, #11); the SSF reference league is not built
 - [ ] Dedicated currency tab labels (#14) and Aldur reward panel values (#15)
 - [ ] Validated generic-grid subset (#16)
 
