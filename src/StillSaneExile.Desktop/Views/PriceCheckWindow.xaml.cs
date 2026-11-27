@@ -7,10 +7,20 @@ using StillSaneExile.Desktop.ViewModels;
 
 namespace StillSaneExile.Desktop.Views;
 
+/// <summary>What the HUD needs from the price check window, so its decisions can be tested with a fake.</summary>
+public interface IPriceCheckSurface
+{
+    bool IsVisible { get; }
+
+    void ShowFor(ItemViewModel item, nint gameWindow);
+
+    void HideWindow();
+}
+
 /// <summary>The price check over the game, opened with F3 after a peek. Unlike the peek card it takes
 /// focus, because it has boxes to tick and numbers to type. Esc, the close button, F3 again or clicking
 /// back into the game closes it, and focus goes back to the game.</summary>
-public partial class PriceCheckWindow : Window
+public partial class PriceCheckWindow : Window, IPriceCheckSurface
 {
     private nint _gameWindow;
     private bool _hiding;

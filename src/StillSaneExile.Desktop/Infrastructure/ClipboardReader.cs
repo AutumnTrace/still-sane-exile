@@ -5,10 +5,19 @@ namespace StillSaneExile.Desktop.Infrastructure;
 
 public sealed record ClipboardRead(string? Text, string? Error);
 
+/// <summary>The two ways the app reads the clipboard, so the HUD and the paste button can be tested
+/// with a fake. Each call is at most one read.</summary>
+public interface IClipboardSource
+{
+    Task<ClipboardRead> ReadAfterChangeAsync(uint sequenceAtPress, TimeSpan timeout);
+
+    ClipboardRead ReadNow();
+}
+
 /// <summary>Reads clipboard text exactly once per call. No retries: a busy clipboard produces one
 /// message and waits for the player's next press. Callers never store the text unless it parses as
 /// an item and the player then saves something.</summary>
-public sealed class ClipboardReader
+public sealed class ClipboardReader : IClipboardSource
 {
     public int ReadCount { get; private set; }
 

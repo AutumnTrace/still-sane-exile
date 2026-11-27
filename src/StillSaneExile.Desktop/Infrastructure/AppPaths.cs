@@ -9,14 +9,15 @@ public sealed class AppPaths
 {
     /// <param name="dataOverride"><c>--data &lt;dir&gt;</c>, for tests and clean starts.</param>
     /// <param name="portableRoot">Root of a portable copy (the folder holding <c>current\</c>), if any.</param>
-    public AppPaths(string? dataOverride = null, string? portableRoot = null)
+    /// <param name="appDataRoot">Stands in for <c>%APPDATA%</c>, so tests never create folders in the real profile.</param>
+    public AppPaths(string? dataOverride = null, string? portableRoot = null, string? appDataRoot = null)
     {
         AppDir = AppContext.BaseDirectory;
         Portable = dataOverride is null && portableRoot is not null;
         DataDir = dataOverride
             ?? (portableRoot is not null
                 ? Path.Combine(portableRoot, "data")
-                : Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "StillSaneExile"));
+                : Path.Combine(appDataRoot ?? Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "StillSaneExile"));
         Directory.CreateDirectory(DataDir);
     }
 

@@ -6,8 +6,18 @@ using StillSaneExile.Desktop.ViewModels;
 
 namespace StillSaneExile.Desktop.Views;
 
+/// <summary>What the HUD needs from the peek card's window, so its decisions can be tested with a fake.</summary>
+public interface IPeekSurface
+{
+    bool IsVisible { get; }
+
+    void ShowCard(PeekViewModel card, PeekAnchor anchor, double scale, nint referenceWindow);
+
+    void HideCard();
+}
+
 /// <summary>The passive HUD card: topmost, click-through, never activated, never focusable.</summary>
-public partial class PeekWindow : Window
+public partial class PeekWindow : Window, IPeekSurface
 {
     public PeekWindow()
     {

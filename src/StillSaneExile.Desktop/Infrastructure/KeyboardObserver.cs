@@ -77,10 +77,21 @@ public sealed record Hotkey(int Vk, bool Ctrl, bool Shift, bool Alt)
     }
 }
 
+/// <summary>What the HUD needs from the keyboard observer, so its decisions can be tested with a fake.</summary>
+public interface IKeySource : IDisposable
+{
+    /// <summary>Raised on the thread that started the source, inside the hook callback.</summary>
+    event Action<KeyEvent>? Key;
+
+    bool AltGrDetected { get; }
+
+    void Start();
+}
+
 /// <summary>Observes physical key presses system-wide with a low-level keyboard hook. It never
 /// swallows, delays or sends a key: every event is passed on unchanged with CallNextHookEx. The hook
 /// runs in this process (no DLL is loaded into the game).</summary>
-public sealed class KeyboardObserver : IDisposable
+public sealed class KeyboardObserver : IKeySource
 {
     private const int VkLShift = 0xA0, VkRShift = 0xA1, VkLControl = 0xA2, VkRControl = 0xA3, VkLMenu = 0xA4, VkRMenu = 0xA5;
     private const uint AltGrFakeCtrlScan = 0x21D;

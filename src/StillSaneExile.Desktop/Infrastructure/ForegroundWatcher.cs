@@ -9,9 +9,22 @@ public enum ForegroundKind
     ThisApp,
 }
 
+/// <summary>What the HUD needs to know about the window in front, so its decisions can be tested with a fake.</summary>
+public interface IForegroundSource : IDisposable
+{
+    ForegroundKind Current { get; }
+
+    nint ForegroundWindow { get; }
+
+    /// <summary>The new kind of window in front, and why it changed.</summary>
+    event Action<ForegroundKind, string>? Changed;
+
+    void Start();
+}
+
 /// <summary>Knows which window is in front, from OS window metadata only (title and owning process
 /// name). Raises an event when that changes or a window starts minimizing.</summary>
-public sealed class ForegroundWatcher : IDisposable
+public sealed class ForegroundWatcher : IForegroundSource
 {
     private static readonly string[] GameProcessPrefixes = ["PathOfExile"];
     private const string GameWindowTitle = "Path of Exile 2";
