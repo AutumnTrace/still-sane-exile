@@ -3,7 +3,19 @@ using System.Text.RegularExpressions;
 
 namespace StillSaneExile.Domain.Items;
 
-public sealed record ParseResult(ItemSnapshot? Item, string? Error)
+public enum ParseFailure
+{
+    None,
+    Empty,
+    /// <summary>Not item text at all (chat, a link, anything else).</summary>
+    NotAnItem,
+    /// <summary>Shaped like an item copy, but not in English. Never translated or guessed.</summary>
+    UnsupportedLanguage,
+    /// <summary>English item text without a name or base line.</summary>
+    NoName,
+}
+
+public sealed record ParseResult(ItemSnapshot? Item, string? Error, ParseFailure Failure = ParseFailure.None)
 {
     public bool Ok => Item is not null;
 }
@@ -43,11 +55,14 @@ public static partial class ItemTextParser
     [GeneratedRegex(@"(?<n>\d+)\s*/\s*(?<m>\d+)")]
     private static partial Regex StackValue();
 
+    public const string UnsupportedLanguageMessage =
+        "This looks like an item copied from a game set to another language. SSE reads English item text only for now, so switch the game to English to use the price check.";
+
     public static ParseResult Parse(string? text, DateTimeOffset capturedAt, string captureId)
     {
         if (string.IsNullOrWhiteSpace(text))
         {
-            return new ParseResult(null, "The clipboard is empty.");
+            return new ParseResult(null, "The clipboard is empty.", ParseFailure.Empty);
         }
 
         var lines = text.Replace("\r\n", "\n", StringComparison.Ordinal).Replace('\r', '\n').Split('\n')
@@ -60,7 +75,9 @@ public static partial class ItemTextParser
 
         if (lines.Count == 0 || !(lines[0].StartsWith("Item Class:", StringComparison.Ordinal) || lines[0].StartsWith("Rarity:", StringComparison.Ordinal)))
         {
-            return new ParseResult(null, "The clipboard does not hold an English item copy. Hover an item in game and press Ctrl+C (or Ctrl+Alt+C) first.");
+            return LooksLikeItemCopy(lines)
+                ? new ParseResult(null, UnsupportedLanguageMessage, ParseFailure.UnsupportedLanguage)
+                : new ParseResult(null, "The clipboard does not hold an English item copy. Hover an item in game and press Ctrl+C (or Ctrl+Alt+C) first.", ParseFailure.NotAnItem);
         }
 
         var sections = SplitSections(lines);
@@ -70,7 +87,7 @@ public static partial class ItemTextParser
         ParseHeader(sections[0], b);
         if (b.BaseType.Length == 0)
         {
-            return new ParseResult(null, "The item text has no name or base line.");
+            return new ParseResult(null, "The item text has no name or base line.", ParseFailure.NoName);
         }
 
         var explicitSeen = false;
@@ -141,6 +158,18 @@ public static partial class ItemTextParser
 
         return new ParseResult(b.Build(), null);
     }
+
+    /// <summary>The shape every item copy has, whatever the client language: a first line "label: value"
+    /// (item class or rarity, translated) and several separator lines. Only used to word the rejection
+    /// of non-English text plainly; nothing in such a copy is read or translated.</summary>
+    private static bool LooksLikeItemCopy(List<string> lines) =>
+        lines.Count >= 3
+        && LabelLine().IsMatch(lines[0].Trim())
+        && lines.Count(l => l.Trim() == Separator) >= 2;
+
+    // A short label, then an ASCII or full-width colon, then a value: "Rareté: Rare", "아이템 희귀도: 희귀".
+    [GeneratedRegex(@"^[^:：\s][^:：]{0,39}[:：]\s*\S")]
+    private static partial Regex LabelLine();
 
     private static List<List<string>> SplitSections(List<string> lines)
     {

@@ -111,6 +111,44 @@ public class ItemParserTests
         Assert.NotNull(result.Error);
     }
 
+    // Hand-written in the shape of an item copy, not copied from a game client: only the structure
+    // (a translated "label: value" first line and separator lines) matters to these tests.
+    [Theory]
+    [InlineData("Classe d'objet: Arbalètes\nRareté: Rare\nMarque de tempête\nArbalète de bombardement\n--------\nDégâts physiques: 98-210 (augmented)\n--------\nNiveau de l'objet: 81\n--------\n+212 à la Précision")]
+    [InlineData("Gegenstandsklasse: Armbrüste\nSeltenheit: Selten\nSturmmal\nBombardierarmbrust\n--------\nPhysischer Schaden: 98-210\n--------\nGegenstandsstufe: 81")]
+    [InlineData("Класс предмета: Арбалеты\nРедкость: Редкий\nМетка бури\nБомбардирский арбалет\n--------\nФизический урон: 98-210\n--------\nУровень предмета: 81")]
+    [InlineData("아이템 종류: 쇠뇌\n아이템 희귀도: 희귀\n폭풍의 표식\n폭격 쇠뇌\n--------\n물리 피해：98-210\n--------\n아이템 레벨：81")]
+    public void Non_english_item_copy_says_unsupported_language(string text)
+    {
+        var result = ItemTextParser.Parse(text, Fixtures.DemoNow, "x");
+
+        Assert.False(result.Ok);
+        Assert.Equal(ParseFailure.UnsupportedLanguage, result.Failure);
+        Assert.Equal(ItemTextParser.UnsupportedLanguageMessage, result.Error);
+        Assert.Contains("English", result.Error);
+    }
+
+    [Theory]
+    [InlineData("Objet de classe: Arbalètes")]
+    [InlineData("hello from a chat window\n--------\nsee you\n--------\nbye")]
+    [InlineData("this first line is long enough to be a sentence, not a label: really\n--------\nx\n--------")]
+    [InlineData("Party: anyone for maps?\nok")]
+    public void Other_text_is_not_mistaken_for_a_foreign_item(string text)
+    {
+        var result = ItemTextParser.Parse(text, Fixtures.DemoNow, "x");
+
+        Assert.False(result.Ok);
+        Assert.Equal(ParseFailure.NotAnItem, result.Failure);
+    }
+
+    [Fact]
+    public void English_copies_are_unaffected_by_the_language_check()
+    {
+        var result = ItemTextParser.Parse(Fixtures.Text("items/rare-crossbow-normal-hybrid.txt"), Fixtures.DemoNow, "x");
+        Assert.True(result.Ok);
+        Assert.Equal(ParseFailure.None, result.Failure);
+    }
+
     [Fact]
     public void States_are_read()
     {
