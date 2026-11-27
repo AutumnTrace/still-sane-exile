@@ -2,7 +2,8 @@ namespace StillSaneExile.Domain.Capture;
 
 public enum HoldMode
 {
-    /// <summary>Show while held, hide on release.</summary>
+    /// <summary>Show while held, hide on release, unless the player pinned it while holding (by moving
+    /// onto the card): then it stays until they close it, press again, or focus goes elsewhere.</summary>
     Hold,
     /// <summary>Accessibility: first press shows a frozen snapshot, the next press dismisses it.</summary>
     Toggle,
@@ -15,6 +16,8 @@ public enum GateAction
     Read,
     /// <summary>Hide whatever this command is showing.</summary>
     Hide,
+    /// <summary>The key is up and what this command shows stays: the player pinned it while holding.</summary>
+    Keep,
 }
 
 public sealed record GateDecision(GateAction Action, long Generation, string Reason)
@@ -84,8 +87,10 @@ public sealed class CaptureGate
             return GateDecision.Ignore("game is not the foreground window");
         }
 
+        // A fresh press replaces whatever shows, pinned or not, and starts unpinned.
         _generation++;
         s.ActiveGeneration = _generation;
+        s.Pinned = false;
         Counters.Reads++;
         return new GateDecision(GateAction.Read, _generation, "fresh physical press");
     }
@@ -99,6 +104,11 @@ public sealed class CaptureGate
         }
 
         s.IsDown = false;
+        if (s.Mode == HoldMode.Hold && s.ActiveGeneration is { } active && s.Pinned)
+        {
+            return new GateDecision(GateAction.Keep, active, "released, pinned");
+        }
+
         if (s.Mode == HoldMode.Hold && s.ActiveGeneration is not null)
         {
             s.ActiveGeneration = null;
@@ -110,6 +120,37 @@ public sealed class CaptureGate
         return GateDecision.Ignore("nothing showing");
     }
 
+    /// <summary>Hold mode, while the key is down and a result is on its way or showing: the player moved
+    /// onto it, so letting go no longer hides it. Reads nothing. False when there is nothing to pin.</summary>
+    public bool Pin(string command)
+    {
+        var s = State(command);
+        if (s.Mode != HoldMode.Hold || !s.IsDown || s.ActiveGeneration is null)
+        {
+            return false;
+        }
+
+        s.Pinned = true;
+        return true;
+    }
+
+    /// <summary>The player closed what this command shows (its close button, or Esc). A result still on
+    /// its way for it is dropped.</summary>
+    public GateDecision Dismiss(string command, string reason)
+    {
+        var s = State(command);
+        if (s.ActiveGeneration is null)
+        {
+            return GateDecision.Ignore("nothing showing");
+        }
+
+        s.ActiveGeneration = null;
+        s.Pinned = false;
+        _generation++;
+        Counters.Hides++;
+        return new GateDecision(GateAction.Hide, _generation, reason);
+    }
+
     /// <summary>Focus loss, minimize, lock, resolution change, scroll or panel change: clear everything.
     /// Held keys stay held, so auto-repeat cannot start a new read until a fresh press.</summary>
     public GateDecision Invalidate(string reason)
@@ -119,6 +160,7 @@ public sealed class CaptureGate
         {
             any |= s.ActiveGeneration is not null;
             s.ActiveGeneration = null;
+            s.Pinned = false;
         }
 
         _generation++;
@@ -145,6 +187,11 @@ public sealed class CaptureGate
 
     public bool IsShowing(string command) => State(command).ActiveGeneration is not null;
 
+    public bool IsPinned(string command) => State(command) is { Pinned: true, ActiveGeneration: not null };
+
+    /// <summary>The physical key is down: a fresh press was seen and its release not yet.</summary>
+    public bool IsHeld(string command) => State(command).IsDown;
+
     private CommandState State(string command)
     {
         if (!_commands.TryGetValue(command, out var s))
@@ -160,6 +207,7 @@ public sealed class CaptureGate
     {
         public HoldMode Mode = HoldMode.Hold;
         public bool IsDown;
+        public bool Pinned;
         public long? ActiveGeneration;
     }
 }
