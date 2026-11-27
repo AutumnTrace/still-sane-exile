@@ -14,6 +14,10 @@ namespace StillSaneExile.Domain.Trade;
 public sealed record TradeSearch(string League, string Json, IReadOnlyList<string> ByHand, IReadOnlyList<WorksheetRow> Unmapped)
 {
     public string Url => TradeLink.Search(League, Json);
+
+    /// <summary>The query says what the item is: a unique's name, and a base or a category. Without that a
+    /// search would price other items, so SSE does not run it itself (the link still opens, to finish by hand).</summary>
+    public bool Identifies { get; init; } = true;
 }
 
 public static class TradeLink
@@ -294,7 +298,10 @@ public static class TradeQuery
             j.WriteEndObject();
         }
 
-        return new TradeSearch(league, Encoding.UTF8.GetString(buffer.ToArray()), byHand, unmapped);
+        return new TradeSearch(league, Encoding.UTF8.GetString(buffer.ToArray()), byHand, unmapped)
+        {
+            Identifies = (w.Rarity != ItemRarity.Unique || name is not null) && (type is not null || category is not null),
+        };
     }
 
     private static bool IsLocal(string? category, string template) =>

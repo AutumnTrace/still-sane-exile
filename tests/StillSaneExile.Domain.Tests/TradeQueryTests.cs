@@ -164,6 +164,7 @@ public class TradeQueryTests
             """{"query":{"status":{"option":"securable"},"name":"Mageblood","type":"Utility Belt","filters":{"type_filters":{"filters":{"category":{"option":"accessory.belt"}}},"misc_filters":{"filters":{"corrupted":{"option":"false"}}}}}}""",
             search.Json);
         Assert.Empty(search.ByHand);
+        Assert.True(search.Identifies);
     }
 
     [Fact]
@@ -199,6 +200,7 @@ public class TradeQueryTests
             """{"query":{"status":{"option":"securable"},"type":"Gold Ring","filters":{"type_filters":{"filters":{"category":{"option":"accessory.ring"},"rarity":{"option":"unique"}}},"misc_filters":{"filters":{"corrupted":{"option":"false"}}}}}}""",
             search.Json);
         Assert.Equal(["Name (Sanity's Last Loop)"], search.ByHand);
+        Assert.False(search.Identifies); // a search without the name would price every unique gold ring
     }
 
     [Fact]
