@@ -55,6 +55,12 @@ The game copies the item. SSE reads the changed clipboard once for that press an
 
 Every control in SSE works from the keyboard and has a name for screen readers, and its windows follow the Windows text size setting as far as they fit your screen. Details and contrast measurements: [Accessibility](docs/ACCESSIBILITY.md).
 
+## Is it allowed?
+
+Grinding Gear Games' [developer policy](https://www.pathofexile.com/developer/docs) permits apps that run independently from the game, and bans apps that interact with the game or its files. SSE is the permitted kind: it never touches the game's memory, files or logs, and never sends a key, click or chat message to the game. It reads the clipboard once per key press you make, as the policy requires, and tells you what each key reads.
+
+GGG doesn't approve or guarantee any third-party tool, and its rules can change, so no tool can promise you won't be banned. SSE is built to follow the rules as written, and we recheck them before features that read more of the screen. Policy quotes and how SSE meets each one: [Sources](docs/SOURCES.md#ggg-third-party-policy-checked-27-november-2026).
+
 ## Also in the app
 
 **My wealth** keeps count of what you hold, tab by tab, from counts you type or a [CSV file](docs/WEALTH-CSV.md). The **Campaign guide** walks the start of Act 1 (a draft route, not yet checked in game) and turns your own build notes into gem steps for the stage you are at; a pasted guide link only ever opens in your browser.
