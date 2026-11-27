@@ -64,7 +64,40 @@ public sealed class TradeData
     /// "rune"). <paramref name="local"/> asks for the "(Local)" version where the site has one, as a
     /// weapon's own attack speed or an armour's own armour does. False with a null id when the group has
     /// the text under more than one id.</summary>
-    public bool TryStat(string group, string template, bool local, out string? id) => _stats.TryGetValue((group, template, local), out id);
+    public bool TryStat(string group, string template, bool local, out string? id)
+    {
+        if (_stats.TryGetValue((group, template, local), out id))
+        {
+            return true;
+        }
+
+        // The game writes "Has 3 Charm Slots"; the site files the stat as "Has # Charm Slot". Fall back to a
+        // match that ignores plural endings, and only when exactly one id fits.
+        _singular ??= BuildSingular(_stats);
+        return _singular.TryGetValue((group, SingularKey(template), local), out id) && id is not null;
+    }
+
+    private Dictionary<(string, string, bool), string?>? _singular;
+
+    private static Dictionary<(string, string, bool), string?> BuildSingular(Dictionary<(string Group, string Template, bool Local), string?> stats)
+    {
+        var map = new Dictionary<(string, string, bool), string?>();
+        foreach (var ((group, template, local), id) in stats)
+        {
+            var key = (group, SingularKey(template), local);
+            map[key] = map.TryGetValue(key, out var existing) && existing != id ? null : id;
+        }
+
+        return map;
+    }
+
+    /// <summary>The template lower-cased with plural endings dropped ("Has # Charm Slots" → "has # charm slot").</summary>
+    public static string SingularKey(string template) =>
+        string.Join(' ', template.Split(' ').Select(w =>
+        {
+            var lower = w.ToLowerInvariant();
+            return lower.Length > 3 && lower.EndsWith('s') && !lower.EndsWith("ss", StringComparison.Ordinal) ? lower[..^1] : lower;
+        }));
 
     /// <summary>Reads the shipped file. Throws <see cref="FormatException"/> when it is not trade data.</summary>
     public static TradeData Parse(string json)

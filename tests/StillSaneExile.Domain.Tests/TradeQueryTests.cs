@@ -167,6 +167,30 @@ public class TradeQueryTests
     }
 
     [Fact]
+    public void A_plural_game_line_finds_the_sites_singular_stat()
+    {
+        // The game writes "Has 3 Charm Slots"; the site files it as "Has # Charm Slot". A player who asked
+        // for at least 3 slots on a Mageblood got every Mageblood, because the filter was left out.
+        var s = Typed("Item Class: Belts\nRarity: Unique\nMageblood\nUtility Belt\n--------\nItem Level: 84\n--------\nHas 3 Charm Slots (implicit)\n--------\n+30 to Dexterity");
+        var slots = Tick(s.W, RowKind.Implicit, "Has # Charm Slots");
+        slots.Min = 3;
+
+        var search = Build(s);
+
+        Assert.Equal("implicit.stat_1416292992", TradeQuery.StatIdFor(RowKind.Implicit, "Has # Charm Slots", "Belts", Data.Value));
+        Assert.Contains("""{"id":"implicit.stat_1416292992","value":{"min":3}}""", search.Json);
+        Assert.DoesNotContain(search.ByHand, h => h.Contains("Charm", StringComparison.Ordinal));
+    }
+
+    [Theory]
+    [InlineData("Has # Charm Slots", "has # charm slot")]
+    [InlineData("#% to all Elemental Resistances", "#% to all elemental resistance")]
+    [InlineData("Has # Charm Slot", "has # charm slot")]
+    [InlineData("#% increased Mana Regeneration Rate", "#% increased mana regeneration rate")]
+    public void Plural_endings_are_ignored_only_for_the_fallback(string template, string key) =>
+        Assert.Equal(key, TradeData.SingularKey(template));
+
+    [Fact]
     public void A_made_up_unique_keeps_its_base_and_says_to_set_the_name_by_hand()
     {
         var search = Build(Practice("unique-ring"));
