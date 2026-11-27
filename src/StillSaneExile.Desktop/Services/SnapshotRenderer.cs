@@ -79,8 +79,14 @@ public static class SnapshotRenderer
         wealth.CancelImportCommand.Execute(null);
         wealth.Message = null;
 
-        shell.GoSettingsCommand.Execute(null);
-        Save(main, Path.Combine(dir, "settings.png"));
+        // Settings, one section at a time, then back on the first.
+        foreach (var section in SettingsViewModel.Sections.Where(s => s.Key != "pictures"))
+        {
+            shell.OpenSettings(section.Key);
+            Save(main, Path.Combine(dir, section.Key == "general" ? "settings.png" : $"settings-{section.Key}.png"));
+        }
+
+        shell.OpenSettings("general");
         RenderStashPictures(shell, main, dir);
 
         // "What's new" as the first start after an update shows it, over the price check. A development
@@ -165,16 +171,13 @@ public static class SnapshotRenderer
                 p.LoadThumbnailNow();
             }
 
-            shell.GoSettingsCommand.Execute(null);
-            Flush(main);
-            Find<FrameworkElement>(main, "StashPicturesCard")?.BringIntoView();
-            Save(main, Path.Combine(dir, "settings-stash-pictures.png"));
-
             shell.GoWealthCommand.Execute(null);
             Save(main, Path.Combine(dir, "wealth-stash-card.png"));
             pictures.ReviewCommand.Execute(null);
-            Save(main, Path.Combine(dir, "wealth-stash-pictures.png"));
-            pictures.DoneReviewingCommand.Execute(null);
+            Flush(main);
+            Find<FrameworkElement>(main, "StashPicturesCard")?.BringIntoView();
+            Save(main, Path.Combine(dir, "settings-stash-pictures.png"));
+            shell.OpenSettings("general");
 
             // The note over the game, unpositioned; the click-through window never activates.
             var toast = new StashToastWindow { Left = -20000, Top = 0, Message = $"Saved stash picture {pictures.Count}" };

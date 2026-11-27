@@ -21,8 +21,27 @@ public sealed record GuideStep(int Number, string Title, string Text)
 }
 
 /// <summary>Settings and first-run onboarding (same page, different heading).</summary>
+/// <summary>One page of Settings, picked in the rail on its left.</summary>
+public sealed record SettingsSection(string Key, string Label)
+{
+    /// <summary>What a screen reader says for the section (WPF reads a list row through ToString).</summary>
+    public override string ToString() => Label;
+}
+
 public sealed partial class SettingsViewModel : ObservableObject
 {
+    /// <summary>Settings in short pages instead of one long one: what most players change first, the
+    /// contributor tool and the fine print last.</summary>
+    public static readonly IReadOnlyList<SettingsSection> Sections =
+    [
+        new("general", "League and prices"),
+        new("keys", "Keys"),
+        new("card", "Price card"),
+        new("market", "Live prices and trade"),
+        new("pictures", "Stash pictures"),
+        new("about", "Updates and privacy"),
+    ];
+
     private readonly ShellViewModel _shell;
     private Hotkey _peek;
     private Hotkey _openLast;
@@ -48,7 +67,20 @@ public sealed partial class SettingsViewModel : ObservableObject
     public StashPicturesViewModel Pictures => _shell.StashPictures;
 
     /// <summary>Beside the stash key in the Keys card.</summary>
-    public string StashKeyNote => Pictures.IsCollecting ? "takes stash pictures (see below)" : "coming later";
+    public string StashKeyNote => Pictures.IsCollecting ? "takes stash pictures (see Stash pictures)" : "coming later";
+
+    /// <summary>The page of Settings in view: a <see cref="SettingsSection.Key"/>.</summary>
+    [ObservableProperty]
+    public partial string Section { get; set; } = "general";
+
+    [RelayCommand]
+    private void ShowSection(string key)
+    {
+        if (Sections.Any(s => s.Key == key))
+        {
+            Section = key;
+        }
+    }
 
     [ObservableProperty]
     public partial bool IsOnboarding { get; set; }
@@ -128,7 +160,7 @@ public sealed partial class SettingsViewModel : ObservableObject
             var session = _shell.Session;
             if (session is null || session.IsDemo)
             {
-                return "Starts once you confirm a live league above.";
+                return "Starts once you confirm a live league under League and prices.";
             }
 
             var prices = _shell.Prices;
@@ -245,7 +277,7 @@ public sealed partial class SettingsViewModel : ObservableObject
         $"{OpenLastKey}: reads nothing; opens the price check for your last item over the game (Esc closes it).\n" +
         (Pictures.IsCollecting
             ? $"{StashKey}: \"Collect stash pictures\" is on, so each press with the game in front takes one picture of the game window and saves it in your data folder. Holding the key takes no more. Stash and Aldur labels come later (Milestone 2)."
-            : $"{StashKey}: reserved for stash and Aldur labels (Milestone 2). It reads nothing now; with \"Collect stash pictures\" on (below), each press takes one picture of the game window.");
+            : $"{StashKey}: reserved for stash and Aldur labels (Milestone 2). It reads nothing now; with \"Collect stash pictures\" on (Stash pictures), each press takes one picture of the game window.");
 
     /// <summary>Onboarding's one line under "Quick price".</summary>
     public string PeekHowTo => (_peek.IsNativeCopy, ToggleMode) switch

@@ -172,7 +172,7 @@ The app takes pictures with WGC behind **Collect stash pictures** in Settings, o
 
 The screenshots for the M2 recognizers. Take them with SSE itself, so each one is exactly the frame SSE will get: client area only, no Windows cursor, the same colour handling.
 
-In SSE, open Settings, find **Stash reading (coming soon): help build it** and tick **Collect stash pictures**. In the game, press Right Alt once per screenshot (under Keys, change the stash key to F8 if Alt changes what the game shows). Each press saves one PNG and its notes in the data folder, under `captures\<date>\`, and a note over the game says "Saved stash picture N". Afterwards, label them on My wealth with **Review and label**.
+In SSE, open Settings → **Stash pictures** and tick **Collect stash pictures**. In the game, press Right Alt once per screenshot (under Keys, change the stash key to F8 if Alt changes what the game shows). Each press saves one PNG and its notes in the data folder, under `captures\<date>\`, and a note over the game says "Saved stash picture N". Afterwards, label them on the same Settings page, under **Label your pictures**.
 
 1. **Tabs.** Take each of these at every resolution and UI scale in item 4:
    - **Dedicated currency tab:** one capture of every subtab, with real stacks in it. Include small (1 to 9) and large (3 to 4 digit) stack counts.

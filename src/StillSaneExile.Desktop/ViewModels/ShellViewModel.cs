@@ -184,6 +184,13 @@ public sealed partial class ShellViewModel : ObservableObject
         }
     }
 
+    /// <summary>Settings, open on one of its sections (<see cref="SettingsViewModel.Sections"/>).</summary>
+    public void OpenSettings(string section)
+    {
+        SettingsPage.ShowSectionCommand.Execute(section);
+        Navigate(SettingsPage);
+    }
+
     public void OpenCraftWith(ItemViewModel? item)
     {
         Craft.Context = item is null ? null : $"Item handed over from the price check: {item.Item.DisplayName} (snapshot {item.CapturedAt}). Crafting plans will start from this exact snapshot.";
@@ -229,7 +236,7 @@ public sealed partial class ShellViewModel : ObservableObject
     private void GoSettings() => Navigate(SettingsPage);
 
     [RelayCommand]
-    private void OpenLeagueSetting() => Navigate(SettingsPage);
+    private void OpenLeagueSetting() => OpenSettings("general");
 
     [RelayCommand]
     private void ToggleCurrencyMenu() => CurrencyMenuOpen = !CurrencyMenuOpen;
