@@ -11,3 +11,4 @@ TestResults/
 *.db-shm
 *.db-wal
 /snapshots/
+.claude/worktrees/
