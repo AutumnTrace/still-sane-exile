@@ -304,6 +304,7 @@ public class AccessibilityTests
 
     private static List<string> Check(Window window)
     {
+        Stage(window);
         if (!window.IsVisible)
         {
             window.Show();
@@ -365,9 +366,45 @@ public class AccessibilityTests
             FontFamily = new FontFamily("Segoe UI"),
             FontSize = 14,
         };
+        Stage(window);
         window.Show();
         return window;
     }
+
+    private const string StageTag = "accessibility-test-stage";
+
+    /// <summary>Lays the window's content out at the app's size, whatever the screen. Windows caps a window
+    /// at the screen's size (GitHub's runners have 1024×768), which squeezes the layout and leaves Tab stops
+    /// outside the window. The content sits on a fixed 1440×1000 surface with its own adorner layer, so focus
+    /// rings still draw, and the focus check renders that surface rather than the window.</summary>
+    private static void Stage(Window window)
+    {
+        if (window.Content is Canvas { Tag: StageTag })
+        {
+            return;
+        }
+
+        var content = (UIElement)window.Content;
+        window.Content = null;
+        window.Content = new Canvas
+        {
+            Tag = StageTag,
+            Children =
+            {
+                new Border
+                {
+                    Width = 1440,
+                    Height = 1000,
+                    Background = window.Background,
+                    Child = new AdornerDecorator { Child = content },
+                },
+            },
+        };
+    }
+
+    /// <summary>What the focus check renders: the staged surface, or the window itself if it was never staged.</summary>
+    private static FrameworkElement Surface(Window window) =>
+        window.Content is Canvas { Tag: StageTag } stage ? (FrameworkElement)stage.Children[0] : window;
 
     /// <summary>Everything a screen reader can reach, controls or not, reads as words: WPF names a row
     /// of a list after its data object, which by default is the type's name.</summary>
@@ -458,6 +495,7 @@ public class AccessibilityTests
     /// accent fill, changes its pixels by 2.9:1 and stands at 16:1 against the card around it.</summary>
     private static void AssertFocusShows(Window window, UIElement element, string name)
     {
+        var surface = Surface(window);
         byte[] before, after;
         Int32Rect area;
         var attempt = 0;
@@ -468,14 +506,16 @@ public class AccessibilityTests
             Flush(window);
             Keyboard.ClearFocus();
             Flush(window);
-            var bounds = element.TransformToAncestor(window).TransformBounds(new Rect(element.RenderSize));
+            var bounds = element.TransformToAncestor(surface).TransformBounds(new Rect(element.RenderSize));
             bounds.Inflate(3, 3);
-            bounds.Intersect(new Rect(0, 0, Math.Floor(window.ActualWidth), Math.Floor(window.ActualHeight)));
+            bounds.Intersect(new Rect(0, 0, Math.Floor(surface.ActualWidth), Math.Floor(surface.ActualHeight)));
+            Assert.False(bounds.IsEmpty || bounds.Width < 1 || bounds.Height < 1,
+                $"'{name}' ({Describe(element)}) lies outside the {surface.ActualWidth}×{surface.ActualHeight} area the test renders");
             area = new Int32Rect((int)bounds.X, (int)bounds.Y, (int)bounds.Width, (int)bounds.Height);
-            before = Render(window, area);
+            before = Render(surface, area);
             element.Focus();
             Flush(window);
-            after = Render(window, area);
+            after = Render(surface, area);
         }
         while (!(window.IsActive && element.IsKeyboardFocused) && ++attempt < 3); // lost the foreground meanwhile
 
@@ -500,11 +540,11 @@ public class AccessibilityTests
         Assert.True(clear >= 20, $"Focus on '{name}' ({Describe(element)}) is hard to see: {clear} pixels change clearly (window in front: {window.IsActive})");
     }
 
-    /// <summary>The window as drawn, cut to <paramref name="area"/>.</summary>
-    private static byte[] Render(Window window, Int32Rect area)
+    /// <summary>The surface as drawn, cut to <paramref name="area"/>.</summary>
+    private static byte[] Render(FrameworkElement surface, Int32Rect area)
     {
-        var bitmap = new RenderTargetBitmap((int)window.ActualWidth, (int)window.ActualHeight, 96, 96, PixelFormats.Pbgra32);
-        bitmap.Render(window);
+        var bitmap = new RenderTargetBitmap((int)surface.ActualWidth, (int)surface.ActualHeight, 96, 96, PixelFormats.Pbgra32);
+        bitmap.Render(surface);
         var pixels = new byte[area.Width * area.Height * 4];
         bitmap.CopyPixels(area, pixels, area.Width * 4, 0);
         return pixels;
