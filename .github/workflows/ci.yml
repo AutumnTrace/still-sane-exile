@@ -12,7 +12,7 @@ jobs:
   build-test:
     runs-on: windows-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0
 
@@ -26,13 +26,13 @@ jobs:
           if ($last -and [version]$v -lt $last) { Write-Host "::error::Version $v is lower than the latest release v$last"; exit 1 }
           Write-Host "Version $v (latest release: $(if ($last) { "v$last" } else { 'none' }))"
 
-      - uses: actions/setup-dotnet@v4
+      - uses: actions/setup-dotnet@v6
         with:
           dotnet-version: 10.0.x
       - run: dotnet restore StillSaneExile.sln
       - run: dotnet build StillSaneExile.sln -c Release --no-restore
       - run: dotnet test StillSaneExile.sln -c Release --no-build --logger "trx;LogFileName=results.trx"
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: always()
         with:
           name: test-results
