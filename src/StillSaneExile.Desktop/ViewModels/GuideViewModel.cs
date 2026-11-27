@@ -7,7 +7,11 @@ using StillSaneExile.Domain.Guide;
 namespace StillSaneExile.Desktop.ViewModels;
 
 /// <summary>A zone in the picker.</summary>
-public sealed record ZoneChoice(string Id, string Name, string Facts);
+public sealed record ZoneChoice(string Id, string Name, string Facts)
+{
+    /// <summary>The zone as a screen reader says it (WPF reads a list row through ToString).</summary>
+    public override string ToString() => $"{Name}, {Facts.Replace(" · ", ", ", StringComparison.Ordinal)}";
+}
 
 /// <summary>One step row on the guide page.</summary>
 public sealed record GuideStepViewModel(string Id, string Text, string Detail, StepState State)
@@ -16,9 +20,17 @@ public sealed record GuideStepViewModel(string Id, string Text, string Detail, S
     public bool IsSkipped => State == StepState.Skipped;
     public bool IsOpen => State == StepState.Open;
     public bool HasDetail => Detail.Length > 0;
+
+    /// <summary>The step as a screen reader says it (WPF reads a list row through ToString).</summary>
+    public override string ToString() =>
+        $"{Text}{(HasDetail ? $", {Detail}" : "")}{(IsDone ? ", done" : IsSkipped ? ", skipped" : "")}";
 }
 
-public sealed record MissedRewardViewModel(string Reward, string Where);
+public sealed record MissedRewardViewModel(string Reward, string Where)
+{
+    /// <summary>The reward as a screen reader says it (WPF reads a list row through ToString).</summary>
+    public override string ToString() => $"{Reward}, {Where}";
+}
 
 /// <summary>The campaign guide page: characters, where the player says they are, the steps there, and
 /// the two HUD lines. Works offline from the shipped route pack. Nothing moves or gets ticked unless

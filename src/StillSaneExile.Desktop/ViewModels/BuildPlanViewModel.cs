@@ -11,6 +11,9 @@ namespace StillSaneExile.Desktop.ViewModels;
 public sealed record NoteLineViewModel(int Number, string Text, string Reading, bool IsProblem)
 {
     public bool HasReading => Reading.Length > 0;
+
+    /// <summary>The line as a screen reader says it (WPF reads a list row through ToString).</summary>
+    public override string ToString() => $"Line {Number}: {Text}{(HasReading ? $". {Reading.Replace(" · ", ", ", StringComparison.Ordinal)}" : "")}";
 }
 
 /// <summary>A step on the gem checklist.</summary>
@@ -19,10 +22,18 @@ public sealed record PlanStepViewModel(string Key, string Text, string Detail, M
     public bool IsDone => Status == MilestoneStatus.Done;
     public bool IsDue => Status == MilestoneStatus.Due;
     public bool IsWaiting => Status is MilestoneStatus.WaitingForGem or MilestoneStatus.WaitingForZone;
+
+    /// <summary>The step as a screen reader says it (WPF reads a list row through ToString).</summary>
+    public override string ToString() =>
+        $"{Text}{(Detail.Length > 0 ? $", {Detail.Replace(" · ", ", ", StringComparison.Ordinal)}" : "")}{(IsDone ? ", done" : IsDue ? ", due now" : "")}";
 }
 
 /// <summary>One line of a revision diff: "+", "−" or "~", the step, and what changed.</summary>
-public sealed record PlanChangeViewModel(string Sign, string Text, string Detail);
+public sealed record PlanChangeViewModel(string Sign, string Text, string Detail)
+{
+    /// <summary>The change as a screen reader says it: the sign as a word.</summary>
+    public override string ToString() => $"{Sign switch { "+" => "Added", "~" => "Changed", _ => "Removed" }}: {Text}{(Detail.Length > 0 ? $", {Detail}" : "")}";
+}
 
 /// <summary>A character's build plan: the guide link they saved, their own notes turned into a
 /// checklist, and the gem step the HUD shows next. The link is only saved and opened in the browser on

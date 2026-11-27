@@ -42,19 +42,24 @@
             </DataTemplate>
           </ListBox.ItemTemplate>
         </ListBox>
-        <DockPanel Margin="0,6,0,0">
-          <Button DockPanel.Dock="Right" Content="Add" Command="{Binding AddCharacterCommand}" MinHeight="36" Margin="6,0,0,0" />
+        <!-- Box first, button second: Tab follows reading order. -->
+        <Grid Margin="0,6,0,0">
+          <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="Auto" />
+          </Grid.ColumnDefinitions>
           <TextBox Text="{Binding NewCharacterName, UpdateSourceTrigger=PropertyChanged}" AutomationProperties.Name="New character name"
                    ToolTip="Your character's name. Progress is saved per character, on this PC only." />
-        </DockPanel>
+          <Button Grid.Column="1" Content="Add" AutomationProperties.Name="Add character" Command="{Binding AddCharacterCommand}" MinHeight="36" Margin="6,0,0,0" />
+        </Grid>
         <StackPanel Visibility="{Binding HasCharacter, Converter={StaticResource Vis}}">
           <Button Style="{StaticResource TextButton}" Content="Remove this character" Command="{Binding RemoveCharacterCommand}" HorizontalAlignment="Left" Margin="2,2,0,0"
                   Visibility="{Binding ConfirmingRemove, Converter={StaticResource Vis}, ConverterParameter=invert}" />
           <StackPanel Visibility="{Binding ConfirmingRemove, Converter={StaticResource Vis}}" Margin="2,8,0,0">
             <TextBlock FontSize="12.5" TextWrapping="Wrap" Foreground="{StaticResource Warn}"><Run Text="Remove " /><Run Text="{Binding SelectedCharacter, Mode=OneWay}" FontWeight="SemiBold" /><Run Text=" and everything saved for them?" /></TextBlock>
             <StackPanel Orientation="Horizontal" Margin="0,6,0,0">
-              <Button Content="Remove" Command="{Binding RemoveCharacterCommand}" MinHeight="32" />
-              <Button Style="{StaticResource TextButton}" Content="Keep" Command="{Binding KeepCharacterCommand}" Margin="12,0,0,0" />
+              <Button Content="Remove" AutomationProperties.Name="{Binding SelectedCharacter, StringFormat='Remove {0}'}" Command="{Binding RemoveCharacterCommand}" MinHeight="32" />
+              <Button Style="{StaticResource TextButton}" Content="Keep" AutomationProperties.Name="{Binding SelectedCharacter, StringFormat='Keep {0}'}" Command="{Binding KeepCharacterCommand}" Margin="12,0,0,0" />
             </StackPanel>
           </StackPanel>
         </StackPanel>
@@ -118,20 +123,16 @@
               </StackPanel>
             </StackPanel>
 
-            <ItemsControl ItemsSource="{Binding Steps}" Focusable="False">
+            <ItemsControl ItemsSource="{Binding Steps}" Focusable="False" AutomationProperties.Name="Steps here">
               <ItemsControl.ItemTemplate>
                 <DataTemplate DataType="{x:Type vm:GuideStepViewModel}">
                   <Border BorderBrush="{StaticResource RowLine}" BorderThickness="0,1,0,0" Padding="20,11" Background="Transparent">
-                    <DockPanel>
-                      <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center" Margin="12,0,0,0">
-                        <Button Style="{StaticResource TextButton}" Content="Skip" Padding="0" ToolTip="Leave it for now. Skipped permanent rewards are listed below."
-                                Command="{Binding DataContext.SkipCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{Binding}"
-                                Visibility="{Binding IsOpen, Converter={StaticResource Vis}}" />
-                        <TextBlock Text="Skipped" FontSize="12.5" Foreground="{StaticResource TextFaint}" VerticalAlignment="Center" Margin="0,0,10,0" Visibility="{Binding IsSkipped, Converter={StaticResource Vis}}" />
-                        <Button Style="{StaticResource TextButton}" Content="Reopen" Padding="0"
-                                Command="{Binding DataContext.ReopenCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{Binding}"
-                                Visibility="{Binding IsSkipped, Converter={StaticResource Vis}}" />
-                      </StackPanel>
+                    <!-- The step, then Skip or Reopen on its right: in that order for Tab as well. -->
+                    <Grid>
+                      <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                      </Grid.ColumnDefinitions>
                       <CheckBox IsChecked="{Binding IsDone, Mode=OneWay}" AutomationProperties.Name="{Binding Text}"
                                 Command="{Binding DataContext.ToggleDoneCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{Binding}">
                         <StackPanel>
@@ -152,7 +153,16 @@
                           <TextBlock Text="{Binding Detail}" FontSize="12" Foreground="{StaticResource TextFaint}" TextWrapping="Wrap" Margin="0,1,0,0" Visibility="{Binding HasDetail, Converter={StaticResource Vis}}" />
                         </StackPanel>
                       </CheckBox>
-                    </DockPanel>
+                      <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center" Margin="12,0,0,0">
+                        <Button Style="{StaticResource TextButton}" Content="Skip" Padding="0" ToolTip="Leave it for now. Skipped permanent rewards are listed below." AutomationProperties.Name="{Binding Text, StringFormat='Skip {0}'}"
+                                Command="{Binding DataContext.SkipCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{Binding}"
+                                Visibility="{Binding IsOpen, Converter={StaticResource Vis}}" />
+                        <TextBlock Text="Skipped" FontSize="12.5" Foreground="{StaticResource TextFaint}" VerticalAlignment="Center" Margin="0,0,10,0" Visibility="{Binding IsSkipped, Converter={StaticResource Vis}}" />
+                        <Button Style="{StaticResource TextButton}" Content="Reopen" Padding="0" AutomationProperties.Name="{Binding Text, StringFormat='Reopen {0}'}"
+                                Command="{Binding DataContext.ReopenCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{Binding}"
+                                Visibility="{Binding IsSkipped, Converter={StaticResource Vis}}" />
+                      </StackPanel>
+                    </Grid>
                   </Border>
                 </DataTemplate>
               </ItemsControl.ItemTemplate>
@@ -166,8 +176,8 @@
             <Border Background="{StaticResource Surface3}" BorderBrush="{StaticResource Line}" BorderThickness="0,1,0,0" CornerRadius="0,0,12,12" Padding="20,12">
               <DockPanel>
                 <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" Margin="12,0,0,0">
-                  <Button Style="{StaticResource GhostButton}" Content="‹ Back" Command="{Binding BackCommand}" MinHeight="40" IsEnabled="{Binding CanBack}" />
-                  <Button Style="{StaticResource PrimaryButton}" Command="{Binding NextCommand}" MinHeight="40" Margin="8,0,0,0" IsEnabled="{Binding CanNext}">
+                  <Button Style="{StaticResource GhostButton}" Content="‹ Back" AutomationProperties.Name="Previous stop" Command="{Binding BackCommand}" MinHeight="40" IsEnabled="{Binding CanBack}" />
+                  <Button Style="{StaticResource PrimaryButton}" Command="{Binding NextCommand}" MinHeight="40" Margin="8,0,0,0" IsEnabled="{Binding CanNext}" AutomationProperties.Name="{Binding NextLabel}">
                     <TextBlock><Run Text="{Binding NextLabel, Mode=OneWay}" /><Run Text="  ›" /></TextBlock>
                   </Button>
                 </StackPanel>
@@ -198,7 +208,7 @@
             <Border Background="{StaticResource Surface3}" CornerRadius="8" Padding="14,10" Margin="0,14,0,6" Visibility="{Binding NextGem, Converter={StaticResource Vis}}">
               <TextBlock TextWrapping="Wrap"><Run Text="Next gem   " FontSize="12.5" Foreground="{StaticResource TextFaint}" /><Run Text="{Binding NextGem, Mode=OneWay}" FontSize="16" FontWeight="Bold" /></TextBlock>
             </Border>
-            <ItemsControl ItemsSource="{Binding Checklist}" Focusable="False" Margin="0,4,0,0">
+            <ItemsControl ItemsSource="{Binding Checklist}" Focusable="False" Margin="0,4,0,0" AutomationProperties.Name="Your gem steps">
               <ItemsControl.ItemTemplate>
                 <DataTemplate DataType="{x:Type vm:PlanStepViewModel}">
                   <Border BorderBrush="{StaticResource RowLine}" BorderThickness="0,1,0,0" Padding="0,9" Background="Transparent">
@@ -236,7 +246,7 @@
           <StackPanel>
             <TextBlock Text="Missed permanent rewards" Style="{StaticResource CardTitle}" />
             <TextBlock Style="{StaticResource CardLead}" Text="Lasting rewards you skipped or walked past without ticking. You can go back for them any time." />
-            <ItemsControl ItemsSource="{Binding Missed}" Margin="0,8,0,0" Focusable="False">
+            <ItemsControl ItemsSource="{Binding Missed}" Margin="0,8,0,0" Focusable="False" AutomationProperties.Name="Missed permanent rewards">
               <ItemsControl.ItemTemplate>
                 <DataTemplate DataType="{x:Type vm:MissedRewardViewModel}">
                   <Border BorderBrush="{StaticResource RowLine}" BorderThickness="0,1,0,0" Padding="0,8">
@@ -253,12 +263,12 @@
 
             <StackPanel Visibility="{Binding SkippedSteps, Converter={StaticResource Vis}}">
               <TextBlock Text="SKIPPED" Style="{StaticResource SectionTitle}" Margin="0,16,0,4" />
-              <ItemsControl ItemsSource="{Binding SkippedSteps}" Focusable="False">
+              <ItemsControl ItemsSource="{Binding SkippedSteps}" Focusable="False" AutomationProperties.Name="Skipped steps">
                 <ItemsControl.ItemTemplate>
                   <DataTemplate DataType="{x:Type vm:GuideStepViewModel}">
                     <Border BorderBrush="{StaticResource RowLine}" BorderThickness="0,1,0,0" Padding="0,7">
                       <DockPanel>
-                        <Button DockPanel.Dock="Right" Style="{StaticResource TextButton}" Content="Reopen" Padding="0" Margin="10,0,0,0"
+                        <Button DockPanel.Dock="Right" Style="{StaticResource TextButton}" Content="Reopen" Padding="0" Margin="10,0,0,0" AutomationProperties.Name="{Binding Text, StringFormat='Reopen {0}'}"
                                 Command="{Binding DataContext.ReopenCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{Binding}" />
                         <StackPanel>
                           <TextBlock Text="{Binding Text}" FontSize="13.5" TextWrapping="Wrap" />
@@ -302,7 +312,7 @@
               <DockPanel>
                 <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center">
                   <Button Content="Open in browser" Command="{Binding OpenLinkCommand}" MinHeight="34" ToolTip="{Binding SavedLink}" />
-                  <Button Style="{StaticResource TextButton}" Content="Forget" Command="{Binding ForgetLinkCommand}" Padding="0" Margin="12,0,0,0" />
+                  <Button Style="{StaticResource TextButton}" Content="Forget" AutomationProperties.Name="Forget the build guide link" Command="{Binding ForgetLinkCommand}" Padding="0" Margin="12,0,0,0" />
                 </StackPanel>
                 <StackPanel VerticalAlignment="Center">
                   <TextBlock Text="{Binding LinkKind}" FontSize="13.5" FontWeight="SemiBold" />
@@ -310,10 +320,14 @@
                 </StackPanel>
               </DockPanel>
             </Border>
-            <DockPanel Margin="0,12,0,0" Visibility="{Binding HasLink, Converter={StaticResource Vis}, ConverterParameter=invert}">
-              <Button DockPanel.Dock="Right" Content="Save link" Command="{Binding SaveLinkCommand}" MinHeight="36" Margin="6,0,0,0" />
+            <Grid Margin="0,12,0,0" Visibility="{Binding HasLink, Converter={StaticResource Vis}, ConverterParameter=invert}">
+              <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+              </Grid.ColumnDefinitions>
               <TextBox Text="{Binding LinkDraft, UpdateSourceTrigger=PropertyChanged}" AutomationProperties.Name="Build guide link" ToolTip="The guide's address, starting with https://" />
-            </DockPanel>
+              <Button Grid.Column="1" Content="Save link" AutomationProperties.Name="Save the build guide link" Command="{Binding SaveLinkCommand}" MinHeight="36" Margin="6,0,0,0" />
+            </Grid>
           </StackPanel>
         </Border>
 
@@ -322,7 +336,7 @@
           <StackPanel DataContext="{Binding Plan}">
             <TextBlock Text="{Binding PendingTitle}" Style="{StaticResource CardTitle}" />
             <TextBlock Text="{Binding PendingLead}" Style="{StaticResource CardLead}" />
-            <ItemsControl ItemsSource="{Binding PendingChanges}" Margin="0,10,0,0" Focusable="False">
+            <ItemsControl ItemsSource="{Binding PendingChanges}" Margin="0,10,0,0" Focusable="False" AutomationProperties.Name="What the waiting revision changes">
               <ItemsControl.ItemTemplate>
                 <DataTemplate DataType="{x:Type vm:PlanChangeViewModel}">
                   <Border BorderBrush="{StaticResource RowLine}" BorderThickness="0,1,0,0" Padding="0,7">
@@ -351,7 +365,7 @@
             <TextBlock Style="{StaticResource CardLead}"
                        Text="Your gem steps in your own words, one per line, typed or pasted from your own notes. SSE turns them into the checklist; nothing is imported from a guide site." />
             <DockPanel Margin="0,12,0,0" Visibility="{Binding EditingNotes, Converter={StaticResource Vis}, ConverterParameter=invert}">
-              <Button DockPanel.Dock="Right" Content="Edit notes" Command="{Binding EditNotesCommand}" MinHeight="34" Margin="10,0,0,0" />
+              <Button DockPanel.Dock="Right" Content="Edit notes" AutomationProperties.Name="Edit your build notes" Command="{Binding EditNotesCommand}" MinHeight="34" Margin="10,0,0,0" />
               <TextBlock Text="{Binding PlanSummary}" FontSize="12.5" Foreground="{StaticResource TextDim}" VerticalAlignment="Center" TextWrapping="Wrap" />
             </DockPanel>
             <StackPanel Margin="0,12,0,0" Visibility="{Binding EditingNotes, Converter={StaticResource Vis}}">
@@ -361,7 +375,7 @@
                          Text="SSE reads lines like cut Entangle, cut support Zenith I, upgrade Entangle to level 5, socket Zenith I into Entangle, move Zenith I: Entangle → Essence Drain, reserve …, respec …. Label stages with Act 2: or after ascendancy:. Optional extras: at Mud Burrow, (level 3 uncut), (needs Essence Drain), (priority: high)." />
               <TextBlock Text="PREVIEW" Style="{StaticResource SectionTitle}" Margin="0,14,0,2" />
               <TextBlock Text="{Binding PreviewSummary}" FontSize="12.5" Foreground="{StaticResource TextDim}" />
-              <ItemsControl ItemsSource="{Binding Preview}" Margin="0,6,0,0" Focusable="False">
+              <ItemsControl ItemsSource="{Binding Preview}" Margin="0,6,0,0" Focusable="False" AutomationProperties.Name="How SSE reads your notes">
                 <ItemsControl.ItemTemplate>
                   <DataTemplate DataType="{x:Type vm:NoteLineViewModel}">
                     <Border BorderBrush="{StaticResource RowLine}" BorderThickness="0,1,0,0" Padding="0,6">
@@ -389,7 +403,7 @@
               </ItemsControl>
               <StackPanel Orientation="Horizontal" Margin="0,12,0,0">
                 <Button Content="{Binding SaveLabel}" Command="{Binding SavePlanCommand}" FontWeight="SemiBold" />
-                <Button Style="{StaticResource TextButton}" Content="Cancel" Command="{Binding CancelEditCommand}" Margin="14,0,0,0" Visibility="{Binding HasPlan, Converter={StaticResource Vis}}" />
+                <Button Style="{StaticResource TextButton}" Content="Cancel" AutomationProperties.Name="Cancel editing the build notes" Command="{Binding CancelEditCommand}" Margin="14,0,0,0" Visibility="{Binding HasPlan, Converter={StaticResource Vis}}" />
               </StackPanel>
             </StackPanel>
           </StackPanel>

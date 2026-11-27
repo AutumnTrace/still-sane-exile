@@ -18,6 +18,35 @@ public class AccessibilityTests
 {
     private const string Crossbow = "rare-crossbow-advanced.txt";
 
+    private const string GuideNotes = """
+        Act 1
+        cut Entangle
+        upgrade Entangle at Mud Burrow
+        cut Contagion
+        socket Zenith I into Entangle
+        After ascendancy
+        respec the passive tree
+        """;
+
+    /// <summary>A character a few stops into the route, as a player gets there: one step ticked, one
+    /// skipped, and their notes saved as a plan with the first step ticked.</summary>
+    private static ViewModels.GuideViewModel SeedGuide(TestApp app)
+    {
+        var guide = app.Shell.Guide;
+        Assert.True(guide.HasPack, guide.PackProblem);
+        guide.NewCharacterName = "Practice exile";
+        guide.AddCharacterCommand.Execute(null);
+        guide.ToggleDoneCommand.Execute(guide.Steps.FirstOrDefault());
+        guide.NextCommand.Execute(null);
+        guide.NextCommand.Execute(null);
+        guide.SkipCommand.Execute(guide.Steps.FirstOrDefault());
+        guide.NextCommand.Execute(null);
+        guide.Plan.NotesDraft = GuideNotes;
+        guide.Plan.SavePlanCommand.Execute(null);
+        guide.Plan.ToggleStepCommand.Execute(guide.Plan.Checklist.FirstOrDefault());
+        return guide;
+    }
+
     [Fact]
     public void The_price_check_page_works_from_the_keyboard() => UiThread.Run(() =>
     {
@@ -59,9 +88,12 @@ public class AccessibilityTests
     {
         using var app = new TestApp();
         var item = app.Shell.Inspect.AddFromText(app.ItemText(Crossbow), "test")!;
-        var window = new PriceCheckWindow { DataContext = item, Left = -20000, Top = 0 };
 
-        var stops = Check(window);
+        // The window's content as the window shows it: scrolling, close button included. Not the window
+        // itself: it hides as soon as anything else on the desktop takes the foreground, as it should over
+        // the game.
+        var view = new PriceCheckView { DataContext = item, Width = 600, CloseCommand = new CommunityToolkit.Mvvm.Input.RelayCommand(() => { }) };
+        var stops = Check(new ScrollViewer { Content = view, VerticalScrollBarVisibility = ScrollBarVisibility.Auto });
 
         Assert.Equal("Close the price check", stops[0]);
         Assert.Contains("Copy search", stops);
@@ -91,6 +123,11 @@ public class AccessibilityTests
 
         Assert.Equal("Practice with demo data", stops[0]);
         Assert.Equal("Skip for now", stops[^1]);
+
+        app.Shell.SettingsPage.ChooseLiveCommand.Execute(null);
+        var live = Check(new SettingsView { DataContext = app.Shell.SettingsPage });
+
+        Assert.True(live.IndexOf("League name") < live.IndexOf("Confirm league"));
     });
 
     [Fact]
@@ -110,6 +147,74 @@ public class AccessibilityTests
         var preview = Check(new WealthView { DataContext = wealth });
 
         Assert.Contains("Cancel", preview);
+    });
+
+    [Fact]
+    public void The_campaign_guide_works_from_the_keyboard() => UiThread.Run(() =>
+    {
+        using var app = new TestApp();
+        var guide = SeedGuide(app);
+        guide.Plan.LinkDraft = "https://mobalytics.gg/poe-2/builds";
+        guide.Plan.SaveLinkCommand.Execute(null);
+
+        var stops = Check(new GuideView { DataContext = guide });
+
+        Assert.Equal("Practice exile", stops[0]);
+        Assert.Contains("New character name", stops);
+        Assert.Contains(stops, s => s.StartsWith("Skip ", StringComparison.Ordinal));
+        Assert.Contains(stops, s => s.StartsWith("Undo ", StringComparison.Ordinal));
+        Assert.Contains("Previous stop", stops);
+        Assert.Contains(stops, s => s.StartsWith("Next: ", StringComparison.Ordinal));
+        Assert.Contains("One more ascendancy", stops);
+        Assert.Contains("Forget the build guide link", stops);
+        Assert.True(stops.IndexOf("Previous stop") < stops.IndexOf("One more ascendancy"));
+    });
+
+    [Fact]
+    public void The_campaign_guide_before_a_character_and_past_the_route_works_from_the_keyboard() => UiThread.Run(() =>
+    {
+        using var app = new TestApp();
+        var guide = app.Shell.Guide;
+
+        var empty = Check(new GuideView { DataContext = guide });
+
+        Assert.Equal("New character name", empty[0]);
+
+        SeedGuide(app);
+        for (var i = 0; i < 50 && !guide.PastRoute; i++)
+        {
+            guide.NextCommand.Execute(null);
+        }
+
+        Assert.True(guide.PastRoute);
+        guide.RemoveCharacterCommand.Execute(null); // asks first
+        var past = Check(new GuideView { DataContext = guide });
+
+        Assert.Contains("Earlier act", past);
+        Assert.Contains("Later act", past);
+        Assert.Contains("Remove Practice exile", past);
+        Assert.Contains("Keep Practice exile", past);
+    });
+
+    [Fact]
+    public void The_build_notes_editor_and_a_waiting_revision_work_from_the_keyboard() => UiThread.Run(() =>
+    {
+        using var app = new TestApp();
+        var plan = SeedGuide(app).Plan;
+        plan.EditNotesCommand.Execute(null);
+        plan.NotesDraft = GuideNotes.Replace("cut Contagion", "cut Contagion (level 5 uncut)", StringComparison.Ordinal) + "\nthis line means nothing";
+
+        var editing = Check(new GuideView { DataContext = app.Shell.Guide });
+
+        Assert.Contains("Your build notes", editing);
+        Assert.Contains("Cancel editing the build notes", editing);
+
+        plan.SavePlanCommand.Execute(null);
+        Assert.True(plan.HasPending);
+        var pending = Check(new GuideView { DataContext = app.Shell.Guide });
+
+        Assert.Contains(pending, s => s.StartsWith("Use revision ", StringComparison.Ordinal));
+        Assert.Contains(pending, s => s.StartsWith("Keep revision ", StringComparison.Ordinal));
     });
 
     [Fact]
@@ -138,7 +243,7 @@ public class AccessibilityTests
         window.Show();
         try
         {
-            window.Activate();
+            EnsureActive(window);
             Flush(window);
             var opener = (Button)window.FindName("CurrencyButton");
             opener.Focus();
@@ -206,11 +311,12 @@ public class AccessibilityTests
 
         try
         {
-            window.Activate();
+            EnsureActive(window);
             Flush(window);
             AssertNoTypeNames(window);
             var stops = TabOrder(window);
             Assert.NotEmpty(stops);
+            AssertReadingOrder(window, stops);
             var names = new List<string>();
             foreach (var stop in stops)
             {
@@ -279,14 +385,33 @@ public class AccessibilityTests
         }
     }
 
+    /// <summary>Two stops in a row that sit on the same line are visited left to right: a box with its
+    /// button docked to the right of it, declared first, would otherwise send Tab to the button first.</summary>
+    private static void AssertReadingOrder(Window window, List<DependencyObject> stops)
+    {
+        foreach (var (before, after) in stops.Zip(stops.Skip(1)))
+        {
+            if (before is not UIElement a || after is not UIElement b)
+            {
+                continue;
+            }
+
+            // Both measured at one scroll position; a stop outside the view still has a place.
+            var p = a.TransformToAncestor(window).TransformBounds(new Rect(a.RenderSize));
+            var q = b.TransformToAncestor(window).TransformBounds(new Rect(b.RenderSize));
+            var overlap = Math.Min(p.Bottom, q.Bottom) - Math.Max(p.Top, q.Top);
+            var sameLine = overlap >= Math.Min(p.Height, q.Height) / 2;
+            Assert.False(sameLine && q.Left < p.Left, $"Tab goes from '{SpokenName(a)}' back left to '{SpokenName(b)}' on the same line");
+        }
+    }
+
     /// <summary>The order Tab visits, from the first stop until it comes round again.</summary>
     private static List<DependencyObject> TabOrder(Window window)
     {
         var order = new List<DependencyObject>();
-        window.MoveFocus(new TraversalRequest(FocusNavigationDirection.First));
+        Move(window, () => window.MoveFocus(new TraversalRequest(FocusNavigationDirection.First)));
         for (var i = 0; i < 200; i++)
         {
-            Flush(window);
             if (Keyboard.FocusedElement is not DependencyObject focused || order.Contains(focused))
             {
                 break;
@@ -294,15 +419,37 @@ public class AccessibilityTests
 
             order.Add(focused);
             var next = new TraversalRequest(FocusNavigationDirection.Next);
-            _ = focused switch
+            Move(window, () => _ = focused switch
             {
                 UIElement e => e.MoveFocus(next),
                 ContentElement c => c.MoveFocus(next),
                 _ => false,
-            };
+            });
         }
 
         return order;
+    }
+
+    /// <summary>Moves focus and checks the window kept the foreground meanwhile: another program on the
+    /// desktop can take it at any moment, and keyboard focus goes with it. Then it tries again.</summary>
+    private static void Move(Window window, Action move)
+    {
+        for (var attempt = 0; attempt < 3; attempt++)
+        {
+            var from = Keyboard.FocusedElement;
+            EnsureActive(window);
+            if (from is not null && !ReferenceEquals(Keyboard.FocusedElement, from))
+            {
+                Keyboard.Focus(from);
+            }
+
+            move();
+            Flush(window);
+            if (window.IsActive)
+            {
+                return;
+            }
+        }
     }
 
     /// <summary>Renders the area around <paramref name="element"/> without and with keyboard focus: the
@@ -311,18 +458,26 @@ public class AccessibilityTests
     /// accent fill, changes its pixels by 2.9:1 and stands at 16:1 against the card around it.</summary>
     private static void AssertFocusShows(Window window, UIElement element, string name)
     {
-        element.Focus();
-        Flush(window);
-        Keyboard.ClearFocus();
-        Flush(window);
-        var bounds = element.TransformToAncestor(window).TransformBounds(new Rect(element.RenderSize));
-        bounds.Inflate(3, 3);
-        bounds.Intersect(new Rect(0, 0, Math.Floor(window.ActualWidth), Math.Floor(window.ActualHeight)));
-        var area = new Int32Rect((int)bounds.X, (int)bounds.Y, (int)bounds.Width, (int)bounds.Height);
-        var before = Render(window, area);
-        element.Focus();
-        Flush(window);
-        var after = Render(window, area);
+        byte[] before, after;
+        Int32Rect area;
+        var attempt = 0;
+        do
+        {
+            EnsureActive(window);
+            element.Focus();
+            Flush(window);
+            Keyboard.ClearFocus();
+            Flush(window);
+            var bounds = element.TransformToAncestor(window).TransformBounds(new Rect(element.RenderSize));
+            bounds.Inflate(3, 3);
+            bounds.Intersect(new Rect(0, 0, Math.Floor(window.ActualWidth), Math.Floor(window.ActualHeight)));
+            area = new Int32Rect((int)bounds.X, (int)bounds.Y, (int)bounds.Width, (int)bounds.Height);
+            before = Render(window, area);
+            element.Focus();
+            Flush(window);
+            after = Render(window, area);
+        }
+        while (!(window.IsActive && element.IsKeyboardFocused) && ++attempt < 3); // lost the foreground meanwhile
 
         var clear = 0;
         for (var i = 0; i < before.Length; i += 4)
@@ -342,7 +497,7 @@ public class AccessibilityTests
             Save(after, area, System.IO.Path.Combine(dump, file + "-1.png"));
         }
 
-        Assert.True(clear >= 20, $"Focus on '{name}' ({Describe(element)}) is hard to see: {clear} pixels change clearly");
+        Assert.True(clear >= 20, $"Focus on '{name}' ({Describe(element)}) is hard to see: {clear} pixels change clearly (window in front: {window.IsActive})");
     }
 
     /// <summary>The window as drawn, cut to <paramref name="area"/>.</summary>
@@ -434,5 +589,20 @@ public class AccessibilityTests
         window.UpdateLayout();
         Sta.Drain();
         window.UpdateLayout();
+    }
+
+    /// <summary>Keyboard focus needs the window in front. A window closed by the test before can hand the
+    /// foreground elsewhere a moment after this one took it, so this asks again until it holds.</summary>
+    private static void EnsureActive(Window window)
+    {
+        for (var i = 0; i < 20 && !window.IsActive; i++)
+        {
+            window.Activate();
+            Sta.Drain();
+            if (!window.IsActive)
+            {
+                Thread.Sleep(25);
+            }
+        }
     }
 }
