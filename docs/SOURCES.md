@@ -59,4 +59,5 @@ All fixture text was written for this repo to match the documented copy format. 
 - `CaptureGate` (domain) allows a read only on the first physical key-down after a key-up, only while the game (or SSE itself, in demo practice) is in front. Auto-repeat and synthetic input are ignored. Late results are dropped by generation id.
 - `CaptureGateTests.Ten_second_hold_with_autorepeat_reads_once` holds the key for 300 auto-repeat events and asserts exactly one read and zero game actions.
 - The status bar shows the live counters. The HUD path has no HTTP client, so market requests are 0 by construction.
+- Screen frames (not shipped yet): `FrameReader` puts the same gate in front of a one-frame capture, discards the frame after analysis and drops late results. Backends, latency and the one-press-one-frame evidence from the #4 spike are in [Capture spike](CAPTURE-SPIKE.md).
 - Still to do on real hardware: a timed trace in the game at 1080p, 1440p, ultrawide and 4K, mixed-DPI monitors and 100/125/150% scaling.
