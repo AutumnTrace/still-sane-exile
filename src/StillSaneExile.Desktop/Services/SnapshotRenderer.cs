@@ -17,9 +17,10 @@ public static class SnapshotRenderer
     {
         Directory.CreateDirectory(dir);
         shell.Settings.Onboarded = false;
+        shell.SettingsPage.Load();
         shell.Navigate(shell.SettingsPage);
         main.Width = 1440;
-        main.Height = 900;
+        main.Height = 1000;
         main.Left = -20000;
         main.Top = 0;
         main.ShowActivated = false;
@@ -47,17 +48,26 @@ public static class SnapshotRenderer
         Save(main, Path.Combine(dir, "craft.png"));
         shell.GoGuideCommand.Execute(null);
         Save(main, Path.Combine(dir, "guide.png"));
+        shell.GoSettingsCommand.Execute(null);
+        Save(main, Path.Combine(dir, "settings.png"));
 
         var peek = new PeekWindow { Left = -20000, Top = 0 };
-        foreach (var (title, name) in new[] { ("Doom Thirst", "peek-advanced"), ("Storm Mark", "peek-hybrid"), ("Sanity's Last Loop", "peek-unique") })
+        foreach (var (title, name) in new[] { ("Doom Thirst", "peek-advanced"), ("Storm Mark", "peek-hybrid"), ("Sanity's Last Loop", "peek-unique"), ("Exalted Orb", "peek-currency") })
         {
             var item = shell.Inspect.Recent.First(r => r.Title == title);
-            peek.DataContext = PeekViewModel.From(item, true, "Release to hide", shell.Settings.OpenLastKey.ToString());
+            peek.DataContext = PeekViewModel.From(item, true, PeekViewModel.ReleaseHintFor(shell.Settings.PeekMode), shell.Settings.OpenLastKey.ToString());
             peek.Show();
             Save(peek, Path.Combine(dir, $"{name}.png"));
         }
 
         peek.Close();
+
+        // The in-game price check window (F3), unpositioned and never activated.
+        var priceCheck = new PriceCheckWindow { Left = -20000, Top = 0, ShowActivated = false };
+        priceCheck.DataContext = shell.Inspect.Recent.First(r => r.Title == "Doom Thirst");
+        priceCheck.Show();
+        Save(priceCheck, Path.Combine(dir, "price-check-window.png"));
+        priceCheck.Close();
         main.Close();
     }
 

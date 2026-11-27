@@ -22,6 +22,7 @@ public sealed class HudController : IDisposable
     private readonly ClipboardReader _clipboard;
     private readonly CaptureGate _gate = new();
     private readonly PeekWindow _peek;
+    private readonly PriceCheckWindow _priceCheck;
     private readonly Window _main;
     private readonly Dispatcher _dispatcher;
     private readonly Dictionary<int, long> _downSince = [];
@@ -29,13 +30,14 @@ public sealed class HudController : IDisposable
     private Hotkey _openLastKey;
     private bool _openLastHeld;
 
-    public HudController(ShellViewModel shell, KeyboardObserver keys, ForegroundWatcher foreground, ClipboardReader clipboard, PeekWindow peek, Window main)
+    public HudController(ShellViewModel shell, KeyboardObserver keys, ForegroundWatcher foreground, ClipboardReader clipboard, PeekWindow peek, PriceCheckWindow priceCheck, Window main)
     {
         _shell = shell;
         _keys = keys;
         _foreground = foreground;
         _clipboard = clipboard;
         _peek = peek;
+        _priceCheck = priceCheck;
         _main = main;
         _dispatcher = main.Dispatcher;
         _peekKey = shell.Settings.PeekKey;
@@ -105,9 +107,11 @@ public sealed class HudController : IDisposable
 
         if (e.Vk == _openLastKey.Vk && !e.Injected)
         {
-            if (e.Down && !_openLastHeld && _openLastKey.Matches(e.Vk, e.Mods) && _foreground.Current is ForegroundKind.Game or ForegroundKind.ThisApp)
+            var fg = _foreground.Current;
+            if (e.Down && !_openLastHeld && _openLastKey.Matches(e.Vk, e.Mods) && fg is ForegroundKind.Game or ForegroundKind.ThisApp)
             {
-                _dispatcher.BeginInvoke(OpenLastItem);
+                var window = _foreground.ForegroundWindow;
+                _dispatcher.BeginInvoke(() => ChangeSearch(fg, window));
             }
 
             _openLastHeld = e.Down;
@@ -119,7 +123,7 @@ public sealed class HudController : IDisposable
     private async Task ReadAndShowAsync(long generation, bool practice, uint clipboardSequence, nint gameWindow)
     {
         var mode = _shell.Settings.PeekMode;
-        var release = PeekViewModel.ReleaseHint(mode);
+        var release = PeekViewModel.ReleaseHintFor(mode);
         PeekViewModel card;
 
         if (practice)
@@ -156,6 +160,27 @@ public sealed class HudController : IDisposable
         PublishDiagnostics();
     }
 
+    /// <summary>F3. Over the game: the price check window for the last item. Pressed again: closes it.
+    /// In this app, or with nothing checked yet: this window, on the Price check page.</summary>
+    private void ChangeSearch(ForegroundKind fg, nint window)
+    {
+        if (_priceCheck.IsVisible)
+        {
+            _priceCheck.HideWindow();
+            return;
+        }
+
+        var item = _shell.Inspect.Selected ?? _shell.Inspect.Recent.FirstOrDefault();
+        if (fg == ForegroundKind.Game && item is not null)
+        {
+            _peek.HideCard();
+            _priceCheck.ShowFor(item, window);
+            return;
+        }
+
+        OpenLastItem();
+    }
+
     private void OpenLastItem()
     {
         _shell.Navigate(_shell.Inspect);
@@ -175,9 +200,17 @@ public sealed class HudController : IDisposable
 
     private void OnForegroundChanged(ForegroundKind kind, string reason) => Invalidate(reason);
 
-    private void OnSessionSwitch(object? sender, SessionSwitchEventArgs e) => _dispatcher.BeginInvoke(() => Invalidate("session " + e.Reason));
+    private void OnSessionSwitch(object? sender, SessionSwitchEventArgs e) => _dispatcher.BeginInvoke(() =>
+    {
+        _priceCheck.HideWindow();
+        Invalidate("session " + e.Reason);
+    });
 
-    private void OnDisplayChanged(object? sender, EventArgs e) => _dispatcher.BeginInvoke(() => Invalidate("display settings changed"));
+    private void OnDisplayChanged(object? sender, EventArgs e) => _dispatcher.BeginInvoke(() =>
+    {
+        _priceCheck.HideWindow();
+        Invalidate("display settings changed");
+    });
 
     private void Invalidate(string reason)
     {
@@ -192,6 +225,8 @@ public sealed class HudController : IDisposable
     private void PublishDiagnostics()
     {
         var c = _gate.Counters;
+        _shell.KeysSent = c.GameActionsSent;
+        _shell.ItemsRead = c.Reads;
         _shell.Diagnostics = $"Reads {c.Reads} · auto-repeat ignored {c.AutoRepeatIgnored} · synthetic ignored {c.InjectedIgnored} · late results dropped {c.StaleResultsDropped} · game inputs sent {c.GameActionsSent} · market requests 0";
     }
 

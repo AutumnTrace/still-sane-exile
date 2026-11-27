@@ -2,6 +2,7 @@ using System.Collections;
 using System.Globalization;
 using System.Windows;
 using System.Windows.Data;
+using StillSaneExile.Domain.Items;
 
 namespace StillSaneExile.Desktop.Views;
 
@@ -49,10 +50,35 @@ public sealed class PillActiveConverter : IMultiValueConverter
     public object[] ConvertBack(object? value, Type[] targetTypes, object? parameter, CultureInfo culture) => throw new NotSupportedException();
 }
 
+/// <summary>Currency id → its name: "Divine Orb", or with ConverterParameter "short" → "div", "word" → "Divine".</summary>
 public sealed class ShortCurrencyConverter : IValueConverter
 {
-    public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture) =>
-        Domain.Pricing.Currencies.Long(value?.ToString() ?? "");
+    public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture) => parameter switch
+    {
+        "short" => Domain.Pricing.Currencies.Short(value?.ToString() ?? ""),
+        "word" => Domain.Pricing.Currencies.Word(value?.ToString() ?? ""),
+        _ => Domain.Pricing.Currencies.Long(value?.ToString() ?? ""),
+    };
+
+    public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture) => throw new NotSupportedException();
+}
+
+/// <summary>Item rarity → the name colour the game uses. Rarity colours appear on item names only.</summary>
+public sealed class RarityBrushConverter : IValueConverter
+{
+    public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
+    {
+        var key = value switch
+        {
+            ItemRarity.Magic => "RarityMagic",
+            ItemRarity.Rare => "RarityRare",
+            ItemRarity.Unique => "RarityUnique",
+            ItemRarity.Currency => "RarityCurrency",
+            ItemRarity.Gem => "RarityGem",
+            _ => "Text",
+        };
+        return Application.Current.Resources[key];
+    }
 
     public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture) => throw new NotSupportedException();
 }

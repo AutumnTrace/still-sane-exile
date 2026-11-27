@@ -4,30 +4,50 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:vm="clr-namespace:StillSaneExile.Desktop.ViewModels"
+             xmlns:v="clr-namespace:StillSaneExile.Desktop.Views"
              mc:Ignorable="d"
              d:DataContext="{d:DesignInstance Type=vm:SettingsViewModel}"
              PreviewKeyDown="OnPreviewKeyDown"
              Focusable="True">
-  <ScrollViewer VerticalScrollBarVisibility="Auto">
-    <StackPanel Margin="24" MaxWidth="820" HorizontalAlignment="Left">
+  <Grid>
+  <!-- First start shows onboarding instead; it is only created while onboarding is open. -->
+  <ContentControl Focusable="False">
+    <ContentControl.Style>
+      <Style TargetType="ContentControl">
+        <Setter Property="Content" Value="{x:Null}" />
+        <Setter Property="Visibility" Value="Collapsed" />
+        <Style.Triggers>
+          <DataTrigger Binding="{Binding IsOnboarding}" Value="True">
+            <Setter Property="Visibility" Value="Visible" />
+            <Setter Property="Content" Value="{Binding}" />
+            <Setter Property="ContentTemplate">
+              <Setter.Value>
+                <DataTemplate>
+                  <v:OnboardingView />
+                </DataTemplate>
+              </Setter.Value>
+            </Setter>
+          </DataTrigger>
+        </Style.Triggers>
+      </Style>
+    </ContentControl.Style>
+  </ContentControl>
 
-      <StackPanel Visibility="{Binding IsOnboarding, Converter={StaticResource Vis}}">
-        <TextBlock Text="Welcome, exile" FontSize="24" FontWeight="SemiBold" />
-        <TextBlock TextWrapping="Wrap" Foreground="{StaticResource TextDim}" Margin="0,8,0,0" FontSize="15"
-                   Text="Three things to set: which profile and league, which currency to show prices in, and which keys do what. No account is needed and nothing you do here leaves this computer." />
-      </StackPanel>
-      <TextBlock Text="Settings" FontSize="24" FontWeight="SemiBold" Visibility="{Binding IsOnboarding, Converter={StaticResource Vis}, ConverterParameter=invert}" />
+  <ScrollViewer VerticalScrollBarVisibility="Auto" Visibility="{Binding IsOnboarding, Converter={StaticResource Vis}, ConverterParameter=invert}">
+    <StackPanel Margin="28,28,28,40" MaxWidth="820" HorizontalAlignment="Left">
 
-      <Border BorderBrush="{StaticResource Accent}" BorderThickness="1" CornerRadius="4" Padding="10,6" Margin="0,12,0,0" Visibility="{Binding Message, Converter={StaticResource Vis}}">
+      <TextBlock Text="Settings" FontSize="28" FontWeight="ExtraBold" />
+
+      <Border BorderBrush="{StaticResource Edge}" BorderThickness="1" CornerRadius="8" Padding="12,8" Margin="0,14,0,0" Visibility="{Binding Message, Converter={StaticResource Vis}}">
         <TextBlock Text="{Binding Message}" TextWrapping="Wrap" />
       </Border>
 
       <!-- 1. Profile and league -->
-      <TextBlock Text="1 · PROFILE AND LEAGUE" Style="{StaticResource SectionTitle}" Margin="0,20,0,6" />
+      <TextBlock Text="PROFILE AND LEAGUE" Style="{StaticResource SectionTitle}" Margin="4,22,0,6" />
       <Border Style="{StaticResource Card}">
         <StackPanel>
           <WrapPanel>
-            <Button Style="{StaticResource TabButton}" Content="Demo (synthetic data)" Command="{Binding UseDemoCommand}" Margin="0,0,8,0"
+            <Button Style="{StaticResource ChoiceButton}" Content="Practice with demo data" Command="{Binding UseDemoCommand}" Margin="0,0,8,0"
                     Tag="{Binding LiveSelected, Converter={StaticResource Active}, ConverterParameter=False}" />
             <TextBlock Text="or a live league:" VerticalAlignment="Center" Foreground="{StaticResource TextDim}" Margin="4,0,8,0" />
             <TextBox Width="220" Text="{Binding LeagueDraft, UpdateSourceTrigger=PropertyChanged}" VerticalContentAlignment="Center" ToolTip="Type the league name exactly as the game shows it" />
@@ -43,7 +63,7 @@
       </Border>
 
       <!-- 2. Currency -->
-      <TextBlock Text="2 · DISPLAY CURRENCY" Style="{StaticResource SectionTitle}" />
+      <TextBlock Text="SHOW PRICES IN" Style="{StaticResource SectionTitle}" />
       <Border Style="{StaticResource Card}">
         <StackPanel>
           <ItemsControl ItemsSource="{Binding CurrencyChoices}">
@@ -54,7 +74,7 @@
             </ItemsControl.ItemsPanel>
             <ItemsControl.ItemTemplate>
               <DataTemplate>
-                <Button Style="{StaticResource TabButton}" Margin="0,0,8,0" Content="{Binding Converter={StaticResource CurrencyName}}"
+                <Button Style="{StaticResource ChoiceButton}" Margin="0,0,8,0" Content="{Binding Converter={StaticResource CurrencyName}}"
                         Command="{Binding DataContext.SetCurrencyCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{Binding}">
                   <Button.Tag>
                     <MultiBinding Converter="{StaticResource PillActive}">
@@ -67,12 +87,12 @@
             </ItemsControl.ItemTemplate>
           </ItemsControl>
           <TextBlock FontSize="12" Foreground="{StaticResource TextFaint}" TextWrapping="Wrap" Margin="0,8,0,0"
-                     Text="Prices convert with decimal math and round only for display. With no usable rate the original currency is shown instead." />
+                     Text="Most players price in Divine. Cheap items still show in Exalted. Prices convert with decimal math and round only for display; with no usable rate the original currency is shown." />
         </StackPanel>
       </Border>
 
       <!-- 3. Keys -->
-      <TextBlock Text="3 · KEYS, AND EXACTLY WHAT EACH ONE READS" Style="{StaticResource SectionTitle}" />
+      <TextBlock Text="KEYS, AND EXACTLY WHAT EACH ONE READS" Style="{StaticResource SectionTitle}" />
       <Border Style="{StaticResource Card}">
         <StackPanel>
           <Grid>
@@ -86,28 +106,28 @@
               <RowDefinition Height="Auto" />
               <RowDefinition Height="Auto" />
             </Grid.RowDefinitions>
-            <TextBlock Grid.Row="0" Text="Item peek (hold)" VerticalAlignment="Center" />
+            <TextBlock Grid.Row="0" Text="Quick price (hold)" VerticalAlignment="Center" />
             <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding PeekKey}" FontWeight="SemiBold" VerticalAlignment="Center" />
             <Button Grid.Row="0" Grid.Column="2" HorizontalAlignment="Left" Content="Change" Command="{Binding StartRecordingCommand}" CommandParameter="peek" Margin="0,3" />
-            <TextBlock Grid.Row="1" Text="Open last item" VerticalAlignment="Center" />
+            <TextBlock Grid.Row="1" Text="Change the search" VerticalAlignment="Center" />
             <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding OpenLastKey}" FontWeight="SemiBold" VerticalAlignment="Center" />
             <Button Grid.Row="1" Grid.Column="2" HorizontalAlignment="Left" Content="Change" Command="{Binding StartRecordingCommand}" CommandParameter="openLast" Margin="0,3" />
-            <TextBlock Grid.Row="2" Text="Stash / Aldur labels" VerticalAlignment="Center" Foreground="{StaticResource TextDim}" />
+            <TextBlock Grid.Row="2" Text="Stash prices (hold)" VerticalAlignment="Center" Foreground="{StaticResource TextDim}" />
             <TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding StashKey}" FontWeight="SemiBold" VerticalAlignment="Center" Foreground="{StaticResource TextDim}" />
             <StackPanel Grid.Row="2" Grid.Column="2" Orientation="Horizontal">
               <Button Content="Change" Command="{Binding StartRecordingCommand}" CommandParameter="stash" Margin="0,3" />
-              <TextBlock Text="not active yet (Milestone 2)" Foreground="{StaticResource Warn}" FontSize="12" VerticalAlignment="Center" Margin="10,0,0,0" />
+              <TextBlock Text="coming later" Foreground="{StaticResource TextFaint}" FontSize="12" VerticalAlignment="Center" Margin="10,0,0,0" />
             </StackPanel>
           </Grid>
           <TextBlock Text="{Binding ReadsExplanation}" TextWrapping="Wrap" FontSize="12" Foreground="{StaticResource TextDim}" Margin="0,10,0,0" />
           <ItemsControl ItemsSource="{Binding KeyWarnings}" Margin="0,6,0,0">
             <ItemsControl.ItemTemplate>
               <DataTemplate>
-                <TextBlock Text="{Binding StringFormat='⚠ {0}'}" FontSize="12" Foreground="{StaticResource Warn}" TextWrapping="Wrap" />
+                <TextBlock Text="{Binding}" FontSize="12" Foreground="{StaticResource Warn}" TextWrapping="Wrap" />
               </DataTemplate>
             </ItemsControl.ItemTemplate>
           </ItemsControl>
-          <Border Background="{StaticResource Surface}" CornerRadius="4" Padding="10,8" Margin="0,10,0,0">
+          <Border Background="{StaticResource Well}" BorderBrush="{StaticResource Edge}" BorderThickness="1" CornerRadius="8" Padding="12,10" Margin="0,12,0,0">
             <StackPanel>
               <TextBlock Text="KEY TESTER: press, hold and release any key while this page is in front" FontSize="11" Foreground="{StaticResource TextFaint}" />
               <TextBlock Text="{Binding TestLog}" FontSize="14" Margin="0,4,0,0" />
@@ -119,17 +139,17 @@
       </Border>
 
       <!-- HUD -->
-      <TextBlock Text="HUD CARD" Style="{StaticResource SectionTitle}" />
+      <TextBlock Text="QUICK PRICE CARD" Style="{StaticResource SectionTitle}" />
       <Border Style="{StaticResource Card}">
         <StackPanel>
           <CheckBox IsChecked="{Binding ToggleMode}" Content="Toggle instead of hold (accessibility): first press shows a frozen snapshot, next press dismisses it" />
           <WrapPanel Margin="0,10,0,0">
             <TextBlock Text="Place the card" VerticalAlignment="Center" Margin="0,0,10,0" />
-            <Button Style="{StaticResource TabButton}" Content="Opposite the cursor" Command="{Binding SetAnchorCommand}" CommandParameter="Auto" Margin="0,0,6,0"
+            <Button Style="{StaticResource ChoiceButton}" MinHeight="40" Content="Opposite the cursor" Command="{Binding SetAnchorCommand}" CommandParameter="Auto" Margin="0,0,6,0"
                     Tag="{Binding Anchor, Converter={StaticResource Active}, ConverterParameter=Auto}" />
-            <Button Style="{StaticResource TabButton}" Content="Always left" Command="{Binding SetAnchorCommand}" CommandParameter="Left" Margin="0,0,6,0"
+            <Button Style="{StaticResource ChoiceButton}" MinHeight="40" Content="Always left" Command="{Binding SetAnchorCommand}" CommandParameter="Left" Margin="0,0,6,0"
                     Tag="{Binding Anchor, Converter={StaticResource Active}, ConverterParameter=Left}" />
-            <Button Style="{StaticResource TabButton}" Content="Always right" Command="{Binding SetAnchorCommand}" CommandParameter="Right"
+            <Button Style="{StaticResource ChoiceButton}" MinHeight="40" Content="Always right" Command="{Binding SetAnchorCommand}" CommandParameter="Right"
                     Tag="{Binding Anchor, Converter={StaticResource Active}, ConverterParameter=Right}" />
           </WrapPanel>
           <StackPanel Orientation="Horizontal" Margin="0,10,0,0">
@@ -143,15 +163,15 @@
       </Border>
 
       <!-- Comparables -->
-      <TextBlock Text="COMPARABLES" Style="{StaticResource SectionTitle}" />
+      <TextBlock Text="PRICES YOU WRITE DOWN" Style="{StaticResource SectionTitle}" />
       <Border Style="{StaticResource Card}">
         <StackPanel>
           <StackPanel Orientation="Horizontal">
-            <TextBlock Text="Prices you enter expire after" VerticalAlignment="Center" />
+            <TextBlock Text="Prices you write down expire after" VerticalAlignment="Center" />
             <TextBox Width="44" Margin="8,0" Text="{Binding ExpiryDays, UpdateSourceTrigger=PropertyChanged}" />
             <TextBlock Text="days" VerticalAlignment="Center" />
           </StackPanel>
-          <Button Content="Remove demo comparables I added" Command="{Binding ResetDemoDataCommand}" HorizontalAlignment="Left" Margin="0,10,0,0" />
+          <Button Content="Remove demo prices I wrote down" Command="{Binding ResetDemoDataCommand}" HorizontalAlignment="Left" Margin="0,10,0,0" />
         </StackPanel>
       </Border>
 
@@ -167,7 +187,7 @@
                     Content="Check for updates automatically (at start and every 6 hours)" />
           <WrapPanel Margin="0,10,0,0">
             <Button Content="Check now" Command="{Binding CheckForUpdatesCommand}" IsEnabled="{Binding Updates.IsInstalled}" Margin="0,0,8,0" />
-            <Button Style="{StaticResource AccentButton}" Content="Restart now to update" Command="{Binding RestartToUpdateCommand}"
+            <Button Content="Restart now to update" Command="{Binding RestartToUpdateCommand}"
                     Visibility="{Binding Updates.IsReady, Converter={StaticResource Vis}}" />
           </WrapPanel>
           <TextBlock TextWrapping="Wrap" FontSize="12" Foreground="{StaticResource TextFaint}" Margin="0,8,0,0"
@@ -188,9 +208,7 @@
                      Text="This product isn't affiliated with or endorsed by Grinding Gear Games in any way." />
         </StackPanel>
       </Border>
-
-      <Button Style="{StaticResource AccentButton}" Content="Done, take me to Inspect" Command="{Binding FinishOnboardingCommand}" HorizontalAlignment="Left" Margin="0,8,0,24"
-              Visibility="{Binding IsOnboarding, Converter={StaticResource Vis}}" />
     </StackPanel>
   </ScrollViewer>
+  </Grid>
 </UserControl>

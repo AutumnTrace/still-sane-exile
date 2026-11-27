@@ -21,6 +21,70 @@ public static class Currencies
         "chaos" => "Chaos Orb",
         _ => id,
     };
+
+    /// <summary>The one-word name used in short labels, e.g. "Show prices in: Divine".</summary>
+    public static string Word(string id) => id.ToLowerInvariant() switch
+    {
+        "exalted" => "Exalted",
+        "divine" => "Divine",
+        "chaos" => "Chaos",
+        _ => id,
+    };
+}
+
+/// <summary>Prices as people read them. Values are in the display currency; when that is Divine, anything
+/// under one Divine Orb shows in whole Exalted Orbs instead ("cheap items still show in Exalted").
+/// Divine amounts keep one decimal. Rounding happens here only, never in the maths before it.</summary>
+public sealed class PriceText(CurrencyConverter converter, string display, DateTimeOffset now)
+{
+    public string Display => display;
+
+    public (decimal Value, string Denomination) Unit(decimal value)
+    {
+        if (display.Equals("divine", StringComparison.OrdinalIgnoreCase) && value < 1m)
+        {
+            var ex = converter.Convert(value, display, "exalted", now);
+            if (ex.Ok)
+            {
+                return (ex.Value, "exalted");
+            }
+        }
+
+        return (value, display);
+    }
+
+    public string One(decimal value)
+    {
+        var (v, d) = Unit(value);
+        return $"{Number(v, d)} {Currencies.Short(d)}";
+    }
+
+    /// <summary>"2.1–2.8 div", "60–95 ex", or "95 ex – 1.2 div" when the ends fall in different units.</summary>
+    public string Range(decimal low, decimal high)
+    {
+        var (a, da) = Unit(low);
+        var (b, db) = Unit(high);
+        if (!string.Equals(da, db, StringComparison.OrdinalIgnoreCase))
+        {
+            return $"{One(low)} – {One(high)}";
+        }
+
+        var x = Number(a, da);
+        var y = Number(b, db);
+        return x == y ? $"{x} {Currencies.Short(da)}" : $"{x}–{y} {Currencies.Short(da)}";
+    }
+
+    /// <summary>"1 div = 120 ex", or null when the price book has no rate.</summary>
+    public string? DivineRate()
+    {
+        var rate = converter.Convert(1m, "divine", "exalted", now);
+        return rate.Ok ? $"1 div = {ValueFormat.Amount(Math.Round(rate.Value))} ex" : null;
+    }
+
+    private static string Number(decimal v, string denomination) =>
+        denomination.Equals("exalted", StringComparison.OrdinalIgnoreCase) && v >= 1m ? ValueFormat.Amount(Math.Round(v))
+        : denomination.Equals("divine", StringComparison.OrdinalIgnoreCase) && v >= 1m ? ValueFormat.Amount(Math.Round(v, v < 100 ? 1 : 0))
+        : ValueFormat.Amount(v);
 }
 
 public static class ValueFormat

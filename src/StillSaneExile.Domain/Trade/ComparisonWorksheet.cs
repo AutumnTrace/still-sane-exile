@@ -70,6 +70,14 @@ public sealed class ComparisonWorksheet
     public bool RequireExactBase { get; set; } = true;
     public bool? Corrupted { get; set; }
     public int? MinItemLevel { get; set; }
+
+    /// <summary>The item level the "item level or higher" choice uses: the item's own level for a
+    /// crafting base (normal, magic), rounded down to a multiple of 5 otherwise.</summary>
+    public int? SuggestedItemLevel { get; init; }
+
+    /// <summary>Only listings that can be bought at once, without messaging the seller.</summary>
+    public bool BuyNowOnly { get; set; } = true;
+
     public string? ListingDenomination { get; set; }
     public List<WorksheetRow> Rows { get; } = [];
 
@@ -79,14 +87,59 @@ public sealed class ComparisonWorksheet
     public IEnumerable<string> MarketControls()
     {
         yield return Corrupted switch { true => "Corrupted only", false => "Not corrupted", null => "Corruption: any" };
-        if (Rarity is ItemRarity.Normal or ItemRarity.Magic)
+        if (MinItemLevel is { } l)
         {
-            yield return MinItemLevel is { } l ? $"Item level ≥ {l} (crafting base)" : "Item level: any (matters for crafting bases)";
+            yield return Rarity is ItemRarity.Normal or ItemRarity.Magic ? $"Item level ≥ {l} (crafting base)" : $"Item level ≥ {l}";
+        }
+        else if (Rarity is ItemRarity.Normal or ItemRarity.Magic)
+        {
+            yield return "Item level: any (matters for crafting bases)";
+        }
+
+        if (BuyNowOnly)
+        {
+            yield return "Buy-now listings only";
         }
 
         if (Rarity == ItemRarity.Unique)
         {
             yield return "Exact unique variant";
+        }
+    }
+
+    /// <summary>Sets every row's starting bound from the item's own number: <paramref name="tolerance"/>
+    /// 0 searches for the exact roll, 0.1 for 10% worse, and so on. Which rows are selected is kept.</summary>
+    public void SetStartingBounds(decimal tolerance)
+    {
+        foreach (var r in Rows)
+        {
+            r.Match = r.Direction == StatDirection.LowerIsBetter ? MatchType.Maximum : MatchType.Minimum;
+            if (r.Actual is { } a)
+            {
+                r.Min = r.Direction == StatDirection.LowerIsBetter ? null : Math.Floor(a * (1 - tolerance));
+                r.Max = r.Direction == StatDirection.LowerIsBetter ? Math.Ceiling(a * (1 + tolerance)) : null;
+            }
+        }
+    }
+
+    /// <summary>Copies every search choice from another worksheet for the same item (rows matched by id).
+    /// Used to reset a worksheet to the defaults without replacing the object people are editing.</summary>
+    public void CopySearchFrom(ComparisonWorksheet other)
+    {
+        RequireExactBase = other.RequireExactBase;
+        Corrupted = other.Corrupted;
+        MinItemLevel = other.MinItemLevel;
+        BuyNowOnly = other.BuyNowOnly;
+        foreach (var r in Rows)
+        {
+            if (other.Row(r.Id) is { } o)
+            {
+                r.Selected = o.Selected;
+                r.Min = o.Min;
+                r.Max = o.Max;
+                r.Match = o.Match;
+                r.Group = o.Group;
+            }
         }
     }
 
@@ -220,6 +273,9 @@ public static class WorksheetFactory
             Rarity = item.Rarity,
             Corrupted = item.States.HasFlag(ItemStates.Corrupted),
             MinItemLevel = item.Rarity is ItemRarity.Normal or ItemRarity.Magic ? item.ItemLevel : null,
+            SuggestedItemLevel = item.ItemLevel is not { } il ? null
+                : item.Rarity is ItemRarity.Normal or ItemRarity.Magic ? il
+                : il / 5 * 5,
         };
 
         if (reading.PhysicalDps is { } pdps)
@@ -237,6 +293,7 @@ public static class WorksheetFactory
         }
 
         var seen = new HashSet<string>(StringComparer.Ordinal);
+        var ambiguous = new HashSet<string>(StringComparer.Ordinal);
         foreach (var l in reading.Lines)
         {
             if (l.Line.Components.Count == 0)
@@ -253,6 +310,11 @@ public static class WorksheetFactory
                 _ => RowKind.Other,
             };
             var id = $"{kind}:{l.Line.Template}";
+            if (l.Status == LineStatus.Ambiguous)
+            {
+                ambiguous.Add(id);
+            }
+
             if (!seen.Add(id))
             {
                 continue;
@@ -272,20 +334,13 @@ public static class WorksheetFactory
             });
         }
 
-        foreach (var r in w.Rows)
-        {
-            r.Match = r.Direction == StatDirection.LowerIsBetter ? MatchType.Maximum : MatchType.Minimum;
-            if (r.Actual is { } a)
-            {
-                r.Min = r.Direction == StatDirection.LowerIsBetter ? null : Math.Floor(a * (1 - tolerance));
-                r.Max = r.Direction == StatDirection.LowerIsBetter ? Math.Ceiling(a * (1 + tolerance)) : null;
-            }
-        }
+        w.SetStartingBounds(tolerance);
 
+        // A line that could be two different stats stays out of the starting search; the player can still tick it.
         foreach (var key in PresetFor(item.ItemClass))
         {
             var row = w.Rows.FirstOrDefault(r => r.Id == key || r.Template == key);
-            if (row is not null)
+            if (row is not null && !ambiguous.Contains(row.Id))
             {
                 row.Selected = true;
             }

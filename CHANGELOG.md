@@ -2,6 +2,16 @@
 
 Every release is a tag `vX.Y.Z` on `main` that matches `<Version>` in `Directory.Build.props`. See [docs/RELEASING.md](docs/RELEASING.md).
 
+## [Unreleased]
+
+- New look from the "UI & overlay" design: cool greys, one blue accent used only for the search, item names in their rarity colours, plain words ("Only 3 for sale — rough price", "Can't tell which stat this is").
+- **Price check** replaces Inspect: what items like yours sell for and how many are for sale, then the search behind it. Tick stats, type or step numbers, start from your exact rolls or 10% / 20% lower, buy-now and item-level filters, cheapest matches; it updates as you go. "Open this search on the trade site" and "Copy search".
+- `F3` over the game now opens the price check for your last item (`Esc` closes it and hands focus back to the game).
+- Quick peek card shows the price, how many are for sale and exactly which stats were searched; currency shows what the stack is worth.
+- "How good are your rolls?" with tier bars and open affix slots, and "Prices you write down" next to the price check.
+- New first-start screen with a labelled sample card ("How to read a price check").
+- Demo profile: synthetic listings made around each practice item, so the search can be practised before live prices exist.
+
 ## [0.1.1] - 2026-11-27
 
 - The app now goes by **Still Sane, Exile?**, with Zana's question mark, in the window title, header, HUD card, Settings and release names.

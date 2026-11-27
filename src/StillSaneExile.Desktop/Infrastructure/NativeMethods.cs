@@ -128,6 +128,16 @@ internal static class NativeMethods
     [return: MarshalAs(UnmanagedType.Bool)]
     public static extern bool IsIconic(nint hWnd);
 
+    [DllImport("user32.dll")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    public static extern bool IsWindow(nint hWnd);
+
+    /// <summary>Used only to give focus back to the game window when the price check window closes.
+    /// It moves focus; it sends no input.</summary>
+    [DllImport("user32.dll")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    public static extern bool SetForegroundWindow(nint hWnd);
+
     /// <summary>A counter Windows bumps whenever clipboard content changes. Reading it does not read the clipboard.</summary>
     [DllImport("user32.dll")]
     public static extern uint GetClipboardSequenceNumber();

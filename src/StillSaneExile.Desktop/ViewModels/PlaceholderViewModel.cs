@@ -17,7 +17,7 @@ public sealed partial class PlaceholderViewModel(string title, string milestone,
     public bool HasContext => Context is not null;
 
     public static PlaceholderViewModel Craft() => new(
-        "Craft",
+        "Crafting",
         "Milestone 5 · not available yet",
         "Plan a craft on the same item snapshot you inspected, with explicit success and failure branches, priced from the same price book as Wealth.",
         [
@@ -29,7 +29,7 @@ public sealed partial class PlaceholderViewModel(string title, string milestone,
         ]);
 
     public static PlaceholderViewModel Wealth() => new(
-        "Wealth",
+        "My wealth",
         "Milestone 3 · not available yet",
         "Track what you own from explicit snapshots, tab by tab, and see how much of it was observed and priced.",
         [
@@ -41,7 +41,7 @@ public sealed partial class PlaceholderViewModel(string title, string milestone,
         ]);
 
     public static PlaceholderViewModel Guide() => new(
-        "Guide",
+        "Campaign guide",
         "Milestone 4 · not available yet",
         "Campaign route and build steps in two short HUD lines: the next objective and what to do with your next uncut gem.",
         [

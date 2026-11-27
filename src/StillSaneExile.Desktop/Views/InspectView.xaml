@@ -4,162 +4,153 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:vm="clr-namespace:StillSaneExile.Desktop.ViewModels"
+             xmlns:v="clr-namespace:StillSaneExile.Desktop.Views"
              mc:Ignorable="d"
              d:DataContext="{d:DesignInstance Type=vm:InspectViewModel}">
-  <Grid Margin="12">
+  <Grid Margin="20" MaxWidth="1480">
     <Grid.ColumnDefinitions>
-      <ColumnDefinition Width="250" />
-      <ColumnDefinition Width="*" MinWidth="380" />
-      <ColumnDefinition Width="460" />
+      <ColumnDefinition Width="240" />
+      <ColumnDefinition Width="20" />
+      <ColumnDefinition Width="600" />
+      <ColumnDefinition Width="20" />
+      <ColumnDefinition Width="*" MinWidth="300" />
     </Grid.ColumnDefinitions>
     <Grid.RowDefinitions>
       <RowDefinition Height="Auto" />
       <RowDefinition Height="*" />
     </Grid.RowDefinitions>
 
-    <Border Grid.Row="0" Grid.ColumnSpan="3" Background="{StaticResource Surface2}" BorderBrush="{StaticResource Warn}" BorderThickness="1" CornerRadius="4" Padding="10,6" Margin="0,0,0,10"
+    <Border Grid.Row="0" Grid.ColumnSpan="5" Background="{StaticResource Surface2}" BorderBrush="{StaticResource Warn}" BorderThickness="1" CornerRadius="8" Padding="12,8" Margin="0,0,0,16"
             Visibility="{Binding Message, Converter={StaticResource Vis}}">
       <TextBlock Text="{Binding Message}" TextWrapping="Wrap" />
     </Border>
 
-    <!-- Left: input and recent items -->
-    <DockPanel Grid.Row="1" Grid.Column="0" Margin="0,0,12,0">
+    <!-- Left: paste, practice items, and what was checked this session -->
+    <DockPanel Grid.Row="1" Grid.Column="0">
       <StackPanel DockPanel.Dock="Top">
-        <Button Style="{StaticResource AccentButton}" Content="Paste item from clipboard" Command="{Binding PasteFromClipboardCommand}" HorizontalAlignment="Stretch"
+        <Button Content="Paste an item" Command="{Binding PasteFromClipboardCommand}" MinHeight="44" FontSize="14" FontWeight="SemiBold" v:Ui.Radius="8"
                 ToolTip="Reads the clipboard once. Copy the item in game first (Ctrl+C, or Ctrl+Alt+C for tiers and ranges)." />
         <StackPanel Visibility="{Binding IsDemo, Converter={StaticResource Vis}}">
-          <TextBlock Style="{StaticResource SectionTitle}" Text="PRACTICE ITEMS (SYNTHETIC)" />
-          <ItemsControl ItemsSource="{Binding PracticeItems}">
+          <TextBlock Style="{StaticResource SectionTitle}" Text="PRACTICE ITEMS (MADE UP)" />
+          <ItemsControl ItemsSource="{Binding PracticeItems}" Focusable="False">
             <ItemsControl.ItemTemplate>
               <DataTemplate>
-                <Button Style="{StaticResource LinkButton}" HorizontalContentAlignment="Left" HorizontalAlignment="Stretch" Content="{Binding Label}"
+                <Button Style="{StaticResource LinkButton}" Content="{Binding Label}" FontSize="13" Padding="4,3" HorizontalAlignment="Stretch"
                         Command="{Binding DataContext.LoadPracticeCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{Binding}" />
               </DataTemplate>
             </ItemsControl.ItemTemplate>
           </ItemsControl>
-          <TextBlock Text="Practice the HUD: load an item, then hold the peek key with this window in front." FontSize="12" Foreground="{StaticResource TextFaint}" TextWrapping="Wrap" Margin="4,6,0,0" />
         </StackPanel>
-        <TextBlock Style="{StaticResource SectionTitle}" Text="RECENT (THIS SESSION ONLY)" />
+        <TextBlock Style="{StaticResource SectionTitle}" Text="CHECKED THIS SESSION" />
+        <TextBlock Text="Nothing yet." FontSize="12.5" Foreground="{StaticResource TextFaint}" Margin="4,0,0,0" Visibility="{Binding Recent.Count, Converter={StaticResource Vis}, ConverterParameter=invert}" />
       </StackPanel>
       <ListBox ItemsSource="{Binding Recent}" SelectedItem="{Binding Selected}">
         <ListBox.ItemTemplate>
-          <DataTemplate>
+          <DataTemplate DataType="{x:Type vm:ItemViewModel}">
             <StackPanel>
-              <TextBlock Text="{Binding Title}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" />
-              <TextBlock FontSize="11" Foreground="{StaticResource TextFaint}"><Run Text="{Binding Rarity, Mode=OneWay}" /><Run Text=" · " /><Run Text="{Binding CapturedAt, Mode=OneWay}" /></TextBlock>
+              <TextBlock Text="{Binding ListTitle}" FontSize="14" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" Foreground="{Binding Rarity, Converter={StaticResource RarityBrush}}" />
+              <TextBlock Text="{Binding ListSubtitle}" FontSize="12" Foreground="{StaticResource TextFaint}" Margin="0,1,0,0" />
             </StackPanel>
           </DataTemplate>
         </ListBox.ItemTemplate>
       </ListBox>
     </DockPanel>
 
-    <!-- Empty state -->
-    <Border Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="2" Style="{StaticResource Card}" VerticalAlignment="Top"
+    <!-- Middle: the price check -->
+    <Border Grid.Row="1" Grid.Column="2" Style="{StaticResource Card}" VerticalAlignment="Top"
             Visibility="{Binding HasSelection, Converter={StaticResource Vis}, ConverterParameter=invert}">
       <StackPanel>
-        <TextBlock Text="No item yet" FontSize="18" FontWeight="SemiBold" />
-        <TextBlock TextWrapping="Wrap" Foreground="{StaticResource TextDim}" Margin="0,6,0,0"
-                   Text="In game, hover an item and hold the peek key (default Ctrl+C: the game copies, this app reads the copy once). Or copy an item and press Paste. Advanced copy (Ctrl+Alt+C) gives tiers and exact ranges." />
+        <TextBlock Text="No item yet" Style="{StaticResource CardTitle}" FontSize="18" />
+        <TextBlock Style="{StaticResource CardLead}" FontSize="14" LineHeight="21" Margin="0,8,0,0"
+                   Text="In game, hover an item and hold Ctrl+C: the game copies it and the price shows while you hold. Or copy an item and press Paste an item. A Ctrl+Alt+C copy also shows tiers and ranges." />
       </StackPanel>
     </Border>
-
-    <!-- Middle: item facts -->
-    <ScrollViewer Grid.Row="1" Grid.Column="1" VerticalScrollBarVisibility="Auto" Margin="0,0,12,0"
-                  DataContext="{Binding Selected}" Visibility="{Binding Converter={StaticResource Vis}}">
-      <StackPanel>
-        <Border Style="{StaticResource Card}">
-          <StackPanel>
-            <TextBlock Text="{Binding Title}" FontSize="20" FontWeight="SemiBold" TextWrapping="Wrap" />
-            <TextBlock Text="{Binding BaseLine}" FontSize="15" Foreground="{StaticResource TextDim}" Visibility="{Binding BaseLine, Converter={StaticResource Vis}}" />
-            <TextBlock Text="{Binding ClassLine}" FontSize="12" Foreground="{StaticResource TextFaint}" Margin="0,4,0,0" />
-            <TextBlock Text="{Binding CopyLabel}" FontSize="12" Foreground="{StaticResource TextFaint}" Visibility="{Binding HasRows, Converter={StaticResource Vis}}" />
-            <TextBlock Text="{Binding StatesLabel}" FontSize="12" Foreground="{StaticResource Warn}" Visibility="{Binding StatesLabel, Converter={StaticResource Vis}}" />
-            <StackPanel Orientation="Horizontal" Margin="0,8,0,0" Visibility="{Binding PhysicalDps, Converter={StaticResource Vis}}">
-              <TextBlock Text="Physical DPS " Foreground="{StaticResource TextDim}" />
-              <TextBlock Text="{Binding PhysicalDps}" FontWeight="SemiBold" />
-              <TextBlock Text="  (displayed average hit × attacks per second; nothing reapplied)" FontSize="12" Foreground="{StaticResource TextFaint}" VerticalAlignment="Center" />
-            </StackPanel>
-            <ItemsControl ItemsSource="{Binding Properties}" Margin="0,6,0,0">
-              <ItemsControl.ItemTemplate>
-                <DataTemplate>
-                  <TextBlock FontSize="12"><Run Text="{Binding Key, Mode=OneWay}" Foreground="{StaticResource TextFaint}" /><Run Text=": " Foreground="{StaticResource TextFaint}" /><Run Text="{Binding Value, Mode=OneWay}" /></TextBlock>
-                </DataTemplate>
-              </ItemsControl.ItemTemplate>
-            </ItemsControl>
-          </StackPanel>
-        </Border>
-
-        <Border Style="{StaticResource Card}" Visibility="{Binding HasRows, Converter={StaticResource Vis}}">
-          <StackPanel>
-            <TextBlock Text="ROLL QUALITY" Style="{StaticResource SectionTitle}" Margin="0,0,0,2" />
-            <TextBlock FontSize="12" Foreground="{StaticResource TextFaint}" TextWrapping="Wrap"
-                       Text="How close each roll is to the best of its range. Bars appear only when range, value and direction are verified for that exact line." />
-            <ItemsControl ItemsSource="{Binding Rows}" ItemTemplate="{StaticResource ModRowFull}" />
-          </StackPanel>
-        </Border>
-
-        <Border Style="{StaticResource Card}" Visibility="{Binding FlavourText, Converter={StaticResource Vis}}">
-          <ItemsControl ItemsSource="{Binding FlavourText}">
-            <ItemsControl.ItemTemplate>
-              <DataTemplate>
-                <TextBlock Text="{Binding}" FontStyle="Italic" Foreground="{StaticResource TextDim}" TextWrapping="Wrap" />
-              </DataTemplate>
-            </ItemsControl.ItemTemplate>
-          </ItemsControl>
-        </Border>
-
-        <Border Style="{StaticResource Card}" Visibility="{Binding Unparsed, Converter={StaticResource Vis}}">
-          <StackPanel>
-            <TextBlock Text="LINES NOT UNDERSTOOD (KEPT AS-IS)" Style="{StaticResource SectionTitle}" Margin="0,0,0,4" />
-            <ItemsControl ItemsSource="{Binding Unparsed}" />
-          </StackPanel>
-        </Border>
-      </StackPanel>
+    <ScrollViewer Grid.Row="1" Grid.Column="2" VerticalScrollBarVisibility="Auto" Visibility="{Binding HasSelection, Converter={StaticResource Vis}}" Focusable="False">
+      <v:PriceCheckView DataContext="{Binding Selected}" Margin="0,0,0,8" VerticalAlignment="Top" />
     </ScrollViewer>
 
-    <!-- Right: price evidence and comparison worksheet -->
-    <ScrollViewer Grid.Row="1" Grid.Column="2" VerticalScrollBarVisibility="Auto" Visibility="{Binding HasSelection, Converter={StaticResource Vis}}">
+    <!-- Right: rolls and prices written down -->
+    <ScrollViewer Grid.Row="1" Grid.Column="4" VerticalScrollBarVisibility="Auto" Visibility="{Binding HasSelection, Converter={StaticResource Vis}}" Focusable="False">
       <StackPanel>
-        <Border Style="{StaticResource Card}">
+        <Border Style="{StaticResource Card}" DataContext="{Binding Selected}" Visibility="{Binding HasRollRows, Converter={StaticResource Vis}}">
           <StackPanel>
-            <TextBlock Text="PRICE" Style="{StaticResource SectionTitle}" Margin="0,0,0,4" />
-            <DockPanel>
-              <TextBlock DockPanel.Dock="Left" Text="⚠ " Foreground="{StaticResource Warn}" FontSize="16" Visibility="{Binding Selected.Price.Uncertain, Converter={StaticResource Vis}}" />
-              <TextBlock Text="{Binding Selected.Price.Headline}" FontSize="16" FontWeight="SemiBold" TextWrapping="Wrap" />
-            </DockPanel>
-            <TextBlock Text="{Binding Selected.Price.Detail}" FontSize="12" Foreground="{StaticResource TextDim}" TextWrapping="Wrap" Margin="0,4,0,0" />
-            <ItemsControl ItemsSource="{Binding Selected.PriceWarnings}" Margin="0,4,0,0">
+            <TextBlock Text="How good are your rolls?" Style="{StaticResource CardTitle}" />
+            <TextBlock Style="{StaticResource CardLead}" Text="Tier 1 is the best a stat can be. The bar shows how close you are to the best number in that tier." />
+            <ItemsControl ItemsSource="{Binding RollRows}" Margin="0,10,0,0" Focusable="False">
+              <ItemsControl.ItemTemplate>
+                <DataTemplate DataType="{x:Type vm:RollRowViewModel}">
+                  <Border BorderBrush="{StaticResource RowLine}" BorderThickness="0,1,0,0" Padding="0,10" Background="Transparent" ToolTip="{Binding Details}">
+                    <StackPanel>
+                      <DockPanel>
+                        <TextBlock DockPanel.Dock="Right" Text="{Binding TierText}" FontSize="12" FontWeight="Bold" Foreground="{StaticResource TextSoft}" Margin="10,0,0,0" />
+                        <TextBlock Text="{Binding Text}" FontSize="13.5" TextWrapping="Wrap" />
+                      </DockPanel>
+                      <Border Height="6" CornerRadius="3" Background="{StaticResource Track}" Margin="0,6,0,0" ClipToBounds="True" Visibility="{Binding HasBar, Converter={StaticResource Vis}}">
+                        <Grid>
+                          <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="{Binding FillWidth}" />
+                            <ColumnDefinition Width="{Binding RestWidth}" />
+                          </Grid.ColumnDefinitions>
+                          <Border CornerRadius="3" Background="{StaticResource BarFill}" Visibility="{Binding HasFill, Converter={StaticResource Vis}}" />
+                          <Border Width="3" HorizontalAlignment="Right" Background="{StaticResource BarFill}" Visibility="{Binding HasMarker, Converter={StaticResource Vis}}" />
+                        </Grid>
+                      </Border>
+                      <TextBlock Text="{Binding Note}" FontSize="12" TextWrapping="Wrap" Margin="0,5,0,0">
+                        <TextBlock.Style>
+                          <Style TargetType="TextBlock">
+                            <Setter Property="Foreground" Value="{StaticResource TextFaint}" />
+                            <Style.Triggers>
+                              <DataTrigger Binding="{Binding NoteIsWarning}" Value="True">
+                                <Setter Property="Foreground" Value="{StaticResource Hint}" />
+                              </DataTrigger>
+                            </Style.Triggers>
+                          </Style>
+                        </TextBlock.Style>
+                      </TextBlock>
+                    </StackPanel>
+                  </Border>
+                </DataTemplate>
+              </ItemsControl.ItemTemplate>
+            </ItemsControl>
+            <TextBlock Text="{Binding OpenSlotsLine}" FontSize="12.5" Foreground="{StaticResource TextDim}" TextWrapping="Wrap" Margin="0,8,0,0" Visibility="{Binding OpenSlotsLine, Converter={StaticResource Vis}}" />
+          </StackPanel>
+        </Border>
+
+        <Border Style="{StaticResource Card}" Visibility="{Binding Selected.ShowsComparables, Converter={StaticResource Vis}}">
+          <StackPanel>
+            <TextBlock Text="Prices you wrote down" Style="{StaticResource CardTitle}" />
+            <TextBlock Style="{StaticResource CardLead}" Text="Saved by you from the trade site. Only you see these." />
+            <ItemsControl ItemsSource="{Binding Selected.Comparables}" Margin="0,8,0,0" Focusable="False">
+              <ItemsControl.ItemTemplate>
+                <DataTemplate DataType="{x:Type vm:ComparableViewModel}">
+                  <Border BorderBrush="{StaticResource RowLine}" BorderThickness="0,1,0,0" Padding="0,8" Background="Transparent" ToolTip="{Binding Tags}">
+                    <DockPanel>
+                      <Button DockPanel.Dock="Right" Style="{StaticResource TextButton}" Content="Remove" FontSize="12" Padding="0" Margin="10,0,0,0"
+                              Command="{Binding DataContext.RemoveComparableCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{Binding}"
+                              Visibility="{Binding Seeded, Converter={StaticResource Vis}, ConverterParameter=invert}" />
+                      <TextBlock DockPanel.Dock="Right" FontSize="13.5" Foreground="{StaticResource TextDim}" TextTrimming="CharacterEllipsis"><Run Text="{Binding Seller, Mode=OneWay}" /><Run Text=" · " /><Run Text="{Binding Age, Mode=OneWay}" /></TextBlock>
+                      <TextBlock FontSize="13.5"><Run Text="{Binding Price, Mode=OneWay}" FontWeight="Bold" /><Run Text=" " /><Run Text="{Binding Converted, Mode=OneWay}" Foreground="{StaticResource TextFaint}" FontSize="12" /></TextBlock>
+                    </DockPanel>
+                  </Border>
+                </DataTemplate>
+              </ItemsControl.ItemTemplate>
+            </ItemsControl>
+            <TextBlock Text="Nothing written down yet." FontSize="12.5" Foreground="{StaticResource TextFaint}" Margin="0,8,0,0"
+                       Visibility="{Binding Selected.Comparables.Count, Converter={StaticResource Vis}, ConverterParameter=invert}" />
+            <ItemsControl ItemsSource="{Binding Selected.PriceWarnings}" Margin="0,6,0,0" Focusable="False">
               <ItemsControl.ItemTemplate>
                 <DataTemplate>
-                  <TextBlock Text="{Binding StringFormat='⚠ {0}'}" FontSize="12" Foreground="{StaticResource Warn}" TextWrapping="Wrap" />
+                  <TextBlock Text="{Binding}" FontSize="12" Foreground="{StaticResource Warn}" TextWrapping="Wrap" Margin="0,0,0,3" />
                 </DataTemplate>
               </ItemsControl.ItemTemplate>
             </ItemsControl>
 
-            <StackPanel Visibility="{Binding Selected.ShowsComparables, Converter={StaticResource Vis}}">
-              <TextBlock Text="YOUR COMPARABLES (ASKING PRICES, PRIVATE)" Style="{StaticResource SectionTitle}" />
-              <ItemsControl ItemsSource="{Binding Selected.Comparables}">
-                <ItemsControl.ItemTemplate>
-                  <DataTemplate>
-                    <Border BorderBrush="{StaticResource Line}" BorderThickness="0,0,0,1" Padding="0,4">
-                      <DockPanel>
-                        <Button DockPanel.Dock="Right" Style="{StaticResource LinkButton}" Content="Remove" FontSize="12"
-                                Command="{Binding DataContext.RemoveComparableCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{Binding}"
-                                Visibility="{Binding Seeded, Converter={StaticResource Vis}, ConverterParameter=invert}" />
-                        <StackPanel>
-                          <TextBlock><Run Text="{Binding Price, Mode=OneWay}" FontWeight="SemiBold" /><Run Text="  " /><Run Text="{Binding Converted, Mode=OneWay}" Foreground="{StaticResource TextDim}" /><Run Text="  · " Foreground="{StaticResource TextFaint}" /><Run Text="{Binding Seller, Mode=OneWay}" /></TextBlock>
-                          <TextBlock FontSize="11" Foreground="{StaticResource TextFaint}"><Run Text="{Binding Age, Mode=OneWay}" /><Run Text=" · " /><Run Text="{Binding Tags, Mode=OneWay}" /><Run Text=" · " /><Run Text="{Binding Notes, Mode=OneWay}" /></TextBlock>
-                        </StackPanel>
-                      </DockPanel>
-                    </Border>
-                  </DataTemplate>
-                </ItemsControl.ItemTemplate>
-              </ItemsControl>
-
-              <TextBlock Text="ADD A COMPARABLE YOU SAW ON THE TRADE SITE" Style="{StaticResource SectionTitle}" />
+            <Button Style="{StaticResource GhostButton}" Content="Write down a price" Command="{Binding ToggleAddFormCommand}" HorizontalAlignment="Stretch" FontSize="13.5" Margin="0,10,0,0"
+                    Visibility="{Binding ShowAddForm, Converter={StaticResource Vis}, ConverterParameter=invert}" />
+            <StackPanel Margin="0,12,0,0" Visibility="{Binding ShowAddForm, Converter={StaticResource Vis}}">
               <Grid>
                 <Grid.ColumnDefinitions>
-                  <ColumnDefinition Width="90" />
+                  <ColumnDefinition Width="96" />
                   <ColumnDefinition Width="*" />
                 </Grid.ColumnDefinitions>
                 <Grid.RowDefinitions>
@@ -167,107 +158,60 @@
                   <RowDefinition Height="Auto" />
                   <RowDefinition Height="Auto" />
                   <RowDefinition Height="Auto" />
-                  <RowDefinition Height="Auto" />
                 </Grid.RowDefinitions>
-                <TextBlock Grid.Row="0" Text="Asking price" VerticalAlignment="Center" FontSize="12" Foreground="{StaticResource TextDim}" />
-                <StackPanel Grid.Row="0" Grid.Column="1" Orientation="Horizontal" Margin="0,2">
-                  <TextBox Width="80" Text="{Binding NewAmount, UpdateSourceTrigger=PropertyChanged}" />
-                  <ItemsControl ItemsSource="{Binding CurrencyChoices}" Margin="6,0,0,0">
-                    <ItemsControl.ItemsPanel>
-                      <ItemsPanelTemplate>
-                        <StackPanel Orientation="Horizontal" />
-                      </ItemsPanelTemplate>
-                    </ItemsControl.ItemsPanel>
-                    <ItemsControl.ItemTemplate>
-                      <DataTemplate>
-                        <Button Style="{StaticResource TabButton}" Padding="8,3" Margin="0,0,4,0" Content="{Binding}"
-                                Command="{Binding DataContext.SetNewCurrencyCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{Binding}">
-                          <Button.Tag>
-                            <MultiBinding Converter="{StaticResource PillActive}">
-                              <Binding />
-                              <Binding Path="DataContext.NewCurrency" RelativeSource="{RelativeSource AncestorType=UserControl}" />
-                            </MultiBinding>
-                          </Button.Tag>
-                        </Button>
-                      </DataTemplate>
-                    </ItemsControl.ItemTemplate>
-                  </ItemsControl>
+                <TextBlock Grid.Row="0" Text="Asking price" VerticalAlignment="Center" FontSize="12.5" Foreground="{StaticResource TextDim}" />
+                <StackPanel Grid.Row="0" Grid.Column="1" Orientation="Horizontal" Margin="0,3">
+                  <TextBox Width="72" Text="{Binding NewAmount, UpdateSourceTrigger=PropertyChanged}" AutomationProperties.Name="Asking price" />
+                  <Border Background="{StaticResource Well}" BorderBrush="{StaticResource Edge}" BorderThickness="1" CornerRadius="8" Padding="2" Margin="8,0,0,0">
+                    <ItemsControl ItemsSource="{Binding CurrencyChoices}" Focusable="False">
+                      <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                          <StackPanel Orientation="Horizontal" />
+                        </ItemsPanelTemplate>
+                      </ItemsControl.ItemsPanel>
+                      <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                          <Button Style="{StaticResource SegmentButton}" Padding="10,0" Content="{Binding Converter={StaticResource CurrencyName}, ConverterParameter=short}"
+                                  Command="{Binding DataContext.SetNewCurrencyCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{Binding}">
+                            <Button.Tag>
+                              <MultiBinding Converter="{StaticResource PillActive}">
+                                <Binding />
+                                <Binding Path="DataContext.NewCurrency" RelativeSource="{RelativeSource AncestorType=UserControl}" />
+                              </MultiBinding>
+                            </Button.Tag>
+                          </Button>
+                        </DataTemplate>
+                      </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                  </Border>
                 </StackPanel>
-                <TextBlock Grid.Row="1" Text="Seller" VerticalAlignment="Center" FontSize="12" Foreground="{StaticResource TextDim}" />
-                <TextBox Grid.Row="1" Grid.Column="1" Margin="0,2" Text="{Binding NewSeller, UpdateSourceTrigger=PropertyChanged}" ToolTip="Optional. Each seller counts once; unknown sellers cannot raise confidence." />
-                <TextBlock Grid.Row="2" Text="Listing link" VerticalAlignment="Center" FontSize="12" Foreground="{StaticResource TextDim}" />
-                <TextBox Grid.Row="2" Grid.Column="1" Margin="0,2" Text="{Binding NewLink, UpdateSourceTrigger=PropertyChanged}" ToolTip="Optional https:// link to the listing" />
-                <TextBlock Grid.Row="3" Text="Match notes" VerticalAlignment="Center" FontSize="12" Foreground="{StaticResource TextDim}" />
-                <TextBox Grid.Row="3" Grid.Column="1" Margin="0,2" Text="{Binding NewNotes, UpdateSourceTrigger=PropertyChanged}" />
-                <Button Grid.Row="4" Grid.Column="1" HorizontalAlignment="Left" Margin="0,6,0,0" Content="Add comparable" Command="{Binding AddComparableCommand}" />
+                <TextBlock Grid.Row="1" Text="Seller" VerticalAlignment="Center" FontSize="12.5" Foreground="{StaticResource TextDim}" />
+                <TextBox Grid.Row="1" Grid.Column="1" Margin="0,3" Text="{Binding NewSeller, UpdateSourceTrigger=PropertyChanged}" AutomationProperties.Name="Seller"
+                         ToolTip="Optional. Each seller counts once; prices without a seller can't make the price guess surer." />
+                <TextBlock Grid.Row="2" Text="Listing link" VerticalAlignment="Center" FontSize="12.5" Foreground="{StaticResource TextDim}" />
+                <TextBox Grid.Row="2" Grid.Column="1" Margin="0,3" Text="{Binding NewLink, UpdateSourceTrigger=PropertyChanged}" AutomationProperties.Name="Listing link" ToolTip="Optional https:// link to the listing" />
+                <TextBlock Grid.Row="3" Text="Notes" VerticalAlignment="Center" FontSize="12.5" Foreground="{StaticResource TextDim}" />
+                <TextBox Grid.Row="3" Grid.Column="1" Margin="0,3" Text="{Binding NewNotes, UpdateSourceTrigger=PropertyChanged}" AutomationProperties.Name="Notes" />
               </Grid>
+              <StackPanel Orientation="Horizontal" Margin="96,8,0,0">
+                <Button Content="Save price" Command="{Binding AddComparableCommand}" FontWeight="SemiBold" />
+                <Button Style="{StaticResource TextButton}" Content="Cancel" Command="{Binding ToggleAddFormCommand}" Margin="12,0,0,0" />
+              </StackPanel>
             </StackPanel>
           </StackPanel>
         </Border>
 
-        <Border Style="{StaticResource Card}" Visibility="{Binding Selected.ShowsWorksheet, Converter={StaticResource Vis}}">
+        <Border Style="{StaticResource Card}" DataContext="{Binding Selected}" Visibility="{Binding Unparsed, Converter={StaticResource Vis}}">
           <StackPanel>
-            <TextBlock Text="COMPARISON WORKSHEET" Style="{StaticResource SectionTitle}" Margin="0,0,0,2" />
-            <TextBlock FontSize="12" Foreground="{StaticResource TextFaint}" TextWrapping="Wrap" Text="Choose what a comparable must match. AND rows are required; OPT rows form one alternatives group. Nothing broadens itself." />
-            <ItemsControl ItemsSource="{Binding Selected.MarketControls}" Margin="0,6,0,0">
+            <TextBlock Text="Lines not understood" Style="{StaticResource CardTitle}" />
+            <TextBlock Style="{StaticResource CardLead}" Text="Kept exactly as copied. They are not part of the price or the search." />
+            <ItemsControl ItemsSource="{Binding Unparsed}" Margin="0,8,0,0" Focusable="False">
               <ItemsControl.ItemTemplate>
                 <DataTemplate>
-                  <TextBlock Text="{Binding StringFormat='• {0}'}" FontSize="12" Foreground="{StaticResource TextDim}" />
+                  <TextBlock Text="{Binding}" FontSize="12.5" Foreground="{StaticResource TextSoft}" TextWrapping="Wrap" Margin="0,0,0,3" />
                 </DataTemplate>
               </ItemsControl.ItemTemplate>
             </ItemsControl>
-            <ItemsControl ItemsSource="{Binding Selected.WorksheetRows}" Margin="0,6,0,0">
-              <ItemsControl.ItemTemplate>
-                <DataTemplate>
-                  <Grid Margin="0,3">
-                    <Grid.ColumnDefinitions>
-                      <ColumnDefinition Width="22" />
-                      <ColumnDefinition Width="*" />
-                      <ColumnDefinition Width="52" />
-                      <ColumnDefinition Width="56" />
-                      <ColumnDefinition Width="56" />
-                      <ColumnDefinition Width="52" />
-                      <ColumnDefinition Width="42" />
-                    </Grid.ColumnDefinitions>
-                    <CheckBox IsChecked="{Binding Selected}" VerticalAlignment="Center" />
-                    <TextBlock Grid.Column="1" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" ToolTip="{Binding Label}">
-                      <Run Text="{Binding Label, Mode=OneWay}" /><Run Text="{Binding KindLabel, StringFormat='  {0}', Mode=OneWay}" FontSize="10" Foreground="{StaticResource TextFaint}" />
-                    </TextBlock>
-                    <TextBlock Grid.Column="2" Text="{Binding Actual}" VerticalAlignment="Center" HorizontalAlignment="Right" Margin="0,0,6,0" Foreground="{StaticResource TextDim}" />
-                    <TextBox Grid.Column="3" Text="{Binding Min, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,4,0" ToolTip="Minimum" />
-                    <TextBox Grid.Column="4" Text="{Binding Max, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,4,0" ToolTip="Maximum" />
-                    <Button Grid.Column="5" Padding="4,2" FontSize="11" Content="{Binding MatchLabel}" Margin="0,0,4,0" ToolTip="Match type: min / range / max"
-                            Command="{Binding DataContext.CycleMatchCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{Binding}" />
-                    <Button Grid.Column="6" Padding="4,2" FontSize="11" Content="{Binding GroupLabel}" ToolTip="AND = required, OPT = one of the alternatives"
-                            Command="{Binding DataContext.ToggleGroupCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{Binding}" />
-                  </Grid>
-                </DataTemplate>
-              </ItemsControl.ItemTemplate>
-            </ItemsControl>
-            <ItemsControl ItemsSource="{Binding Selected.WorksheetWarnings}" Margin="0,6,0,0">
-              <ItemsControl.ItemTemplate>
-                <DataTemplate>
-                  <TextBlock Text="{Binding StringFormat='⚠ {0}'}" FontSize="12" Foreground="{StaticResource Warn}" TextWrapping="Wrap" />
-                </DataTemplate>
-              </ItemsControl.ItemTemplate>
-            </ItemsControl>
-
-            <TextBlock Text="IF YOU FIND TOO FEW LISTINGS, RELAX ONE THING" Style="{StaticResource SectionTitle}" />
-            <ItemsControl ItemsSource="{Binding Selected.Relaxations}">
-              <ItemsControl.ItemTemplate>
-                <DataTemplate>
-                  <Button Style="{StaticResource LinkButton}" HorizontalContentAlignment="Left" Content="{Binding Description}" FontSize="12"
-                          Command="{Binding DataContext.ApplyRelaxationCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{Binding}" />
-                </DataTemplate>
-              </ItemsControl.ItemTemplate>
-            </ItemsControl>
-
-            <WrapPanel Margin="0,10,0,0">
-              <Button Style="{StaticResource AccentButton}" Content="Open official trade site" Command="{Binding OpenTradeCommand}" Margin="0,0,8,6"
-                      ToolTip="Opens pathofexile.com/trade2 in your browser. Set the filters from this worksheet there." />
-              <Button Content="Copy worksheet" Command="{Binding CopyInstructionsCommand}" Margin="0,0,8,6" />
-              <Button Content="Plan a craft from this item" Command="{Binding OpenCraftCommand}" Margin="0,0,8,6" />
-            </WrapPanel>
           </StackPanel>
         </Border>
       </StackPanel>

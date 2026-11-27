@@ -4,44 +4,27 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:vm="clr-namespace:StillSaneExile.Desktop.ViewModels"
+        xmlns:v="clr-namespace:StillSaneExile.Desktop.Views"
         mc:Ignorable="d"
         d:DataContext="{d:DesignInstance Type=vm:PeekViewModel}"
         Title="Still Sane, Exile? HUD"
         WindowStyle="None" AllowsTransparency="True" Background="Transparent"
         Topmost="True" ShowInTaskbar="False" ShowActivated="False" Focusable="False"
         ResizeMode="NoResize" SizeToContent="WidthAndHeight"
-        Foreground="{StaticResource Text}" FontFamily="Segoe UI" FontSize="16"
+        Foreground="{StaticResource Text}" FontFamily="Segoe UI" FontSize="14"
+        Typography.NumeralAlignment="Tabular"
         UseLayoutRounding="True" TextOptions.TextFormattingMode="Display">
-  <Border x:Name="Card" Width="330" Background="#F21A1B1E" BorderBrush="{StaticResource Line}" BorderThickness="1" CornerRadius="6" Padding="14,12">
+  <Border Padding="12,6,12,18">
     <Border.LayoutTransform>
       <ScaleTransform x:Name="Scale" ScaleX="1" ScaleY="1" />
     </Border.LayoutTransform>
-    <StackPanel>
-      <DockPanel>
-        <Border DockPanel.Dock="Right" BorderBrush="{StaticResource Warn}" BorderThickness="1" CornerRadius="3" Padding="5,1" VerticalAlignment="Top" Margin="8,2,0,0"
-                Visibility="{Binding IsDemo, Converter={StaticResource Vis}}">
-          <TextBlock Text="DEMO" Foreground="{StaticResource Warn}" FontSize="11" FontWeight="SemiBold" />
-        </Border>
-        <TextBlock Text="{Binding Title}" FontSize="17" FontWeight="SemiBold" TextWrapping="Wrap" />
-      </DockPanel>
-      <TextBlock Text="{Binding Subtitle}" FontSize="13" Foreground="{StaticResource TextDim}" Visibility="{Binding Subtitle, Converter={StaticResource Vis}}" />
-
-      <TextBlock Text="{Binding MessageText}" FontSize="14" TextWrapping="Wrap" Margin="0,8,0,0" Visibility="{Binding IsMessage, Converter={StaticResource Vis}}" />
-
-      <TextBlock FontSize="13" Margin="0,8,0,0" Visibility="{Binding HasPdps, Converter={StaticResource Vis}}">
-        <Run Text="Physical DPS " Foreground="{StaticResource TextDim}" /><Run Text="{Binding PhysicalDps, Mode=OneWay}" FontWeight="SemiBold" />
-      </TextBlock>
-
-      <ItemsControl ItemsSource="{Binding Rows}" ItemTemplate="{StaticResource ModRowPeek}" Margin="0,10,0,0" />
-
-      <Border BorderBrush="{StaticResource Line}" BorderThickness="0,1,0,0" Padding="0,8,0,0" Visibility="{Binding HasPrice, Converter={StaticResource Vis}}">
-        <DockPanel>
-          <TextBlock DockPanel.Dock="Left" Text="⚠ " Foreground="{StaticResource Warn}" Visibility="{Binding PriceUncertain, Converter={StaticResource Vis}}" />
-          <TextBlock Text="{Binding PriceHeadline}" FontSize="15" FontWeight="SemiBold" TextWrapping="Wrap" />
-        </DockPanel>
+    <Grid>
+      <Border CornerRadius="12" Background="#F715161A">
+        <Border.Effect>
+          <DropShadowEffect Color="Black" BlurRadius="28" ShadowDepth="8" Direction="270" Opacity="0.55" />
+        </Border.Effect>
       </Border>
-
-      <TextBlock Text="{Binding Footer}" FontSize="12" Foreground="{StaticResource TextFaint}" Margin="0,8,0,0" TextWrapping="Wrap" />
-    </StackPanel>
+      <v:PeekCard />
+    </Grid>
   </Border>
 </Window>

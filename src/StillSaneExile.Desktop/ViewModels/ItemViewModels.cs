@@ -1,7 +1,10 @@
 using System.Collections.ObjectModel;
+using System.Diagnostics;
 using System.Globalization;
+using System.Runtime.InteropServices;
 using System.Windows;
 using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
 using StillSaneExile.Desktop.Services;
 using StillSaneExile.Domain.Items;
 using StillSaneExile.Domain.Pricing;
@@ -11,127 +14,51 @@ using StillSaneExile.Domain.Trade;
 
 namespace StillSaneExile.Desktop.ViewModels;
 
-/// <summary>One roll bar: numbers, endpoints and tier are always printed, so color is optional.</summary>
-public sealed class RollBarViewModel
+/// <summary>One stat in the search: tick it to search for it, and set the number to search for.</summary>
+public sealed partial class SearchRowViewModel : ObservableObject
 {
-    public RollBarViewModel(RollAssessment a)
-    {
-        Assessment = a;
-        var fill = (double)(a.Fill ?? 0m);
-        var pos = (double)(a.Position ?? 0m);
-        FillWidth = new GridLength(Math.Max(fill, 0.0001), GridUnitType.Star);
-        RestWidth = new GridLength(Math.Max(1 - fill, 0.0001), GridUnitType.Star);
-        MarkerBefore = new GridLength(Math.Max(pos, 0.0001), GridUnitType.Star);
-        MarkerAfter = new GridLength(Math.Max(1 - pos, 0.0001), GridUnitType.Star);
-    }
+    public const string AmbiguousHint = "Can’t tell which stat this is — Ctrl+Alt+C shows it";
 
-    public RollAssessment Assessment { get; }
-    public bool HasBar => Assessment.HasBar;
-    public bool HasAnything => HasBar || Caption.Length > 0;
-    public bool IsScored => Assessment.Status == RollStatus.Scored;
-    public bool IsPositionOnly => Assessment.Status == RollStatus.PositionOnly;
-    public GridLength FillWidth { get; }
-    public GridLength RestWidth { get; }
-    public GridLength MarkerBefore { get; }
-    public GridLength MarkerAfter { get; }
-
-    public string Percent => IsScored ? RollQuality.Percent(Assessment.Fill) : IsPositionOnly ? "pos." : "";
-
-    public string Caption => Assessment.Status switch
-    {
-        RollStatus.Scored => $"{RollQuality.Num(Assessment.Value)} in {RollQuality.Num(Assessment.Min)}–{RollQuality.Num(Assessment.Max)} · {RollQuality.Distance(Assessment)}",
-        RollStatus.PositionOnly => $"{RollQuality.Num(Assessment.Value)} in {RollQuality.Num(Assessment.Min)}–{RollQuality.Num(Assessment.Max)} · direction not verified",
-        RollStatus.Fixed => "Fixed",
-        RollStatus.RangeMismatch => $"Range mismatch ({RollQuality.Num(Assessment.Min)}–{RollQuality.Num(Assessment.Max)})",
-        _ => "",
-    };
-}
-
-public sealed class ModRowViewModel
-{
-    public ModRowViewModel(LineReading l)
-    {
-        Reading = l;
-        Bars = l.Rolls.Select(r => new RollBarViewModel(r)).ToList();
-        var candidates = new List<string>();
-        if (l.Status == LineStatus.Ambiguous)
-        {
-            candidates.AddRange(l.Candidates.Take(4).Select(c => c.Description));
-            if (l.Candidates.Count > 4)
-            {
-                candidates.Add($"+{l.Candidates.Count - 4} more");
-            }
-        }
-
-        Candidates = candidates;
-    }
-
-    public LineReading Reading { get; }
-    public string Text => Reading.Line.Display;
-
-    public string MetaLine => string.Join(" · ", new[] { SourceLabel, AffixName is null ? null : $"\"{AffixName}\"", StatusLabel }.Where(s => s is not null));
-    public string Template => Reading.Line.Template;
-    public ModSource Source => Reading.Source;
-    public IReadOnlyList<RollBarViewModel> Bars { get; }
-    public IReadOnlyList<string> Candidates { get; }
-    public bool HasBars => Bars.Any(b => b.HasBar);
-    public string? Note => Reading.Note;
-    public bool HasNote => !string.IsNullOrEmpty(Reading.Note);
-    public bool IsAmbiguous => Reading.Status == LineStatus.Ambiguous;
-
-    /// <summary>Warning icon: anything a player should not take at face value.</summary>
-    public bool Uncertain => Reading.Status is LineStatus.Ambiguous or LineStatus.RangeMismatch
-        || Bars.Any(b => b.Assessment.Status == RollStatus.RangeMismatch) || Reading.RangeFromSyntheticPack;
-
-    public string SourceLabel => Reading.Source switch
-    {
-        ModSource.Explicit when Reading.Group.Side == AffixSide.Prefix => "Prefix",
-        ModSource.Explicit when Reading.Group.Side == AffixSide.Suffix => "Suffix",
-        ModSource.Explicit => "Explicit",
-        ModSource.Implicit => "Implicit",
-        ModSource.Rune => "Rune",
-        ModSource.Enchant => "Enchant",
-        ModSource.Unique => "Unique",
-        ModSource.Desecrated => "Desecrated",
-        ModSource.Fractured => "Fractured",
-        ModSource.Crafted => "Crafted",
-        _ => "Unknown",
-    };
-
-    public string TierLabel => Reading.TierLabel;
-
-    public string? AffixName => Reading.AffixName;
-
-    public string StatusLabel => Reading.Status switch
-    {
-        LineStatus.FromAdvancedCopy => "range from game",
-        LineStatus.Resolved => Reading.RangeFromSyntheticPack ? "synthetic pack range" : "pack range",
-        LineStatus.Ambiguous => "ambiguous",
-        LineStatus.RangeMismatch => "range mismatch",
-        LineStatus.NotInPack => Reading.Line.Components.Count == 0 ? "no numbers" : "not in pack",
-        _ => "no pack",
-    };
-}
-
-public sealed partial class WorksheetRowViewModel : ObservableObject
-{
     private readonly Action _changed;
 
-    public WorksheetRowViewModel(WorksheetRow row, Action changed)
+    public SearchRowViewModel(WorksheetRow row, LineReading? reading, Action changed)
     {
         Row = row;
+        Reading = reading;
         _changed = changed;
-        _min = Fmt(row.Min);
-        _max = Fmt(row.Max);
     }
 
     public WorksheetRow Row { get; }
-    public string Label => Row.Label;
-    public string Actual => Row.Actual is { } a ? RollQuality.Num(a) : "";
-    public string KindLabel => Row.Kind.ToString();
-    public bool Supported => Row.Supported;
+    public LineReading? Reading { get; }
 
-    public bool Selected
+    public string Text => Row.Kind == RowKind.Derived && Row.Actual is { } a ? $"{Row.Label} {RollQuality.Num(a)}" : Row.Label;
+    public string ShortLabel => Labels.Short(Row);
+    public bool IsAmbiguous => Reading?.Status == LineStatus.Ambiguous;
+    public bool IsAtMost => Row.Match == MatchType.Maximum;
+    public decimal Step => Row.Actual is >= 100 ? 5 : 1;
+
+    public string Tier => Reading?.Tier is { } t ? $"T{t}" : Row.Kind switch
+    {
+        RowKind.Rune => "Rune",
+        RowKind.Implicit => "Implicit",
+        RowKind.Enchant => "Enchant",
+        _ => "—",
+    };
+
+    /// <summary>What the peek card shows on the right of an unticked row: the tier, or nothing.</summary>
+    public string TierOrBlank => Tier == "—" ? "" : Tier;
+
+    public string? Hint =>
+        IsAmbiguous ? AmbiguousHint
+        : Row.Id == ComparisonWorksheet.PhysicalDpsId ? "Damage per second from physical hits. Best single number for a weapon."
+        : Row.Kind == RowKind.Rune ? "From a rune — buyers rarely care"
+        : !Row.Supported ? "No trade filter for this one: set it by hand on the trade site"
+        : Reading?.Line.Components.Count > 1 && Row.Actual is { } a ? $"Searched by the average ({RollQuality.Num(Math.Round(a, 1))})"
+        : null;
+
+    public bool HasHint => Hint is not null;
+
+    public bool IsOn
     {
         get => Row.Selected;
         set
@@ -145,69 +72,183 @@ public sealed partial class WorksheetRowViewModel : ObservableObject
         }
     }
 
-    private string _min;
-
-    public string Min
+    /// <summary>The number searched for: the minimum, or the maximum for a lower-is-better stat.</summary>
+    public string Bound
     {
-        get => _min;
+        get
+        {
+            var v = IsAtMost ? Row.Max : Row.Min;
+            return v is null ? "" : RollQuality.Num(v);
+        }
+
         set
         {
-            if (SetProperty(ref _min, value))
-            {
-                Row.Min = Parse(value);
-                _changed();
-            }
+            var parsed = decimal.TryParse(value, NumberStyles.Float, CultureInfo.InvariantCulture, out var v) ? Math.Max(0, v) : (decimal?)null;
+            SetBound(parsed, notify: false);
         }
     }
 
-    private string _max;
+    /// <summary>"≥ 319" for the peek card.</summary>
+    public string BoundLabel => Bound.Length == 0 ? "any" : $"{(IsAtMost ? "≤" : "≥")} {Bound}";
 
-    public string Max
-    {
-        get => _max;
-        set
-        {
-            if (SetProperty(ref _max, value))
-            {
-                Row.Max = Parse(value);
-                _changed();
-            }
-        }
-    }
+    [RelayCommand]
+    private void Increase() => SetBound(((IsAtMost ? Row.Max : Row.Min) ?? 0) + Step, notify: true);
 
-    public string MatchLabel => Row.Match switch { MatchType.Minimum => "min", MatchType.Maximum => "max", _ => "range" };
+    [RelayCommand]
+    private void Decrease() => SetBound(Math.Max(0, ((IsAtMost ? Row.Max : Row.Min) ?? 0) - Step), notify: true);
 
-    public string GroupLabel => Row.Group == FilterGroup.Mandatory ? "AND" : "OPT";
-
-    public void CycleMatch()
-    {
-        Row.Match = Row.Match switch { MatchType.Minimum => MatchType.Range, MatchType.Range => MatchType.Maximum, _ => MatchType.Minimum };
-        OnPropertyChanged(nameof(MatchLabel));
-        _changed();
-    }
-
-    public void ToggleGroup()
-    {
-        Row.Group = Row.Group == FilterGroup.Mandatory ? FilterGroup.Optional : FilterGroup.Mandatory;
-        OnPropertyChanged(nameof(GroupLabel));
-        _changed();
-    }
-
+    /// <summary>Re-reads the row after the whole search changed (strictness, reset).</summary>
     public void Refresh()
     {
-        _min = Fmt(Row.Min);
-        _max = Fmt(Row.Max);
-        OnPropertyChanged(nameof(Min));
-        OnPropertyChanged(nameof(Max));
-        OnPropertyChanged(nameof(GroupLabel));
-        OnPropertyChanged(nameof(Selected));
+        OnPropertyChanged(nameof(Bound));
+        OnPropertyChanged(nameof(BoundLabel));
+        OnPropertyChanged(nameof(IsOn));
     }
 
-    private static string Fmt(decimal? v) => v is null ? "" : RollQuality.Num(v);
+    /// <summary>Changing a number puts the stat in the search.</summary>
+    private void SetBound(decimal? value, bool notify)
+    {
+        if (IsAtMost)
+        {
+            Row.Max = value;
+        }
+        else
+        {
+            Row.Min = value;
+        }
 
-    private static decimal? Parse(string s) =>
-        decimal.TryParse(s, NumberStyles.Float, CultureInfo.InvariantCulture, out var v) ? v : null;
+        Row.Selected = true;
+        if (notify)
+        {
+            OnPropertyChanged(nameof(Bound));
+        }
+
+        OnPropertyChanged(nameof(BoundLabel));
+        OnPropertyChanged(nameof(IsOn));
+        _changed();
+    }
 }
+
+/// <summary>One roll in "How good are your rolls?": tier, a bar toward the best number, and a note.</summary>
+public sealed class RollRowViewModel
+{
+    public RollRowViewModel(LineReading l, bool advancedCopy)
+    {
+        Text = l.Line.Display;
+        TierText = l.Tier is { } t ? (l.TierCount is { } c ? $"Tier {t} of {c}" : $"Tier {t}") : "";
+        var scored = l.Rolls.Where(r => r.Status == RollStatus.Scored).ToList();
+        var placed = l.Rolls.Where(r => r.Status == RollStatus.PositionOnly).ToList();
+
+        if (scored.Count > 0)
+        {
+            var fill = (double)scored.Average(r => r.Fill!.Value);
+            HasFill = true;
+            FillWidth = Star(fill);
+            RestWidth = Star(1 - fill);
+        }
+        else if (placed.Count > 0)
+        {
+            var pos = (double)placed.Average(r => r.Position!.Value);
+            HasMarker = true;
+            FillWidth = Star(pos);
+            RestWidth = Star(1 - pos);
+        }
+
+        (Note, NoteIsWarning) = NoteFor(l, scored, placed, advancedCopy);
+        if (l.RangeFromSyntheticPack)
+        {
+            Note += " Demo range, not game data.";
+        }
+
+        var explanations = l.Status == LineStatus.Ambiguous
+            ? l.Candidates.Take(4).Select(c => $"Could be: {c.Description}").Concat(l.Candidates.Count > 4 ? [$"…and {l.Candidates.Count - 4} more"] : [])
+            : [];
+        Details = string.Join("\n", new[] { Meta(l) }.Concat(l.Rolls.Select(RollQuality.Describe)).Concat(explanations));
+    }
+
+    public string Text { get; }
+    public string TierText { get; }
+    public bool HasFill { get; }
+    public bool HasMarker { get; }
+    public bool HasBar => HasFill || HasMarker;
+    public GridLength FillWidth { get; } = Star(0);
+    public GridLength RestWidth { get; } = Star(1);
+    public string Note { get; }
+    public bool NoteIsWarning { get; }
+
+    /// <summary>The full reading, for the tooltip: source, affix name, where the range came from, each number,
+    /// and for a line that could be two stats, the explanations that fit.</summary>
+    public string Details { get; }
+
+    private static GridLength Star(double v) => new(Math.Max(v, 0.0001), GridUnitType.Star);
+
+    private static (string, bool) NoteFor(LineReading l, List<RollAssessment> scored, List<RollAssessment> placed, bool advancedCopy)
+    {
+        if (l.Status == LineStatus.Ambiguous)
+        {
+            return (SearchRowViewModel.AmbiguousHint, true);
+        }
+
+        if (l.Rolls.Any(r => r.Status == RollStatus.RangeMismatch))
+        {
+            return ("This number is outside the range we know. The data may be out of date.", true);
+        }
+
+        if (scored.Count > 0)
+        {
+            var best = string.Join(" to ", scored.Select(r => RollQuality.Num(r.Direction == StatDirection.LowerIsBetter ? r.Min : r.Max)));
+            var perfect = scored.All(r => r.DistanceFromBest == 0);
+            if (l.Tier == 1)
+            {
+                return perfect ? ("Best possible roll.", false)
+                    : scored.Count == 1 ? ($"Best possible: {best}. You’re {RollQuality.Num(scored[0].DistanceFromBest)} short.", false)
+                    : ($"Best possible: {best}.", false);
+            }
+
+            return perfect ? ("Best roll in this tier.", false)
+                : (l.Tier is null ? $"Best for this range: {best}." : $"Best in this tier: {best}.", false);
+        }
+
+        if (placed.Count > 0)
+        {
+            var r = placed[0];
+            return ($"Range {RollQuality.Num(r.Min)}–{RollQuality.Num(r.Max)}. Which end is better isn’t checked yet.", false);
+        }
+
+        if (l.Rolls.Count > 0 && l.Rolls.All(r => r.Status == RollStatus.Fixed))
+        {
+            return ("This number can’t change.", false);
+        }
+
+        return advancedCopy ? ("No range known for this line.", false) : ("No range known — a Ctrl+Alt+C copy shows it.", false);
+    }
+
+    private static string Meta(LineReading l)
+    {
+        var source = l.Source switch
+        {
+            ModSource.Explicit when l.Group.Side == AffixSide.Prefix => "Prefix",
+            ModSource.Explicit when l.Group.Side == AffixSide.Suffix => "Suffix",
+            ModSource.Explicit => "Explicit",
+            var s => s.ToString(),
+        };
+        var from = l.Status switch
+        {
+            LineStatus.FromAdvancedCopy => "range from the game",
+            LineStatus.Resolved => l.RangeFromSyntheticPack ? "range from demo data" : "range from data pack",
+            LineStatus.Ambiguous => "more than one explanation",
+            LineStatus.RangeMismatch => "range mismatch",
+            LineStatus.NotInPack => "not in data pack",
+            _ => "no data pack",
+        };
+        return string.Join(" · ", new[] { source, l.AffixName is null ? null : $"\"{l.AffixName}\"", from }.Where(s => s is not null));
+    }
+}
+
+/// <summary>One of the cheapest listings that match the search.</summary>
+public sealed record MatchViewModel(string Price, string Stats, string How, string Age);
+
+public sealed record StrictnessChoice(string Key, string Label, decimal Tolerance);
 
 public sealed class ComparableViewModel(Comparable c, string display, bool seeded, DateTimeOffset now)
 {
@@ -220,57 +261,118 @@ public sealed class ComparableViewModel(Comparable c, string display, bool seede
     public string? Notes => Comparable.Notes;
     public bool Seeded { get; } = seeded;
     public bool Expired => Comparable.ExpiresAt is { } e && e <= now;
-    public string Tags => string.Join(" · ", new[] { Seeded ? "demo seed" : "player-entered", Expired ? "expired" : null, Comparable.ListingLink is null && Comparable.ListingId is null ? "no link" : null }.Where(t => t is not null));
+    public string Tags => string.Join(" · ", new[] { Seeded ? "demo" : "you wrote this", Expired ? "expired" : null, Comparable.ListingLink is null && Comparable.ListingId is null ? "no link" : null, Notes }.Where(t => t is not null));
 }
 
-/// <summary>Everything the inspector shows for one item snapshot.</summary>
+/// <summary>Everything the price check shows for one item snapshot. The Inspect page and the in-game
+/// price check window bind to the same object, so a change in one shows in the other.</summary>
 public sealed partial class ItemViewModel : ObservableObject
 {
+    public static readonly IReadOnlyList<StrictnessChoice> StrictnessChoices =
+    [
+        new("exact", "My exact rolls", 0m),
+        new("10", "10% lower", 0.1m),
+        new("20", "20% lower", 0.2m),
+    ];
+
+    private const string DefaultStrictness = "10";
     private readonly Session _session;
+    private readonly IReadOnlyList<Listing>? _listings;
 
     public ItemViewModel(ItemSnapshot item, Session session)
     {
         Item = item;
         _session = session;
         Reading = ItemReader.Read(item, session.Pack);
-        Rows = Reading.Lines.Select(l => new ModRowViewModel(l)).ToList();
-        Worksheet = WorksheetFactory.Create(Reading);
-        Worksheet.ListingDenomination = session.ListingDenomination;
-        WorksheetRows = new ObservableCollection<WorksheetRowViewModel>(Worksheet.Rows.Select(r => new WorksheetRowViewModel(r, OnWorksheetChanged)));
+        Worksheet = NewWorksheet();
+        SearchRows = new ObservableCollection<SearchRowViewModel>(Worksheet.Rows.Select(r => new SearchRowViewModel(r, ReadingFor(r), OnSearchChanged)));
+        RollRows = Reading.Lines
+            .Where(l => l.Line.Components.Count > 0 && (l.Source is not (ModSource.Implicit or ModSource.Rune or ModSource.Enchant) || l.Rolls.Any(r => r.HasBar)))
+            .Select(l => new RollRowViewModel(l, item.Copy == CopyKind.Advanced))
+            .ToList();
         SetKey = ComparisonSet.KeyFor(item);
+        _listings = ShowsWorksheet ? session.Listings(item, Worksheet) : null;
         RefreshPrice();
-        OnWorksheetChanged();
+        OnSearchChanged();
     }
 
     public ItemSnapshot Item { get; }
     public ItemReading Reading { get; }
-    public IReadOnlyList<ModRowViewModel> Rows { get; }
     public ComparisonWorksheet Worksheet { get; }
-    public ObservableCollection<WorksheetRowViewModel> WorksheetRows { get; }
+    public ObservableCollection<SearchRowViewModel> SearchRows { get; }
+    public IReadOnlyList<RollRowViewModel> RollRows { get; }
     public string SetKey { get; }
+    public bool IsDemo => _session.IsDemo;
 
     public string Title => Item.Name ?? Item.BaseType;
-    public string? BaseLine => Item.Name is null ? null : Item.BaseType;
-    public string Rarity => Item.Rarity.ToString();
-    public string ClassLine => string.Join(" · ", new[]
+    public ItemRarity Rarity => Item.Rarity;
+    public bool IsUnique => Item.Rarity == ItemRarity.Unique;
+    public string UniqueNameRow => $"Name: {Item.Name}";
+
+    /// <summary>"Expert Bombard Crossbow · Item level 82", "Stack of 7".</summary>
+    public string Subtitle => string.Join(" · ", new[]
     {
-        Item.ItemClass,
-        Item.ItemLevel is { } il ? $"Item level {il}" : null,
-        Item.Requirements.Level is { } rl ? $"Requires level {rl}" : null,
-        Item.Quality is { } q ? $"Quality {q}%" : null,
+        Item.Name is null ? null : Item.BaseType,
+        Item.Rarity == ItemRarity.Unique ? "Unique" : null,
+        Item.StackSize is { } s ? $"Stack of {s}" : null,
+        Item.ItemLevel is { } il && Item.Rarity is not ItemRarity.Currency ? $"Item level {il}" : null,
     }.Where(s => s is not null));
 
-    public string CopyLabel => Item.Copy == CopyKind.Advanced ? "Advanced copy: tiers and ranges from the game" : "Normal copy: ranges only where the pack has exactly one explanation";
-    public string StatesLabel => Item.States == ItemStates.None ? "" : Item.States.ToString();
-    public string? PhysicalDps => Reading.PhysicalDps is { } p ? RollQuality.Num(Math.Round(p, 1)) : null;
-    public IEnumerable<KeyValuePair<string, string>> Properties => Item.Properties.Where(p => p.Key is not ("Requires" or "Item Level" or "Quality"));
-    public IReadOnlyList<string> FlavourText => Item.FlavourText;
+    /// <summary>The name in the session list, with the stack size for currency ("Exalted Orb ×7").</summary>
+    public string ListTitle => Item.Rarity == ItemRarity.Currency && Item.StackSize is > 1 ? $"{Title} ×{Item.StackSize}" : Title;
+
+    /// <summary>"Rare crossbow · 13:30".</summary>
+    public string ListSubtitle => $"{Labels.Kind(Item)} · {Item.CapturedAt.ToLocalTime().ToString("HH:mm", CultureInfo.InvariantCulture)}";
+
+    public string CapturedAt => Item.CapturedAt.ToLocalTime().ToString("HH:mm:ss", CultureInfo.InvariantCulture);
     public IReadOnlyList<string> Unparsed => Item.UnparsedLines;
     public bool HasAmbiguity => Reading.HasAmbiguity;
-    public string CapturedAt => Item.CapturedAt.ToLocalTime().ToString("HH:mm:ss", CultureInfo.InvariantCulture);
+    public bool HasRollRows => RollRows.Count > 0;
+
+    /// <summary>"1 empty prefix slot — an Exalted Orb could add a stat." Only when an advanced copy shows
+    /// every affix's side, so the count is known rather than guessed.</summary>
+    public string? OpenSlotsLine
+    {
+        get
+        {
+            var affixes = Item.Mods.Where(g => g.Source is ModSource.Explicit or ModSource.Fractured or ModSource.Desecrated or ModSource.Crafted).ToList();
+            if (Item.Rarity != ItemRarity.Rare || Item.Copy != CopyKind.Advanced || Item.States.HasFlag(ItemStates.Corrupted) || affixes.Any(g => g.Side == AffixSide.None))
+            {
+                return null;
+            }
+
+            var prefixes = 3 - affixes.Count(g => g.Side == AffixSide.Prefix);
+            var suffixes = 3 - affixes.Count(g => g.Side == AffixSide.Suffix);
+            static string Slots(int n, string side) => $"{n} empty {side} slot{(n == 1 ? "" : "s")}";
+            var open = (prefixes > 0, suffixes > 0) switch
+            {
+                (true, true) => $"{Slots(prefixes, "prefix")} and {Slots(suffixes, "suffix")}",
+                (true, false) => Slots(prefixes, "prefix"),
+                (false, true) => Slots(suffixes, "suffix"),
+                _ => null,
+            };
+            return open is null ? "No empty slots: all six stats are taken." : $"{open} — an Exalted Orb could add a stat.";
+        }
+    }
+
+    public bool ShowsComparables => Item.Rarity is ItemRarity.Rare or ItemRarity.Magic or ItemRarity.Normal;
+
+    public bool ShowsWorksheet => Item.Rarity is not (ItemRarity.Currency or ItemRarity.Gem);
+
+    /// <summary>Whether this profile has listings to search (the demo does; a live profile not yet).</summary>
+    public bool HasListings => _listings is not null;
 
     [ObservableProperty]
     public partial PriceLine? Price { get; set; }
+
+    [ObservableProperty]
+    public partial PriceAnswer Answer { get; set; } = PriceAnswer.NoPrice(noMarketData: true);
+
+    [ObservableProperty]
+    public partial IReadOnlyList<MatchViewModel> Matches { get; set; } = [];
+
+    [ObservableProperty]
+    public partial bool NoMatches { get; set; }
 
     [ObservableProperty]
     public partial IReadOnlyList<ComparableViewModel> Comparables { get; set; } = [];
@@ -279,36 +381,49 @@ public sealed partial class ItemViewModel : ObservableObject
     public partial IReadOnlyList<string> PriceWarnings { get; set; } = [];
 
     [ObservableProperty]
-    public partial IReadOnlyList<string> WorksheetWarnings { get; set; } = [];
-
-    [ObservableProperty]
-    public partial IReadOnlyList<RelaxationSuggestion> Relaxations { get; set; } = [];
-
-    [ObservableProperty]
-    public partial IReadOnlyList<string> MarketControls { get; set; } = [];
-
-    [ObservableProperty]
     public partial string Instructions { get; set; } = "";
 
-    public bool ShowsComparables => Item.Rarity is ItemRarity.Rare or ItemRarity.Magic or ItemRarity.Normal;
+    [ObservableProperty]
+    public partial string Strictness { get; set; } = DefaultStrictness;
 
-    public bool ShowsWorksheet => Item.Rarity is not (ItemRarity.Currency or ItemRarity.Gem);
+    [ObservableProperty]
+    public partial int OnCount { get; set; }
 
-    public bool HasRows => Rows.Count > 0;
+    /// <summary>Feedback after "Copy search", shown under the buttons.</summary>
+    [ObservableProperty]
+    public partial string? SearchStatus { get; set; }
 
-    /// <summary>Up to four rows for the HUD: worksheet preset stats first, then rows with bars.</summary>
-    public IReadOnlyList<ModRowViewModel> PeekRows
+    public int TotalCount => SearchRows.Count + (IsUnique ? 1 : 0);
+
+    public bool BuyNowOnly
     {
-        get
+        get => Worksheet.BuyNowOnly;
+        set
         {
-            var preset = WorksheetFactory.PresetFor(Item.ItemClass);
-            var explicitRows = Rows.Where(r => r.Source is not (ModSource.Implicit or ModSource.Rune or ModSource.Enchant) && r.Reading.Line.Components.Count > 0).ToList();
-            var pool = explicitRows.Count > 0 ? explicitRows : Rows.Where(r => r.Reading.Line.Components.Count > 0).ToList();
-            return pool
-                .OrderByDescending(r => preset.Contains(r.Template))
-                .ThenByDescending(r => r.HasBars)
-                .Take(4)
-                .ToList();
+            if (Worksheet.BuyNowOnly != value)
+            {
+                Worksheet.BuyNowOnly = value;
+                OnPropertyChanged();
+                OnSearchChanged();
+            }
+        }
+    }
+
+    public bool HasItemLevel => Worksheet.SuggestedItemLevel is not null;
+
+    public string ItemLevelLabel => $"Item level {Worksheet.SuggestedItemLevel} or higher";
+
+    public bool UseItemLevel
+    {
+        get => Worksheet.MinItemLevel is not null;
+        set
+        {
+            if (UseItemLevel != value)
+            {
+                Worksheet.MinItemLevel = value ? Worksheet.SuggestedItemLevel : null;
+                OnPropertyChanged();
+                OnSearchChanged();
+            }
         }
     }
 
@@ -328,25 +443,198 @@ public sealed partial class ItemViewModel : ObservableObject
             })
             .OrderBy(c => c.Comparable.InspectedAt)
             .ToList();
+        UpdateAnswer();
     }
 
-    public void OnWorksheetChanged()
+    private void OnSearchChanged()
     {
-        WorksheetWarnings = Worksheet.Warnings().ToList();
-        Relaxations = Worksheet.SuggestRelaxations();
-        MarketControls = Worksheet.MarketControls().ToList();
+        OnCount = SearchRows.Count(r => r.IsOn) + (IsUnique ? 1 : 0);
         Instructions = Worksheet.ToManualInstructions(_session.League);
+        SearchStatus = null;
+        UpdateAnswer();
     }
 
-    public void ApplyRelaxation(RelaxationSuggestion s)
+    private void UpdateAnswer()
     {
-        s.Apply(Worksheet);
-        foreach (var r in WorksheetRows)
+        if (Price is null)
+        {
+            return;
+        }
+
+        var price = new PriceText(_session.Converter, _session.DisplayCurrency, _session.Now);
+        Matches = [];
+        NoMatches = false;
+
+        if (Item.Rarity == ItemRarity.Rare && Item.States.HasFlag(ItemStates.Unidentified))
+        {
+            Answer = PriceAnswer.Unidentified();
+        }
+        else if (ShowsWorksheet && _listings is not null)
+        {
+            var result = MarketSearch.Run(Worksheet, _listings, _session.Converter, _session.DisplayCurrency, _session.Now);
+            Answer = PriceAnswer.FromSearch(result, price, IsUnique);
+            Matches = result.Matches.Take(5).Select(m => ToMatch(m, price)).ToList();
+            NoMatches = result.Count == 0;
+        }
+        else if (Price.Evidence is { } evidence && PriceAnswer.FromWrittenDown(evidence, price) is { } written)
+        {
+            Answer = written;
+        }
+        else if (Price.Kind == PriceKind.Commodity || Item.Rarity == ItemRarity.Currency)
+        {
+            Answer = PriceAnswer.Stack(Item, ItemPricer.Identify(Item, _session.Book), Price, _session.Converter, price, _session.Now);
+        }
+        else if (Price.Kind == PriceKind.UniqueBaseline)
+        {
+            Answer = PriceAnswer.Baseline(Price);
+        }
+        else
+        {
+            Answer = PriceAnswer.NoPrice(_session.Book.Quotes.Count == 0, ShowsWorksheet, ShowsComparables);
+        }
+    }
+
+    private MatchViewModel ToMatch(PricedListing m, PriceText price)
+    {
+        var shown = SearchRows.Where(r => r.IsOn).Take(3)
+            .Select(r => m.Listing.Stats.TryGetValue(r.Row.Id, out var v) ? $"{r.ShortLabel} {RollQuality.Num(v)}" : null)
+            .Where(s => s is not null)
+            .ToList();
+        var stats = shown.Count > 0 ? string.Join(" · ", shown) : IsUnique ? Title : $"Any {Labels.Singular(Item.ItemClass)}";
+        return new MatchViewModel(price.One(m.Value), stats, m.Listing.BuyNow ? "Buy now" : "Message seller", ValueFormat.Age(_session.Now - m.Listing.ListedAt));
+    }
+
+    [RelayCommand]
+    private void SetStrictness(string key)
+    {
+        if (StrictnessChoices.FirstOrDefault(c => c.Key == key) is not { } choice)
+        {
+            return;
+        }
+
+        Strictness = key;
+        Worksheet.SetStartingBounds(choice.Tolerance);
+        foreach (var r in SearchRows)
         {
             r.Refresh();
         }
 
-        OnPropertyChanged(nameof(Worksheet));
-        OnWorksheetChanged();
+        OnSearchChanged();
     }
+
+    /// <summary>Back to the search the app started with for this item.</summary>
+    [RelayCommand]
+    private void Reset()
+    {
+        Worksheet.CopySearchFrom(NewWorksheet());
+        Strictness = DefaultStrictness;
+        foreach (var r in SearchRows)
+        {
+            r.Refresh();
+        }
+
+        OnPropertyChanged(nameof(BuyNowOnly));
+        OnPropertyChanged(nameof(UseItemLevel));
+        OnSearchChanged();
+    }
+
+    /// <summary>Opens the official trade site in the browser. No result-link format is documented, so
+    /// the site opens as-is and the copied search lists the filters to set.</summary>
+    [RelayCommand]
+    private void OpenTrade() =>
+        Process.Start(new ProcessStartInfo(TradeHandoff.OfficialTradeUrl) { UseShellExecute = true });
+
+    [RelayCommand]
+    private void CopySearch()
+    {
+        try
+        {
+            Clipboard.SetText(Instructions);
+            SearchStatus = "Search copied. Set the same filters on the trade site.";
+        }
+        catch (ExternalException)
+        {
+            SearchStatus = "The clipboard is busy. Try again.";
+        }
+    }
+
+    private ComparisonWorksheet NewWorksheet()
+    {
+        var w = WorksheetFactory.Create(Reading);
+        w.ListingDenomination = _session.ListingDenomination;
+        return w;
+    }
+
+    private LineReading? ReadingFor(WorksheetRow row) =>
+        Reading.Lines.FirstOrDefault(l => l.Line.Template == row.Template && Labels.KindOf(l.Source) == row.Kind);
+}
+
+/// <summary>Short words for lists: stat names in the cheapest-matches list, item kinds in the session list.</summary>
+public static class Labels
+{
+    private static readonly Dictionary<string, string> ShortStats = new(StringComparer.Ordinal)
+    {
+        [ComparisonWorksheet.PhysicalDpsId] = "Phys DPS",
+        [ComparisonWorksheet.LocalPhysPercent] = "% Phys",
+        [ComparisonWorksheet.LocalFlatPhys] = "Added phys",
+        [ComparisonWorksheet.LocalAttackSpeed] = "Attack speed",
+        ["#% increased Critical Hit Chance"] = "Crit",
+        ["# to Accuracy Rating"] = "Accuracy",
+        ["#% to Fire Resistance"] = "Fire res",
+        ["#% to Cold Resistance"] = "Cold res",
+        ["#% to Lightning Resistance"] = "Lightning res",
+        ["#% to Chaos Resistance"] = "Chaos res",
+        ["#% increased Movement Speed"] = "Move speed",
+        ["# to maximum Life"] = "Life",
+        ["# to maximum Mana"] = "Mana",
+        ["# to Strength"] = "Str",
+        ["# to Dexterity"] = "Dex",
+        ["# to Intelligence"] = "Int",
+    };
+
+    public static string Short(WorksheetRow row)
+    {
+        if (ShortStats.TryGetValue(row.Id, out var s) || ShortStats.TryGetValue(row.Template, out s))
+        {
+            return s;
+        }
+
+        var plain = row.Template.Replace("#", "").Replace("%", "").Replace("+", "").Replace(" increased ", " ").Trim();
+        plain = plain.StartsWith("to ", StringComparison.Ordinal) ? plain[3..] : plain;
+        return plain.Length > 18 ? plain[..17].TrimEnd() + "…" : plain;
+    }
+
+    /// <summary>"Rare crossbow", "Unique ring", "Currency".</summary>
+    public static string Kind(ItemSnapshot item) => item.Rarity switch
+    {
+        ItemRarity.Currency => "Currency",
+        ItemRarity.Gem => "Gem",
+        ItemRarity.Unknown or ItemRarity.Other => Capitalize(Singular(item.ItemClass)),
+        var r => $"{r} {Singular(item.ItemClass)}",
+    };
+
+    private static string Capitalize(string s) => s.Length == 0 ? s : char.ToUpperInvariant(s[0]) + s[1..];
+
+    /// <summary>"Crossbows" → "crossbow", "Quarterstaves" → "quarterstaff"; boots and gloves stay plural.</summary>
+    public static string Singular(string itemClass)
+    {
+        var c = itemClass.Trim().ToLowerInvariant();
+        return c switch
+        {
+            "" => "item",
+            "boots" or "gloves" => c,
+            _ when c.EndsWith("staves", StringComparison.Ordinal) => c[..^6] + "staff",
+            _ when c.EndsWith('s') => c[..^1],
+            _ => c,
+        };
+    }
+
+    public static RowKind KindOf(ModSource source) => source switch
+    {
+        ModSource.Implicit => RowKind.Implicit,
+        ModSource.Rune => RowKind.Rune,
+        ModSource.Enchant => RowKind.Enchant,
+        ModSource.Explicit or ModSource.Fractured or ModSource.Desecrated or ModSource.Crafted or ModSource.Unique => RowKind.Explicit,
+        _ => RowKind.Other,
+    };
 }

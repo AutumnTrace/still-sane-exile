@@ -33,7 +33,7 @@ public sealed partial class ShellViewModel : ObservableObject
     public string VersionLabel => $"v{Updates.CurrentVersion}";
 
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(IsDemo), nameof(League), nameof(DisplayCurrency), nameof(ProfileBadge), nameof(PackStatus), nameof(PriceStatus))]
+    [NotifyPropertyChangedFor(nameof(IsDemo), nameof(League), nameof(LeagueLabel), nameof(DisplayCurrency), nameof(CurrencyWord), nameof(PackStatus), nameof(PriceStatus), nameof(FooterStatus), nameof(FooterDetail))]
     public partial Session Session { get; private set; }
 
     public InspectViewModel Inspect { get; }
@@ -59,7 +59,7 @@ public sealed partial class ShellViewModel : ObservableObject
 
     public string PageName => CurrentPage switch
     {
-        InspectViewModel => "Inspect",
+        InspectViewModel => "Price check",
         PlaceholderViewModel p => p.Title,
         SettingsViewModel => "Settings",
         _ => "",
@@ -68,17 +68,31 @@ public sealed partial class ShellViewModel : ObservableObject
     public bool CanGoBack => _back.Count > 0;
     public bool IsDemo => Session.IsDemo;
     public string League => Session.League;
+
+    /// <summary>The league as the header shows it: "Demo", or the live league's name.</summary>
+    public string LeagueLabel => Session.IsDemo ? "Demo" : Session.League;
+
     public string DisplayCurrency => Currencies.Long(Session.DisplayCurrency);
-    public string ProfileBadge => Session.IsDemo ? "DEMO · synthetic data" : "LIVE";
+    public string CurrencyWord => Currencies.Word(Session.DisplayCurrency);
     public string PackStatus => Session.PackStatus;
     public string PriceStatus => Session.PriceStatus;
+    public string FooterStatus => Session.FooterStatus;
+    public string FooterDetail => $"{PackStatus} · {PriceStatus}";
     public IReadOnlyList<string> CurrencyChoices => Currencies.Display;
 
     [ObservableProperty]
     public partial bool CurrencyMenuOpen { get; set; }
 
+    /// <summary>Always 0: the app never sends input to the game. Shown so the promise is visible.</summary>
     [ObservableProperty]
-    public partial string Diagnostics { get; set; } = "";
+    public partial int KeysSent { get; set; }
+
+    [ObservableProperty]
+    public partial int ItemsRead { get; set; }
+
+    /// <summary>Every capture counter, for the status bar's tooltip.</summary>
+    [ObservableProperty]
+    public partial string Diagnostics { get; set; } = "Reads 0 · game inputs sent 0 · market requests 0";
 
     public void Navigate(object page)
     {
@@ -93,7 +107,7 @@ public sealed partial class ShellViewModel : ObservableObject
 
     public void OpenCraftWith(ItemViewModel? item)
     {
-        Craft.Context = item is null ? null : $"Item handed over from Inspect: {item.Item.DisplayName} (snapshot {item.CapturedAt}). Crafting plans will start from this exact snapshot.";
+        Craft.Context = item is null ? null : $"Item handed over from the price check: {item.Item.DisplayName} (snapshot {item.CapturedAt}). Crafting plans will start from this exact snapshot.";
         Navigate(Craft);
     }
 

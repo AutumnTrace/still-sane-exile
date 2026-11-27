@@ -1,16 +1,11 @@
 using System.Collections.ObjectModel;
-using System.Diagnostics;
 using System.Globalization;
 using System.IO;
-using System.Runtime.InteropServices;
-using System.Windows;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using StillSaneExile.Desktop.Infrastructure;
-using StillSaneExile.Desktop.Services;
 using StillSaneExile.Domain.Items;
 using StillSaneExile.Domain.Pricing;
-using StillSaneExile.Domain.Trade;
 
 namespace StillSaneExile.Desktop.ViewModels;
 
@@ -68,6 +63,10 @@ public sealed partial class InspectViewModel : ObservableObject
 
     [ObservableProperty]
     public partial string NewNotes { get; set; } = "";
+
+    /// <summary>"Write down a price" opens the form under the list.</summary>
+    [ObservableProperty]
+    public partial bool ShowAddForm { get; set; }
 
     /// <summary>Parses item text into a snapshot and adds it to the in-memory recent list. Text that is
     /// not an item is discarded immediately and never stored.</summary>
@@ -135,50 +134,10 @@ public sealed partial class InspectViewModel : ObservableObject
     }
 
     [RelayCommand]
-    private void OpenTrade()
-    {
-        Process.Start(new ProcessStartInfo(TradeHandoff.OfficialTradeUrl) { UseShellExecute = true });
-    }
-
-    [RelayCommand]
-    private void CopyInstructions()
-    {
-        if (Selected is null)
-        {
-            return;
-        }
-
-        try
-        {
-            Clipboard.SetText(Selected.Instructions);
-            Message = "Worksheet copied. Set the same filters on the trade site.";
-        }
-        catch (ExternalException)
-        {
-            Message = "The clipboard is busy. Try again.";
-        }
-    }
-
-    [RelayCommand]
-    private void OpenCraft() => _shell.OpenCraftWith(Selected);
-
-    [RelayCommand]
     private void SetNewCurrency(string currency) => NewCurrency = currency;
 
     [RelayCommand]
-    private void CycleMatch(WorksheetRowViewModel? row) => row?.CycleMatch();
-
-    [RelayCommand]
-    private void ToggleGroup(WorksheetRowViewModel? row) => row?.ToggleGroup();
-
-    [RelayCommand]
-    private void ApplyRelaxation(RelaxationSuggestion? s)
-    {
-        if (s is not null)
-        {
-            Selected?.ApplyRelaxation(s);
-        }
-    }
+    private void ToggleAddForm() => ShowAddForm = !ShowAddForm;
 
     [RelayCommand]
     private void AddComparable()
@@ -190,7 +149,7 @@ public sealed partial class InspectViewModel : ObservableObject
 
         if (!decimal.TryParse(NewAmount, NumberStyles.Float, CultureInfo.InvariantCulture, out var amount) || amount <= 0)
         {
-            Message = "Enter the listing's asking price as a positive number, e.g. 2.5.";
+            Message = "Type the asking price as a positive number, e.g. 2.5.";
             return;
         }
 
@@ -213,6 +172,7 @@ public sealed partial class InspectViewModel : ObservableObject
         _shell.Store.AddComparable(session.ProfileId, Selected.SetKey, Selected.Item.RawText, comparable, now);
         NewAmount = NewSeller = NewLink = NewNotes = "";
         Selected.RefreshPrice();
+        ShowAddForm = false;
         Message = null;
     }
 

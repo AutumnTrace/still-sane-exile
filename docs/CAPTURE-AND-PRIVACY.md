@@ -9,6 +9,7 @@
 | Clipboard change counter | `GetClipboardSequenceNumber` | Wait until the game's own copy has landed | Read content (it is a counter) |
 | Clipboard read | `Clipboard.GetText`, once per qualifying press | Get the item text the game just copied | Read again on auto-repeat or release; read when the game copied nothing |
 | HUD card | Topmost, layered, click-through, no-activate window | Show the result over the game | Take focus or intercept clicks |
+| Price check window (`F3`) | Topmost window that takes focus while open; `SetForegroundWindow` hands focus back to the game when it closes | Tick stats and type numbers over the game | Send input to the game; stay open once you press `Esc`, press `F3` again or click back into the game |
 
 ## What is stored
 
@@ -18,8 +19,8 @@
 
 ## Network
 
-The only request SSE makes itself is the update check: an anonymous call to GitHub's releases API for this repository at start and every 6 hours, plus the package download when there is a new version. It sends nothing about you or your game, and Settings → "Check for updates automatically" turns it off. "Open official trade site" asks Windows to open your default browser. The Milestone 2 economy cache will fetch public market data only; screen pixels, clipboard text, stash contents and build notes stay local by default.
+The only request SSE makes itself is the update check: an anonymous call to GitHub's releases API for this repository at start and every 6 hours, plus the package download when there is a new version. It sends nothing about you or your game, and Settings → "Check for updates automatically" turns it off. "Open this search on the trade site" asks Windows to open your default browser on the official trade site; "Copy search" puts the filters on the clipboard as text. The Milestone 2 economy cache will fetch public market data only; screen pixels, clipboard text, stash contents and build notes stay local by default.
 
 ## Demo isolation
 
-The demo profile reads `fixtures/` only, uses a fixed demo clock (so ages are the same on every run), and is labelled DEMO in the header and on the HUD card. `PriceBookGuard` refuses a synthetic price book in a live profile and any price book from another league.
+The demo profile reads `fixtures/` only, uses a fixed demo clock (so ages are the same on every run), and is labelled DEMO in the header, the price check and the HUD card. Its listings are synthetic: made up around each item from a fixed seed, so the same item gets the same listings on every run. A live profile has no listings until live prices arrive. `PriceBookGuard` refuses a synthetic price book in a live profile and any price book from another league.

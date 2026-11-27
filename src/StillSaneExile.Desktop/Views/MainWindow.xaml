@@ -8,34 +8,44 @@
         d:DataContext="{d:DesignInstance Type=vm:ShellViewModel}"
         Title="Still Sane, Exile?"
         Icon="pack://application:,,,/Assets/sse.ico"
-        Width="1440" Height="900" MinWidth="1100" MinHeight="640"
+        Width="1440" Height="1000" MinWidth="1260" MinHeight="640"
         Background="{StaticResource Surface}"
         Foreground="{StaticResource Text}"
         FontFamily="Segoe UI" FontSize="14"
+        Typography.NumeralAlignment="Tabular"
         UseLayoutRounding="True"
         TextOptions.TextFormattingMode="Display">
   <DockPanel>
-    <!-- Header: destinations, and league + display currency always visible. -->
-    <Border DockPanel.Dock="Top" Background="{StaticResource Surface2}" BorderBrush="{StaticResource Line}" BorderThickness="0,0,0,1" Padding="12,8">
+    <!-- Header: destinations, then the demo badge, league and display currency always in view. -->
+    <Border DockPanel.Dock="Top" Background="{StaticResource Surface2}" BorderBrush="{StaticResource Line}" BorderThickness="0,0,0,1" Padding="20,10">
       <DockPanel LastChildFill="False">
-        <Button DockPanel.Dock="Left" Style="{StaticResource LinkButton}" Content="‹ Back" Command="{Binding BackCommand}" IsEnabled="{Binding CanGoBack}" Margin="0,0,8,0" ToolTip="Back keeps your selection, scroll and filters" />
-        <TextBlock DockPanel.Dock="Left" Text="Still Sane, Exile?" FontSize="16" FontWeight="SemiBold" VerticalAlignment="Center" Margin="0,0,20,0" />
-        <Button DockPanel.Dock="Left" Style="{StaticResource TabButton}" Content="Inspect" Command="{Binding GoInspectCommand}" Tag="{Binding PageName, Converter={StaticResource Active}, ConverterParameter=Inspect}" Margin="0,0,4,0" />
-        <Button DockPanel.Dock="Left" Style="{StaticResource TabButton}" Content="Craft" Command="{Binding GoCraftCommand}" Tag="{Binding PageName, Converter={StaticResource Active}, ConverterParameter=Craft}" Margin="0,0,4,0" />
-        <Button DockPanel.Dock="Left" Style="{StaticResource TabButton}" Content="Wealth" Command="{Binding GoWealthCommand}" Tag="{Binding PageName, Converter={StaticResource Active}, ConverterParameter=Wealth}" Margin="0,0,4,0" />
-        <Button DockPanel.Dock="Left" Style="{StaticResource TabButton}" Content="Guide" Command="{Binding GoGuideCommand}" Tag="{Binding PageName, Converter={StaticResource Active}, ConverterParameter=Guide}" Margin="0,0,4,0" />
+        <Button DockPanel.Dock="Left" Style="{StaticResource TextButton}" Content="‹ Back" FontSize="13" Command="{Binding BackCommand}" Margin="0,0,14,0"
+                Visibility="{Binding CanGoBack, Converter={StaticResource Vis}}" ToolTip="Back keeps your selection and your search" />
+        <TextBlock DockPanel.Dock="Left" Text="Still Sane, Exile?" FontSize="16" FontWeight="ExtraBold" VerticalAlignment="Center" Margin="0,0,20,0" />
+        <StackPanel DockPanel.Dock="Left" Orientation="Horizontal">
+          <Button Style="{StaticResource TabButton}" Content="Price check" Command="{Binding GoInspectCommand}" Tag="{Binding PageName, Converter={StaticResource Active}, ConverterParameter='Price check'}" Margin="0,0,2,0" />
+          <Button Style="{StaticResource TabButton}" Command="{Binding GoCraftCommand}" Tag="{Binding PageName, Converter={StaticResource Active}, ConverterParameter=Crafting}" Margin="0,0,2,0">
+            <TextBlock><Run Text="Crafting" /><Run Text=" later" FontSize="11" Foreground="{StaticResource TextFaint}" FontWeight="Normal" /></TextBlock>
+          </Button>
+          <Button Style="{StaticResource TabButton}" Command="{Binding GoWealthCommand}" Tag="{Binding PageName, Converter={StaticResource Active}, ConverterParameter='My wealth'}" Margin="0,0,2,0">
+            <TextBlock><Run Text="My wealth" /><Run Text=" later" FontSize="11" Foreground="{StaticResource TextFaint}" FontWeight="Normal" /></TextBlock>
+          </Button>
+          <Button Style="{StaticResource TabButton}" Command="{Binding GoGuideCommand}" Tag="{Binding PageName, Converter={StaticResource Active}, ConverterParameter='Campaign guide'}">
+            <TextBlock><Run Text="Campaign guide" /><Run Text=" later" FontSize="11" Foreground="{StaticResource TextFaint}" FontWeight="Normal" /></TextBlock>
+          </Button>
+        </StackPanel>
 
-        <Button DockPanel.Dock="Right" Style="{StaticResource TabButton}" Content="Settings" Command="{Binding GoSettingsCommand}" Tag="{Binding PageName, Converter={StaticResource Active}, ConverterParameter=Settings}" Margin="8,0,0,0" />
+        <Button DockPanel.Dock="Right" Content="Settings" Command="{Binding GoSettingsCommand}" Tag="{Binding PageName, Converter={StaticResource Active}, ConverterParameter=Settings}" Margin="8,0,0,0" />
         <Grid DockPanel.Dock="Right" Margin="8,0,0,0">
-          <Button x:Name="CurrencyButton" Command="{Binding ToggleCurrencyMenuCommand}" ToolTip="Display currency: click to change">
-            <TextBlock><Run Text="Show in " Foreground="{StaticResource TextDim}" /><Run Text="{Binding DisplayCurrency, Mode=OneWay}" /></TextBlock>
+          <Button x:Name="CurrencyButton" Command="{Binding ToggleCurrencyMenuCommand}" ToolTip="Click to change the currency prices are shown in">
+            <TextBlock><Run Text="Show prices in: " Foreground="{StaticResource TextFaint}" /><Run Text="{Binding CurrencyWord, Mode=OneWay}" /></TextBlock>
           </Button>
           <Popup IsOpen="{Binding CurrencyMenuOpen}" PlacementTarget="{Binding ElementName=CurrencyButton}" Placement="Bottom" StaysOpen="False" AllowsTransparency="True">
-            <Border Background="{StaticResource Surface2}" BorderBrush="{StaticResource Line}" BorderThickness="1" CornerRadius="4" Padding="6" Margin="0,4,0,0">
+            <Border Background="{StaticResource Surface3}" BorderBrush="{StaticResource Edge}" BorderThickness="1" CornerRadius="8" Padding="6" Margin="0,4,0,0" MinWidth="160">
               <ItemsControl ItemsSource="{Binding CurrencyChoices}">
                 <ItemsControl.ItemTemplate>
                   <DataTemplate>
-                    <Button Style="{StaticResource LinkButton}" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left"
+                    <Button Style="{StaticResource TabButton}" FontSize="13" MinHeight="34" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left"
                             Content="{Binding Converter={StaticResource CurrencyName}}"
                             Command="{Binding DataContext.SetCurrencyCommand, RelativeSource={RelativeSource AncestorType=Window}}"
                             CommandParameter="{Binding}" />
@@ -45,29 +55,28 @@
             </Border>
           </Popup>
         </Grid>
-        <Button DockPanel.Dock="Right" Command="{Binding OpenLeagueSettingCommand}" ToolTip="League: click to change" Margin="8,0,0,0">
-          <TextBlock><Run Text="League " Foreground="{StaticResource TextDim}" /><Run Text="{Binding League, Mode=OneWay}" /></TextBlock>
+        <Button DockPanel.Dock="Right" Command="{Binding OpenLeagueSettingCommand}" ToolTip="Click to change the league" Margin="8,0,0,0">
+          <TextBlock><Run Text="League: " Foreground="{StaticResource TextFaint}" /><Run Text="{Binding LeagueLabel, Mode=OneWay}" /></TextBlock>
         </Button>
-        <Button DockPanel.Dock="Right" Style="{StaticResource AccentButton}" Margin="8,0,0,0" Padding="10,4"
+        <Border DockPanel.Dock="Right" Style="{StaticResource DemoBadge}" Visibility="{Binding IsDemo, Converter={StaticResource Vis}}">
+          <TextBlock Text="DEMO PRICES" FontSize="11" FontWeight="Bold" />
+        </Border>
+        <Button DockPanel.Dock="Right" Margin="0,0,8,0" Padding="12,0"
                 Command="{Binding RestartToUpdateCommand}" Visibility="{Binding Updates.IsReady, Converter={StaticResource Vis}}"
-                ToolTip="The update is downloaded. It also installs by itself when you close SSE.">
+                ToolTip="The update is downloaded. It also installs by itself when you close the app.">
           <TextBlock><Run Text="Update " /><Run Text="{Binding Updates.ReadyVersion, Mode=OneWay}" /><Run Text=" ready · Restart" /></TextBlock>
         </Button>
-        <Border DockPanel.Dock="Right" CornerRadius="3" Padding="8,3" VerticalAlignment="Center" BorderThickness="1"
-                BorderBrush="{StaticResource Warn}" Visibility="{Binding IsDemo, Converter={StaticResource Vis}}" ToolTip="Demo profile: every price, range and listing here is synthetic test data.">
-          <TextBlock Text="{Binding ProfileBadge}" Foreground="{StaticResource Warn}" FontWeight="SemiBold" FontSize="12" />
-        </Border>
       </DockPanel>
     </Border>
 
-    <!-- Status: data sources and the one-read instrumentation. -->
-    <Border DockPanel.Dock="Bottom" Background="{StaticResource Surface2}" BorderBrush="{StaticResource Line}" BorderThickness="0,1,0,0" Padding="12,5">
+    <!-- Status: where prices come from, and the promise that nothing is sent to the game. -->
+    <Border DockPanel.Dock="Bottom" Background="{StaticResource Surface2}" BorderBrush="{StaticResource Line}" BorderThickness="0,1,0,0" Padding="20,8">
       <DockPanel>
-        <TextBlock DockPanel.Dock="Right" Text="{Binding VersionLabel}" FontSize="11" Foreground="{StaticResource TextFaint}" Margin="12,0,0,0" />
-        <TextBlock DockPanel.Dock="Right" Text="{Binding Diagnostics}" FontSize="11" Foreground="{StaticResource TextFaint}" />
-        <TextBlock FontSize="11" Foreground="{StaticResource TextFaint}" TextTrimming="CharacterEllipsis">
-          <Run Text="{Binding PackStatus, Mode=OneWay}" /><Run Text="  ·  " /><Run Text="{Binding PriceStatus, Mode=OneWay}" />
+        <TextBlock DockPanel.Dock="Right" Text="{Binding VersionLabel}" FontSize="12" Foreground="{StaticResource TextFaint}" Margin="18,0,0,0" />
+        <TextBlock DockPanel.Dock="Right" FontSize="12" Foreground="{StaticResource TextFaint}" ToolTip="{Binding Diagnostics}">
+          <Run Text="Keys sent to the game: " /><Run Text="{Binding KeysSent, Mode=OneWay}" Foreground="{StaticResource Text}" FontWeight="Bold" /><Run Text=" · Items read: " /><Run Text="{Binding ItemsRead, Mode=OneWay}" Foreground="{StaticResource Text}" FontWeight="Bold" />
         </TextBlock>
+        <TextBlock Text="{Binding FooterStatus}" FontSize="12" Foreground="{StaticResource TextFaint}" TextTrimming="CharacterEllipsis" ToolTip="{Binding FooterDetail}" />
       </DockPanel>
     </Border>
 

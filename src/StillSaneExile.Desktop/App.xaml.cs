@@ -12,6 +12,7 @@ public partial class App : Application
 {
     private HudController? _hud;
     private PeekWindow? _peek;
+    private PriceCheckWindow? _priceCheck;
     private AppPaths? _paths;
     private UpdateService? _updates;
 
@@ -44,7 +45,8 @@ public partial class App : Application
         }
 
         _peek = new PeekWindow();
-        _hud = new HudController(shell, new KeyboardObserver(), new ForegroundWatcher(), clipboard, _peek, main);
+        _priceCheck = new PriceCheckWindow();
+        _hud = new HudController(shell, new KeyboardObserver(), new ForegroundWatcher(), clipboard, _peek, _priceCheck, main);
         shell.Hud = _hud;
 
         main.Closed += (_, _) => Shutdown();
@@ -58,6 +60,7 @@ public partial class App : Application
     {
         _hud?.Dispose();
         _peek?.Close();
+        _priceCheck?.Close();
         _updates?.ApplyOnExit();
         base.OnExit(e);
     }
@@ -76,6 +79,7 @@ public partial class App : Application
         }
 
         _peek?.HideCard();
+        _priceCheck?.HideWindow();
         MessageBox.Show(e.Exception.Message, "Still Sane, Exile?", MessageBoxButton.OK, MessageBoxImage.Warning);
         e.Handled = true;
     }
