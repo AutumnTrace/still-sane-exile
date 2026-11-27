@@ -92,6 +92,27 @@ public class CaptureGateTests
     }
 
     [Fact]
+    public void Shot_mode_reads_on_every_fresh_press_and_letting_go_keeps_the_shot()
+    {
+        var gate = new CaptureGate();
+        gate.Configure(Peek, HoldMode.Shot);
+
+        var first = gate.KeyDown(Peek, false, true);
+        Assert.Equal(GateAction.Ignore, gate.KeyUp(Peek, false).Action);
+        Assert.True(gate.TryAccept(Peek, first.Generation));
+
+        // Unlike toggle mode, the next press takes another picture instead of dismissing the first.
+        var second = gate.KeyDown(Peek, false, true);
+        Assert.Equal(GateAction.Read, second.Action);
+        gate.KeyUp(Peek, false);
+        Assert.False(gate.TryAccept(Peek, first.Generation));
+        Assert.True(gate.TryAccept(Peek, second.Generation));
+        Assert.False(gate.Pin(Peek));
+        Assert.Equal(2, gate.Counters.Reads);
+        Assert.Equal(0, gate.Counters.Hides);
+    }
+
+    [Fact]
     public void A_newer_press_supersedes_an_older_pending_result()
     {
         var gate = new CaptureGate();
