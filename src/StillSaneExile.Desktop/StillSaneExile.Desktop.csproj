@@ -8,6 +8,9 @@
     <RootNamespace>StillSaneExile.Desktop</RootNamespace>
     <ApplicationManifest>app.manifest</ApplicationManifest>
     <ApplicationIcon>Assets\sse.ico</ApplicationIcon>
+    <!-- The stash picture collector calls Direct3D 11 and Windows.Graphics.Capture through COM vtables
+         (Infrastructure\CaptureInterop.cs) instead of the 25 MB WinRT projection. -->
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <!-- Program.Main runs Velopack's install/update hooks before WPF starts. -->
     <StartupObject>StillSaneExile.Desktop.Program</StartupObject>
     <Title>Still Sane, Exile?</Title>

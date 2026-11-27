@@ -113,10 +113,13 @@ public sealed class HudController : IDisposable
         Invalidate("display settings changed");
     }
 
-    /// <summary>Side buttons are observed only while one is bound to something active, or while the
-    /// Settings page is open so the key tester can show them. Otherwise no mouse hook runs at all.</summary>
+    /// <summary>Side buttons are observed only while one is bound to something active (the stash key
+    /// counts while stash pictures are being collected: <see cref="StashCollector"/> reads the same
+    /// events), or while the Settings page is open so the key tester can show them. Otherwise no mouse
+    /// hook runs at all.</summary>
     private void UpdateMouseButtons() =>
-        _keys.ObserveMouseButtons = _peekKey.IsMouseButton || _openLastKey.IsMouseButton || _shell.CurrentPage is SettingsViewModel;
+        _keys.ObserveMouseButtons = _peekKey.IsMouseButton || _openLastKey.IsMouseButton || _shell.CurrentPage is SettingsViewModel
+            || (_shell.StashPictures is { IsCollecting: true, Key.IsMouseButton: true });
 
     private void OnShellChanged(object? sender, PropertyChangedEventArgs e)
     {

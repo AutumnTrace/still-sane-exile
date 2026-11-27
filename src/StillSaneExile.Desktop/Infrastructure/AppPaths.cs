@@ -43,6 +43,10 @@ public sealed class AppPaths
     /// <summary>The market client's cooldowns and holds, so a restart keeps waiting out a provider's hold.</summary>
     public string ProviderState => Path.Combine(DataDir, "provider-cooldowns.json");
 
+    /// <summary>Stash pictures the player collected (Settings, "Collect stash pictures"): one folder per
+    /// day, each picture a PNG with a JSON file of notes beside it.</summary>
+    public string Captures => Path.Combine(DataDir, "captures");
+
     /// <summary>Which poe.ninja categories a refresh asks for. Ships with the app like the route packs.</summary>
     public string PoeNinjaCategories => Path.Combine(AppDir, "data", "poe-ninja.json");
 }

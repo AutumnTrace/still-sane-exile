@@ -161,7 +161,7 @@
             <TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding StashKey}" FontWeight="SemiBold" VerticalAlignment="Center" Foreground="{StaticResource TextDim}" />
             <StackPanel Grid.Row="2" Grid.Column="2" Orientation="Horizontal">
               <Button Content="Change" AutomationProperties.Name="Change the stash prices key" Command="{Binding StartRecordingCommand}" CommandParameter="stash" Margin="0,3" />
-              <TextBlock Text="coming later" Foreground="{StaticResource TextFaint}" FontSize="12" VerticalAlignment="Center" Margin="10,0,0,0" />
+              <TextBlock Text="{Binding StashKeyNote}" Foreground="{StaticResource TextFaint}" FontSize="12" VerticalAlignment="Center" Margin="10,0,0,0" />
             </StackPanel>
           </Grid>
           <TextBlock Text="{Binding ReadsExplanation}" TextWrapping="Wrap" FontSize="12" Foreground="{StaticResource TextDim}" Margin="0,10,0,0" />
@@ -214,6 +214,26 @@
                      Text="The card keeps clear of the screen centre, the skill bar and the top-right map. While you hold the key it is click-through and never takes focus. Once you move onto it, it takes clicks, takes focus when you click it, and stays until you close it (× or Esc) or check another item. Any card hides when another program comes to the front, on minimize, lock and resolution change. Windowed or borderless only; exclusive fullscreen cannot show it." />
           <TextBlock FontSize="12" Foreground="{StaticResource TextFaint}" TextWrapping="Wrap" Margin="0,6,0,0"
                      Text="Scale is the card's own size. The Windows text size setting (Accessibility, Text size) enlarges this window and the price check over the game, not the card." />
+        </StackPanel>
+      </Border>
+
+      <!-- Stash pictures for #3: what is taken, where it goes, and the switch. Off by default. -->
+      <TextBlock Text="STASH READING (COMING SOON): HELP BUILD IT" Style="{StaticResource SectionTitle}" />
+      <Border x:Name="StashPicturesCard" Style="{StaticResource Card}" DataContext="{Binding Pictures}">
+        <StackPanel>
+          <TextBlock Text="{Binding Lead}" TextWrapping="Wrap" FontSize="13" LineHeight="19" />
+          <CheckBox IsChecked="{Binding IsCollecting}" Content="{Binding SwitchLabel}" Margin="0,12,0,0" />
+          <TextBlock Text="{Binding Problem}" TextWrapping="Wrap" FontSize="12.5" Foreground="{StaticResource Warn}" Margin="0,8,0,0"
+                     Visibility="{Binding Problem, Converter={StaticResource Vis}}" />
+          <TextBlock Text="{Binding WhatIsTaken}" TextWrapping="Wrap" FontSize="12" Foreground="{StaticResource TextDim}" Margin="0,10,0,0" />
+          <TextBlock Text="{Binding WhereSaved}" TextWrapping="Wrap" FontSize="12" Foreground="{StaticResource TextDim}" Margin="0,6,0,0" />
+          <TextBlock Text="{Binding PrivacyText}" TextWrapping="Wrap" FontSize="12" Foreground="{StaticResource Hint}" Margin="0,6,0,0" />
+          <WrapPanel Margin="0,12,0,0">
+            <TextBlock Text="{Binding Summary}" FontSize="12.5" VerticalAlignment="Center" Margin="0,0,14,0" />
+            <Button Content="Review and label them on My wealth" Command="{Binding ReviewCommand}" Margin="0,0,8,0"
+                    Visibility="{Binding HasPictures, Converter={StaticResource Vis}}" />
+            <Button Content="Open the pictures folder" Command="{Binding OpenFolderCommand}" ToolTip="Opens the folder in Explorer" />
+          </WrapPanel>
         </StackPanel>
       </Border>
 

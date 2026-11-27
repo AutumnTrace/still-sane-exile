@@ -1,0 +1,23 @@
+<Window x:Class="StillSaneExile.Desktop.Views.StashToastWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Still Sane, Exile? stash picture"
+        WindowStyle="None" AllowsTransparency="True" Background="Transparent"
+        Topmost="True" ShowInTaskbar="False" ShowActivated="False" Focusable="False"
+        ResizeMode="NoResize" SizeToContent="WidthAndHeight"
+        Foreground="{StaticResource Text}" FontFamily="Segoe UI" FontSize="14"
+        UseLayoutRounding="True" TextOptions.TextFormattingMode="Display">
+  <Border Padding="10,6,10,14">
+    <Grid>
+      <Border CornerRadius="10" Background="#F715161A" BorderBrush="{StaticResource Edge}" BorderThickness="1">
+        <Border.Effect>
+          <DropShadowEffect Color="Black" BlurRadius="20" ShadowDepth="6" Direction="270" Opacity="0.5" />
+        </Border.Effect>
+      </Border>
+      <StackPanel Orientation="Horizontal" Margin="16,10,18,10">
+        <TextBlock Text="SSE" FontSize="11" FontWeight="Bold" Foreground="{StaticResource TextFaint}" VerticalAlignment="Center" Margin="0,1,10,0" />
+        <TextBlock x:Name="MessageText" FontSize="14" FontWeight="SemiBold" MaxWidth="560" TextWrapping="Wrap" VerticalAlignment="Center" />
+      </StackPanel>
+    </Grid>
+  </Border>
+</Window>

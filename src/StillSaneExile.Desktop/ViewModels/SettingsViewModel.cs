@@ -32,9 +32,23 @@ public sealed partial class SettingsViewModel : ObservableObject
     {
         _shell = shell;
         Load();
+        shell.StashPictures.PropertyChanged += (_, e) =>
+        {
+            if (e.PropertyName == nameof(StashPicturesViewModel.IsCollecting))
+            {
+                OnPropertyChanged(nameof(ReadsExplanation));
+                OnPropertyChanged(nameof(StashKeyNote));
+            }
+        };
     }
 
     private Settings S => _shell.Settings;
+
+    /// <summary>The "Stash reading (coming soon): help build it" card.</summary>
+    public StashPicturesViewModel Pictures => _shell.StashPictures;
+
+    /// <summary>Beside the stash key in the Keys card.</summary>
+    public string StashKeyNote => Pictures.IsCollecting ? "takes stash pictures (see below)" : "coming later";
 
     [ObservableProperty]
     public partial bool IsOnboarding { get; set; }
@@ -223,7 +237,9 @@ public sealed partial class SettingsViewModel : ObservableObject
             ? ""
             : "While you hold it, the app checks where the mouse cursor is (its position, not the screen) to notice you moving onto the card. Ticking stats on the card reads nothing.\n") +
         $"{OpenLastKey}: reads nothing; opens the price check for your last item over the game (Esc closes it).\n" +
-        $"{StashKey}: reserved for stash and Aldur labels (Milestone 2). Not active yet; it will read one frame of the game window per press, with your opt-in.";
+        (Pictures.IsCollecting
+            ? $"{StashKey}: \"Collect stash pictures\" is on, so each press with the game in front takes one picture of the game window and saves it in your data folder. Holding the key takes no more. Stash and Aldur labels come later (Milestone 2)."
+            : $"{StashKey}: reserved for stash and Aldur labels (Milestone 2). It reads nothing now; with \"Collect stash pictures\" on (below), each press takes one picture of the game window.");
 
     /// <summary>Onboarding's one line under "Quick price".</summary>
     public string PeekHowTo => (_peek.IsNativeCopy, ToggleMode) switch
@@ -532,6 +548,7 @@ public sealed partial class SettingsViewModel : ObservableObject
         Load();
         OnPropertyChanged(nameof(KeyWarnings));
         OnPropertyChanged(nameof(ReadsExplanation));
+        _shell.StashPictures.ApplySettings();
         _shell.Hud?.ApplySettings();
     }
 
