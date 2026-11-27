@@ -2,6 +2,15 @@
 
 Every release is a tag `vX.Y.Z` on `main` that matches `<Version>` in `Directory.Build.props`. See [docs/RELEASING.md](docs/RELEASING.md).
 
+## [0.6.0] - 2026-11-27
+
+- **A new look that reads like the game:** dark panels in thin bronze borders, the item's name in its rarity colour, stats in the game's blue, small caps for headings, and gold for everything that belongs to your search.
+- **Prices coloured like a loot filter:** white and red for a jackpot, red for Divines, orange to tan for Exalted money, dark for small change. Prices show the game's own Divine, Exalted and Chaos Orbs instead of "div", "ex" and "c".
+- **Simpler Settings:** six short sections instead of one long page. The fine print is still there, under **Details**.
+- Stash pictures are labelled in Settings → **Stash pictures** now, next to the switch that collects them.
+- **My wealth is switched off for now** while it is rethought. Counts you saved stay on your computer, untouched.
+- The **‹ Back** button is gone from the header.
+
 ## [0.5.0] - 2026-11-27
 
 - **The pinned card keeps you in the game:** ticking stats on it no longer pulls the game out of focus. The game keeps your keyboard the whole time; close the card with its ×.
