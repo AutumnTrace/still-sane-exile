@@ -47,7 +47,7 @@ try {
         Write-Host "Version and changelog already say $Version; tagging the current commit."
     }
 
-    Invoke-Git tag -a $tag -m "Still Sane, Exile $Version"
+    Invoke-Git tag -a $tag -m "Still Sane, Exile? $Version"
     Invoke-Git push origin $tag
     Write-Host "Pushed $tag. Watch the Release workflow: gh run watch"
 }

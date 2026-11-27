@@ -10,7 +10,7 @@
     <ApplicationIcon>Assets\sse.ico</ApplicationIcon>
     <!-- Program.Main runs Velopack's install/update hooks before WPF starts. -->
     <StartupObject>StillSaneExile.Desktop.Program</StartupObject>
-    <Title>Still Sane, Exile</Title>
+    <Title>Still Sane, Exile?</Title>
     <Description>Path of Exile 2 companion: item roll bars, price evidence and (later) stash, crafting, wealth and campaign guidance.</Description>
   </PropertyGroup>
 

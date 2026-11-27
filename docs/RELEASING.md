@@ -18,7 +18,7 @@ A release exists only as a tag `vMAJOR.MINOR.PATCH` that
 
 This bumps `<Version>`, adds a `CHANGELOG.md` section from the commit subjects if you have not written one, commits `chore: release 0.2.0`, tags `v0.2.0`, and pushes `main` and the tag. Edit the changelog section first if you want hand-written notes; the script keeps an existing section.
 
-Doing it by hand works too: bump `<Version>`, commit to `main`, `git tag -a v0.2.0 -m "Still Sane, Exile 0.2.0"`, push the commit and the tag.
+Doing it by hand works too: bump `<Version>`, commit to `main`, `git tag -a v0.2.0 -m "Still Sane, Exile? 0.2.0"`, push the commit and the tag.
 
 ## What the Release workflow does
 

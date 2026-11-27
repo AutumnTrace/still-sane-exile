@@ -6,7 +6,7 @@
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <Version>0.1.0</Version>
     <Authors>Mina Rotari</Authors>
-    <Product>Still Sane, Exile</Product>
+    <Product>Still Sane, Exile?</Product>
     <Copyright>Copyright (c) 2026 Mina Rotari</Copyright>
   </PropertyGroup>
 </Project>

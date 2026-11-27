@@ -19,6 +19,7 @@ $pub = Join-Path $root "artifacts/publish/$Version"
 dotnet publish (Join-Path $root 'src/StillSaneExile.Desktop') -c Release -r win-x64 --self-contained true -p:Version=$Version -o $pub
 if ($LASTEXITCODE -ne 0) { throw 'dotnet publish failed' }
 dotnet tool restore
+# --packTitle has no '?': it names the shortcuts, and Windows file names cannot contain '?'.
 dotnet vpk pack --packId $PackId --packVersion $Version --packDir $pub --mainExe StillSaneExile.exe `
     --packTitle 'Still Sane, Exile' --packAuthors 'Mina Rotari' --icon (Join-Path $root 'src/StillSaneExile.Desktop/Assets/sse.ico') `
     --outputDir $OutDir

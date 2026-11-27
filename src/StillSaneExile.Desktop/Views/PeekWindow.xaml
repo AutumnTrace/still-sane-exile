@@ -6,7 +6,7 @@
         xmlns:vm="clr-namespace:StillSaneExile.Desktop.ViewModels"
         mc:Ignorable="d"
         d:DataContext="{d:DesignInstance Type=vm:PeekViewModel}"
-        Title="Still Sane, Exile HUD"
+        Title="Still Sane, Exile? HUD"
         WindowStyle="None" AllowsTransparency="True" Background="Transparent"
         Topmost="True" ShowInTaskbar="False" ShowActivated="False" Focusable="False"
         ResizeMode="NoResize" SizeToContent="WidthAndHeight"

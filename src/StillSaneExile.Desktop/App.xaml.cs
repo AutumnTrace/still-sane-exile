@@ -76,7 +76,7 @@ public partial class App : Application
         }
 
         _peek?.HideCard();
-        MessageBox.Show(e.Exception.Message, "Still Sane, Exile", MessageBoxButton.OK, MessageBoxImage.Warning);
+        MessageBox.Show(e.Exception.Message, "Still Sane, Exile?", MessageBoxButton.OK, MessageBoxImage.Warning);
         e.Handled = true;
     }
 }

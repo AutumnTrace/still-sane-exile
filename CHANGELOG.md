@@ -2,6 +2,12 @@
 
 Every release is a tag `vX.Y.Z` on `main` that matches `<Version>` in `Directory.Build.props`. See [docs/RELEASING.md](docs/RELEASING.md).
 
+## [0.1.1] - 2026-11-27
+
+- The app now goes by **Still Sane, Exile?**, with Zana's question mark, in the window title, header, HUD card, Settings and release names.
+- Shortcuts, the Apps list entry and file names keep "Still Sane, Exile": Windows does not allow `?` in file names.
+- First update delivered through the automatic updater: installed copies of 0.1.0 pick this up by themselves.
+
 ## [0.1.0] - 2026-11-27
 
 First public build: the Milestone 1 foundation and a demo profile.

@@ -57,6 +57,7 @@ jobs:
         shell: pwsh
         run: ./scripts/release-notes.ps1 -Version '${{ steps.version.outputs.version }}' -OutFile release-notes.md
 
+      # --packTitle has no '?': it becomes the shortcut and Apps-list name, and Windows file names cannot contain '?'.
       - name: Pack installer
         shell: pwsh
         run: >
@@ -68,4 +69,4 @@ jobs:
         shell: pwsh
         run: >
           dotnet vpk upload github --repoUrl '${{ github.server_url }}/${{ github.repository }}' --token '${{ secrets.GITHUB_TOKEN }}'
-          --outputDir releases --publish --tag '${{ github.ref_name }}' --releaseName 'Still Sane, Exile ${{ github.ref_name }}'
+          --outputDir releases --publish --tag '${{ github.ref_name }}' --releaseName 'Still Sane, Exile? ${{ github.ref_name }}'

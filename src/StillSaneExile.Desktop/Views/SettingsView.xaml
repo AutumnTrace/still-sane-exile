@@ -160,7 +160,7 @@
       <Border Style="{StaticResource Card}">
         <StackPanel>
           <TextBlock>
-            <Run Text="Still Sane, Exile " Foreground="{StaticResource TextDim}" /><Run Text="{Binding Updates.CurrentVersion, Mode=OneWay}" FontWeight="SemiBold" />
+            <Run Text="Still Sane, Exile? " Foreground="{StaticResource TextDim}" /><Run Text="{Binding Updates.CurrentVersion, Mode=OneWay}" FontWeight="SemiBold" />
           </TextBlock>
           <TextBlock Text="{Binding Updates.Status}" TextWrapping="Wrap" FontSize="12" Foreground="{StaticResource TextDim}" Margin="0,4,0,0" />
           <CheckBox IsChecked="{Binding AutoUpdate}" Margin="0,10,0,0" IsEnabled="{Binding Updates.IsInstalled}"

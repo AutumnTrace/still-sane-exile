@@ -6,7 +6,7 @@
         xmlns:vm="clr-namespace:StillSaneExile.Desktop.ViewModels"
         mc:Ignorable="d"
         d:DataContext="{d:DesignInstance Type=vm:ShellViewModel}"
-        Title="Still Sane, Exile"
+        Title="Still Sane, Exile?"
         Icon="pack://application:,,,/Assets/sse.ico"
         Width="1440" Height="900" MinWidth="1100" MinHeight="640"
         Background="{StaticResource Surface}"
@@ -19,7 +19,7 @@
     <Border DockPanel.Dock="Top" Background="{StaticResource Surface2}" BorderBrush="{StaticResource Line}" BorderThickness="0,0,0,1" Padding="12,8">
       <DockPanel LastChildFill="False">
         <Button DockPanel.Dock="Left" Style="{StaticResource LinkButton}" Content="‹ Back" Command="{Binding BackCommand}" IsEnabled="{Binding CanGoBack}" Margin="0,0,8,0" ToolTip="Back keeps your selection, scroll and filters" />
-        <TextBlock DockPanel.Dock="Left" Text="Still Sane, Exile" FontSize="16" FontWeight="SemiBold" VerticalAlignment="Center" Margin="0,0,20,0" />
+        <TextBlock DockPanel.Dock="Left" Text="Still Sane, Exile?" FontSize="16" FontWeight="SemiBold" VerticalAlignment="Center" Margin="0,0,20,0" />
         <Button DockPanel.Dock="Left" Style="{StaticResource TabButton}" Content="Inspect" Command="{Binding GoInspectCommand}" Tag="{Binding PageName, Converter={StaticResource Active}, ConverterParameter=Inspect}" Margin="0,0,4,0" />
         <Button DockPanel.Dock="Left" Style="{StaticResource TabButton}" Content="Craft" Command="{Binding GoCraftCommand}" Tag="{Binding PageName, Converter={StaticResource Active}, ConverterParameter=Craft}" Margin="0,0,4,0" />
         <Button DockPanel.Dock="Left" Style="{StaticResource TabButton}" Content="Wealth" Command="{Binding GoWealthCommand}" Tag="{Binding PageName, Converter={StaticResource Active}, ConverterParameter=Wealth}" Margin="0,0,4,0" />

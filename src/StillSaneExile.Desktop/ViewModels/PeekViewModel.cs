@@ -34,7 +34,7 @@ public sealed class PeekViewModel
 
     public static PeekViewModel Message(string text, bool demo, string releaseHint) => new()
     {
-        Title = "Still Sane, Exile",
+        Title = "Still Sane, Exile?",
         IsMessage = true,
         MessageText = text,
         IsDemo = demo,

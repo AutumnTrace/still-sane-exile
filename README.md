@@ -1,4 +1,4 @@
-# Still Sane, Exile
+# Still Sane, Exile?
 
 A Path of Exile 2 companion for Windows. Hover an item, hold a key, and see which rolls are good and what comparable items ask. Later milestones add held-key price labels on stash and Aldur reward panels, crafting plans, wealth history and campaign guidance (SSE for short).
 
