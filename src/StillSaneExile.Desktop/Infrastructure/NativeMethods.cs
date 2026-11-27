@@ -4,7 +4,8 @@ using System.Text;
 namespace StillSaneExile.Desktop.Infrastructure;
 
 /// <summary>The complete list of Windows calls the app makes. Every one of them is OS window, keyboard,
-/// mouse button or clipboard metadata. None touches the game process, its memory, its files or its input.</summary>
+/// mouse button, cursor position or clipboard metadata. None touches the game process, its memory, its
+/// files or its input.</summary>
 internal static class NativeMethods
 {
     public const int WH_KEYBOARD_LL = 13;
@@ -30,7 +31,10 @@ internal static class NativeMethods
     public const long WS_EX_NOACTIVATE = 0x08000000;
 
     public const uint SWP_NOSIZE = 0x0001;
+    public const uint SWP_NOMOVE = 0x0002;
+    public const uint SWP_NOZORDER = 0x0004;
     public const uint SWP_NOACTIVATE = 0x0010;
+    public const uint SWP_FRAMECHANGED = 0x0020;
     public static readonly nint HWND_TOPMOST = -1;
 
     public const uint EVENT_SYSTEM_FOREGROUND = 0x0003;
@@ -153,7 +157,8 @@ internal static class NativeMethods
     [return: MarshalAs(UnmanagedType.Bool)]
     public static extern bool IsWindow(nint hWnd);
 
-    /// <summary>Used only to give focus back to the game window when the price check window closes.
+    /// <summary>Used only to give focus back to the game window when the price check window or a
+    /// pinned quick price card closes, or the mouse leaves a pinned card the player clicked.
     /// It moves focus; it sends no input.</summary>
     [DllImport("user32.dll")]
     [return: MarshalAs(UnmanagedType.Bool)]

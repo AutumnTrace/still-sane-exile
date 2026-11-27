@@ -1,5 +1,6 @@
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Input;
 using System.Windows.Media;
 using StillSaneExile.Desktop.ViewModels;
 
@@ -9,6 +10,14 @@ namespace StillSaneExile.Desktop.Views;
 /// where numbered pins mark each part of the card.</summary>
 public partial class PeekCard : UserControl
 {
+    /// <summary>The pinned card's close button (the HUD window sets it).</summary>
+    public static readonly DependencyProperty CloseCommandProperty = DependencyProperty.Register(
+        nameof(CloseCommand), typeof(ICommand), typeof(PeekCard));
+
+    /// <summary>The pinned card's "All filters": the full price check for this item.</summary>
+    public static readonly DependencyProperty MoreCommandProperty = DependencyProperty.Register(
+        nameof(MoreCommand), typeof(ICommand), typeof(PeekCard));
+
     private const double PinSize = 22;
     private const double PinGutter = 12;
 
@@ -18,6 +27,32 @@ public partial class PeekCard : UserControl
         DataContextChanged += (_, _) => Dispatcher.BeginInvoke(PlacePins, System.Windows.Threading.DispatcherPriority.Loaded);
         Loaded += (_, _) => PlacePins();
         SizeChanged += (_, _) => PlacePins();
+    }
+
+    public ICommand? CloseCommand
+    {
+        get => (ICommand?)GetValue(CloseCommandProperty);
+        set => SetValue(CloseCommandProperty, value);
+    }
+
+    public ICommand? MoreCommand
+    {
+        get => (ICommand?)GetValue(MoreCommandProperty);
+        set => SetValue(MoreCommandProperty, value);
+    }
+
+    /// <summary>The visible card (not its shadow) on the screen, in physical pixels; null while it is not
+    /// on screen.</summary>
+    public Rect? ScreenBounds()
+    {
+        if (!Card.IsVisible || PresentationSource.FromVisual(Card) is null)
+        {
+            return null;
+        }
+
+        var topLeft = Card.PointToScreen(new Point(0, 0));
+        var bottomRight = Card.PointToScreen(new Point(Card.ActualWidth, Card.ActualHeight));
+        return new Rect(topLeft, bottomRight);
     }
 
     private bool _placing;
@@ -61,7 +96,8 @@ public partial class PeekCard : UserControl
         Pin(3, CountBlock, right);
         Pin(4, SearchedWith, left);
         Pin(5, firstRow, left);
-        Pin(6, ChangeHint, right);
+        Pin(6, FooterText, left);
+        Pin(7, ChangeHint, right);
     }
 
     /// <summary>Puts pin <paramref name="n"/> level with the middle of <paramref name="target"/>.</summary>

@@ -105,7 +105,10 @@ public sealed partial class SettingsViewModel : ObservableObject
         new(3, "How many are for sale", "More for sale means a better price guess."),
         new(4, "Stats in the search", "How many of your stats were used to find similar items."),
         new(5, "Ticked = searched", "Ticked stats show the number searched for. Empty boxes were left out."),
-        new(6, $"Press {OpenLastKey} to change it", "Tick or untick stats and type your own numbers — like 160 instead of 175."),
+        ToggleMode
+            ? new(6, "Press again to hide", "The card stays until you press the key again.")
+            : new(6, "Move onto it to keep it", "Still holding the key, move the mouse onto the card: it stays open, and you can tick or untick stats on it. Let go without moving and it hides."),
+        new(7, $"Press {OpenLastKey} to change it", "Every filter, and your own numbers — like 160 instead of 175."),
     ];
 
     private PeekViewModel? _samplePeek;
@@ -150,13 +153,20 @@ public sealed partial class SettingsViewModel : ObservableObject
         (_peek.IsNativeCopy
             ? $"{PeekKey}: reads the clipboard once, right after the game copies the hovered item. If the game copied nothing, nothing is read.\n"
             : $"{PeekKey}: reads the clipboard once per press, straight away. It is not the game's copy key, so the game copies nothing: it shows the last item you copied with Ctrl+C (or Ctrl+Alt+C), which may not be the one under your cursor.\n") +
+        (ToggleMode
+            ? ""
+            : "While you hold it, the app checks where the mouse cursor is (its position, not the screen) to notice you moving onto the card. Ticking stats on the card reads nothing.\n") +
         $"{OpenLastKey}: reads nothing; opens the price check for your last item over the game (Esc closes it).\n" +
         $"{StashKey}: reserved for stash and Aldur labels (Milestone 2). Not active yet; it will read one frame of the game window per press, with your opt-in.";
 
     /// <summary>Onboarding's one line under "Quick price".</summary>
-    public string PeekHowTo => _peek.IsNativeCopy
-        ? "Hover an item and hold. Let go to hide."
-        : "Shows the last item you copied with Ctrl+C. Let go to hide.";
+    public string PeekHowTo => (_peek.IsNativeCopy, ToggleMode) switch
+    {
+        (true, false) => "Hover an item and hold. Move onto the card to keep it open and change the search; let go without moving and it hides.",
+        (true, true) => "Hover an item and press. Press again to hide.",
+        (false, false) => "Shows the last item you copied with Ctrl+C. Move onto the card to keep it open; let go without moving and it hides.",
+        (false, true) => "Shows the last item you copied with Ctrl+C. Press again to hide.",
+    };
 
     [MemberNotNull(nameof(_peek), nameof(_openLast), nameof(_stash))]
     public void Load()
@@ -191,7 +201,17 @@ public sealed partial class SettingsViewModel : ObservableObject
     {
         S.PeekMode = value ? HoldMode.Toggle : HoldMode.Hold;
         _shell.Hud?.ApplySettings();
+        _samplePeek = null; // its footer says how to hide it
+        OnPropertyChanged(nameof(ReadsExplanation));
+        OnPropertyChanged(nameof(PeekHowTo));
+        OnPropertyChanged(nameof(GuideSteps));
+        OnPropertyChanged(nameof(SamplePeek));
     }
+
+    /// <summary>Settings → Quick price card: "hold" (hide on release, unless the player moved onto the
+    /// card) or "toggle" (press again to hide).</summary>
+    [RelayCommand]
+    private void SetPeekMode(string mode) => ToggleMode = mode == "toggle";
 
     partial void OnAnchorChanged(PeekAnchor value) => S.Anchor = value;
 

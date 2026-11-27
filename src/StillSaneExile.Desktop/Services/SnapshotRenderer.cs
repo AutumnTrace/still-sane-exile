@@ -96,6 +96,12 @@ public static class SnapshotRenderer
             Save(peek, Path.Combine(dir, $"{name}.png"));
         }
 
+        // Pinned (the player moved onto it while holding the key): close button, live stats. Never
+        // pinned through the window here, so it stays click-through and never activates.
+        var pinned = PeekViewModel.From(shell.Inspect.Recent.First(r => r.Title == "Doom Thirst"), true, PeekViewModel.ReleaseHintFor(shell.Settings.PeekMode), shell.Settings.OpenLastKey.Label);
+        pinned.IsPinned = true;
+        peek.DataContext = pinned;
+        Save(peek, Path.Combine(dir, "peek-pinned.png"));
         peek.Close();
 
         // The pinned guide lines, unpositioned; the click-through window never activates.

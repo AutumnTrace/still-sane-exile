@@ -126,7 +126,7 @@
                   <Button DockPanel.Dock="Right" Style="{StaticResource GhostButton}" Content="Change" FontWeight="Normal" Foreground="{StaticResource TextSoft}" v:Ui.Radius="6" AutomationProperties.Name="Change the quick price key" Command="{Binding StartRecordingCommand}" CommandParameter="peek" Margin="14,0,0,0" />
                   <Border DockPanel.Dock="Right" Style="{StaticResource KeyCap}" Margin="14,0,0,0"><TextBlock Text="{Binding PeekKey}" FontSize="13" FontWeight="SemiBold" /></Border>
                   <StackPanel VerticalAlignment="Center">
-                    <TextBlock Text="Quick price (hold)" FontSize="14.5" FontWeight="SemiBold" />
+                    <TextBlock Text="Quick price" FontSize="14.5" FontWeight="SemiBold" />
                     <TextBlock Text="{Binding PeekHowTo}" Style="{StaticResource Small}" Margin="0,2,0,0" />
                   </StackPanel>
                 </DockPanel>

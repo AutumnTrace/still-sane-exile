@@ -8,7 +8,8 @@ What SSE does for keyboard use, screen readers, contrast and text size, and what
 - Every control shows when it has keyboard focus. Buttons, tick boxes, list rows and the slider get an outline in the text colour, text boxes a coloured border, and links in release notes a ring. The number boxes of an unticked stat are dimmed, but come up to full strength while one of them has focus.
 - `Enter` or `Space` presses a button, `Space` ticks a box, and the arrow keys move through a list or change the slider.
 - **Show prices in** in the header opens its menu with `Enter` or `Space`. Focus lands on the current currency: the arrow keys or `Tab` move, `Enter` picks one, `Esc` closes the menu and returns to the button.
-- `Esc` closes the price check over the game (`F3`). The quick price card is click-through and never takes focus, so it has nothing to tab to.
+- `Esc` closes the price check over the game (`F3`), and a quick price card you kept open, once you have clicked it. While you hold the key the card is click-through and never takes focus, so it has nothing to tab to. Kept open, `Tab` goes through its close button, its stats with their − and + buttons, and **All filters**.
+- Keeping the card open means moving the mouse onto it while holding the key. **Press again to hide** (Settings → Quick price card) needs no held key: one press shows the card, the next hides it, and `F3` changes the search.
 - Scroll bars page up or down when you click above or below the thumb.
 
 ## Screen readers

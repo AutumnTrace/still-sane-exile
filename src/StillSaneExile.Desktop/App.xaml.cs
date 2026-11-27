@@ -55,7 +55,7 @@ public partial class App : Application
         _peek = new PeekWindow();
         _priceCheck = new PriceCheckWindow();
         _priceCheck.UseTextScale(_textScale);
-        _hud = new HudController(shell, new InputObserver(), new ForegroundWatcher(), clipboard, _peek, _priceCheck, main);
+        _hud = new HudController(shell, new InputObserver(), new ForegroundWatcher(), clipboard, _peek, _priceCheck, main, new CursorPoller(main.Dispatcher));
         shell.Hud = _hud;
 
         main.Closed += (_, _) => Shutdown();
