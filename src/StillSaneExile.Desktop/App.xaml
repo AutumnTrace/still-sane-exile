@@ -126,6 +126,17 @@
         </Style.Triggers>
       </Style>
 
+      <!-- Links inside text (release notes), coloured like LinkButton. -->
+      <Style TargetType="Hyperlink">
+        <Setter Property="Foreground" Value="{StaticResource Link}" />
+        <Setter Property="Cursor" Value="Hand" />
+        <Style.Triggers>
+          <Trigger Property="IsMouseOver" Value="True">
+            <Setter Property="Foreground" Value="{StaticResource LinkHover}" />
+          </Trigger>
+        </Style.Triggers>
+      </Style>
+
       <!-- Quiet text action, e.g. "Reset to my item". -->
       <Style x:Key="TextButton" TargetType="Button" BasedOn="{StaticResource LinkButton}">
         <Setter Property="Foreground" Value="{StaticResource TextDim}" />

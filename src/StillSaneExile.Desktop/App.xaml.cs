@@ -53,6 +53,9 @@ public partial class App : Application
 
         main.Closed += (_, _) => Shutdown();
         MainWindow = main;
+
+        // After an update: the notes wait in the main window, never on the HUD.
+        shell.WhatsNew.CheckOnStart();
         main.Show();
         _hud.Start();
         _updates.Start(settings.AutoUpdate);
