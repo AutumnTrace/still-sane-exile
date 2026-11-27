@@ -11,6 +11,9 @@ namespace StillSaneExile.Desktop;
 public partial class App : Application
 {
     private HudController? _hud;
+    private StashCollector? _stash;
+    private WgcFrameSource? _frames;
+    private StashToastWindow? _stashToast;
     private PeekWindow? _peek;
     private PriceCheckWindow? _priceCheck;
     private GuideHud? _guideHud;
@@ -56,8 +59,17 @@ public partial class App : Application
         _peek = new PeekWindow();
         _priceCheck = new PriceCheckWindow();
         _priceCheck.UseTextScale(_textScale);
-        _hud = new HudController(shell, new InputObserver(), new ForegroundWatcher(), clipboard, _peek, _priceCheck, main, new CursorPoller(main.Dispatcher));
+        var keys = new InputObserver();
+        var foreground = new ForegroundWatcher();
+        _hud = new HudController(shell, keys, foreground, clipboard, _peek, _priceCheck, main, new CursorPoller(main.Dispatcher));
         shell.Hud = _hud;
+
+        // The stash key's own path, on the same key and foreground events: off until "Collect stash
+        // pictures" is switched on, and then one frame of the game window per physical press.
+        _frames = new WgcFrameSource();
+        _stashToast = new StashToastWindow();
+        _stash = new StashCollector(shell.StashPictures, _updates.CurrentVersion, keys, foreground, _frames, _stashToast, Dispatcher);
+        shell.StashPictures.UseSource(_frames);
 
         main.Closed += (_, _) => Shutdown();
         MainWindow = main;
@@ -66,6 +78,7 @@ public partial class App : Application
         shell.WhatsNew.CheckOnStart();
         main.Show();
         _hud.Start();
+        _stash.Start();
         _guideHud = new GuideHud(shell.Guide, _peek, main);
         _guideHud.Start();
         _updates.Start(settings.AutoUpdate);
@@ -78,6 +91,9 @@ public partial class App : Application
 
     protected override void OnExit(ExitEventArgs e)
     {
+        _stash?.Dispose();
+        _frames?.Dispose();
+        _stashToast?.Close();
         _hud?.Dispose();
         _guideHud?.Dispose();
         _prices?.Dispose();

@@ -4,8 +4,10 @@ using System.Windows;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Threading;
+using StillSaneExile.Desktop.Infrastructure;
 using StillSaneExile.Desktop.ViewModels;
 using StillSaneExile.Desktop.Views;
+using StillSaneExile.Domain.Capture;
 
 namespace StillSaneExile.Desktop.Services;
 
@@ -79,6 +81,7 @@ public static class SnapshotRenderer
 
         shell.GoSettingsCommand.Execute(null);
         Save(main, Path.Combine(dir, "settings.png"));
+        RenderStashPictures(shell, main, dir);
 
         // "What's new" as the first start after an update shows it, over the price check. A development
         // build never decides to show it, so it is opened directly.
@@ -118,6 +121,136 @@ public static class SnapshotRenderer
         Save(priceCheck, Path.Combine(dir, "price-check-window.png"));
         priceCheck.Close();
         main.Close();
+    }
+
+    /// <summary>"Collect stash pictures" switched on with three made-up pictures: its Settings card, the
+    /// review list and the card on My wealth, and the note over the game. The made-up pictures are deleted
+    /// and the switch put back afterwards; pictures already in the data folder are left alone.</summary>
+    private static void RenderStashPictures(ShellViewModel shell, MainWindow main, string dir)
+    {
+        var pictures = shell.StashPictures;
+        var wasCollecting = pictures.IsCollecting;
+        var made = new List<string>();
+        pictures.IsCollecting = true;
+        try
+        {
+            var today = DateTimeOffset.Now.Date;
+            var facts = new CaptureFacts("Windows.Graphics.Capture", new GameWindowFacts(1920, 1080, "borderless fullscreen", null, 1920, 1080, 100, false, 1.0), "B8G8R8A8UIntNormalized", 9.8);
+            foreach (var (time, title, quad) in new[] { (new TimeSpan(14, 30, 5), "Currency", false), (new TimeSpan(14, 31, 12), "Quad stash", true), (new TimeSpan(14, 32, 40), "Stash", false) })
+            {
+                using var frame = MadeUpStash(title, quad);
+                using var copy = PictureCopy.Of(frame);
+                made.Add(pictures.Store.Save(copy, StashPictureNotes.For(copy, facts, new DateTimeOffset(today + time), shell.Updates.CurrentVersion, 13.4)).PngPath);
+            }
+
+            pictures.Reload();
+            var byFile = pictures.Pictures.Where(p => made.Contains(p.Picture.PngPath)).OrderBy(p => p.Picture.PngPath, StringComparer.Ordinal).ToList();
+            byFile[0].TabType = StashTabTypes.Currency;
+            byFile[0].Subtab = "General";
+            byFile[0].UiScale = "100";
+            byFile[1].TabType = StashTabTypes.Quad;
+            byFile[1].UiScale = "100";
+            byFile[1].Note = "Tooltip over a stack";
+            byFile[1].HeldOut = true;
+            foreach (var p in pictures.Pictures)
+            {
+                p.LoadThumbnailNow();
+            }
+
+            shell.GoSettingsCommand.Execute(null);
+            Flush(main);
+            Find<FrameworkElement>(main, "StashPicturesCard")?.BringIntoView();
+            Save(main, Path.Combine(dir, "settings-stash-pictures.png"));
+
+            shell.GoWealthCommand.Execute(null);
+            Save(main, Path.Combine(dir, "wealth-stash-card.png"));
+            pictures.ReviewCommand.Execute(null);
+            Save(main, Path.Combine(dir, "wealth-stash-pictures.png"));
+            pictures.DoneReviewingCommand.Execute(null);
+
+            // The note over the game, unpositioned; the click-through window never activates.
+            var toast = new StashToastWindow { Left = -20000, Top = 0, Message = $"Saved stash picture {pictures.Count}" };
+            ((Window)toast).Show();
+            Save(toast, Path.Combine(dir, "stash-toast.png"));
+            toast.Close();
+        }
+        finally
+        {
+            foreach (var p in pictures.Pictures.Where(p => made.Contains(p.Picture.PngPath)).ToList())
+            {
+                pictures.DeleteCommand.Execute(p);
+            }
+
+            pictures.Message = null;
+            pictures.IsCollecting = wasCollecting;
+        }
+    }
+
+    /// <summary>A made-up stash for the snapshots, drawn at 1920×1080: a tab of square cells with a few
+    /// items and stack counts, the rest of the screen dark. Not a picture of the game.</summary>
+    private static Frame MadeUpStash(string title, bool quad)
+    {
+        const int W = 1920, H = 1080;
+        var visual = new DrawingVisual();
+        using (var dc = visual.RenderOpen())
+        {
+            dc.DrawRectangle(new LinearGradientBrush(Color.FromRgb(0x24, 0x1C, 0x16), Color.FromRgb(0x0C, 0x0A, 0x09), 90), null, new Rect(0, 0, W, H));
+            dc.DrawRectangle(new SolidColorBrush(Color.FromRgb(0x14, 0x11, 0x0E)), new Pen(new SolidColorBrush(Color.FromRgb(0x6B, 0x55, 0x33)), 3), new Rect(40, 110, 880, 900));
+            var face = new Typeface("Segoe UI");
+            var gold = new SolidColorBrush(Color.FromRgb(0xC8, 0xB0, 0x7A));
+            dc.DrawText(new FormattedText(title, CultureInfo.InvariantCulture, FlowDirection.LeftToRight, face, 30, gold, 1.0), new Point(70, 125));
+            var cells = quad ? 24 : 12;
+            var size = 820.0 / cells;
+            var line = new Pen(new SolidColorBrush(Color.FromRgb(0x2A, 0x24, 0x1E)), 1);
+            var colours = new[] { Color.FromRgb(0xC8, 0xBF, 0xA6), Color.FromRgb(0x9A, 0x9A, 0xFF), Color.FromRgb(0xD2, 0x80, 0x3F), Color.FromRgb(0x1B, 0xA2, 0x9B) };
+            var random = new Random(title.Length * 7919);
+            for (var y = 0; y < cells; y++)
+            {
+                for (var x = 0; x < cells; x++)
+                {
+                    var cell = new Rect(70 + x * size, 175 + y * size, size, size);
+                    dc.DrawRectangle(null, line, cell);
+                    if (random.NextDouble() < 0.28)
+                    {
+                        var c = colours[random.Next(colours.Length)];
+                        var inner = cell;
+                        inner.Inflate(-size * 0.18, -size * 0.18);
+                        dc.DrawRoundedRectangle(new SolidColorBrush(Color.FromArgb(0xE0, c.R, c.G, c.B)), null, inner, 4, 4);
+                        if (!quad)
+                        {
+                            dc.DrawText(new FormattedText(random.Next(1, 1200).ToString(CultureInfo.InvariantCulture), CultureInfo.InvariantCulture, FlowDirection.LeftToRight, face, 15, Brushes.White, 1.0), new Point(cell.X + 4, cell.Y + 2));
+                        }
+                    }
+                }
+            }
+
+            dc.DrawText(new FormattedText("Made up for SSE's screenshots", CultureInfo.InvariantCulture, FlowDirection.LeftToRight, face, 22, gold, 1.0), new Point(1260, 1020));
+        }
+
+        var bitmap = new RenderTargetBitmap(W, H, 96, 96, PixelFormats.Pbgra32);
+        bitmap.Render(visual);
+        var pixels = new byte[W * H * 4];
+        bitmap.CopyPixels(pixels, W * 4, 0);
+        return new Frame(W, H, W * 4, FramePixelFormat.Bgra8, pixels, System.Diagnostics.Stopwatch.GetTimestamp());
+    }
+
+    private static T? Find<T>(DependencyObject root, string name) where T : FrameworkElement
+    {
+        for (var i = 0; i < VisualTreeHelper.GetChildrenCount(root); i++)
+        {
+            var child = VisualTreeHelper.GetChild(root, i);
+            if (child is T match && match.Name == name)
+            {
+                return match;
+            }
+
+            if (Find<T>(child, name) is { } found)
+            {
+                return found;
+            }
+        }
+
+        return null;
     }
 
     /// <summary>Example build notes, written for the snapshots in a player's own words.</summary>

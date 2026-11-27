@@ -20,6 +20,7 @@ public sealed partial class ShellViewModel : ObservableObject
         Session = Session.Create(store, settings, paths);
         Inspect = new InspectViewModel(this, clipboard);
         Craft = PlaceholderViewModel.Craft();
+        StashPictures = new StashPicturesViewModel(this);
         Wealth = new WealthViewModel(this);
         Guide = new GuideViewModel(this);
         WhatsNew = new WhatsNewViewModel(settings, updates);
@@ -97,6 +98,10 @@ public sealed partial class ShellViewModel : ObservableObject
 
     public InspectViewModel Inspect { get; }
     public PlaceholderViewModel Craft { get; }
+
+    /// <summary>"Collect stash pictures": the switch in Settings and the review list on My wealth.</summary>
+    public StashPicturesViewModel StashPictures { get; }
+
     public WealthViewModel Wealth { get; }
     public GuideViewModel Guide { get; }
     public SettingsViewModel SettingsPage { get; }

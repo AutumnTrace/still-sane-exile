@@ -224,6 +224,8 @@ public class AccessibilityTests
         Assert.Contains("Press again to hide (accessibility)", stops);
         Assert.Contains("Quick price card scale", stops);
         Assert.Contains("Days until prices you write down expire", stops);
+        Assert.Contains("Collect stash pictures when I press RightAlt in the game", stops);
+        Assert.Contains("Open the pictures folder", stops);
         Assert.True(stops.IndexOf("Practice with demo data") < stops.IndexOf("Divine Orb"));
     });
 
@@ -261,6 +263,34 @@ public class AccessibilityTests
         var preview = Check(new WealthView { DataContext = wealth });
 
         Assert.Contains("Cancel", preview);
+    });
+
+    [Fact]
+    public void Stash_pictures_review_works_from_the_keyboard() => UiThread.Run(() =>
+    {
+        using var app = new TestApp(s => s.CollectStashPictures = true);
+        StashTestPictures.Save(app, new DateTimeOffset(2026, 11, 27, 14, 30, 5, TimeSpan.Zero));
+        StashTestPictures.Save(app, new DateTimeOffset(2026, 11, 27, 14, 31, 40, TimeSpan.Zero));
+        var pictures = app.Shell.StashPictures;
+        pictures.Reload();
+        pictures.Pictures[0].TabType = Services.StashTabTypes.Currency;
+
+        var summary = Check(new WealthView { DataContext = app.Shell.Wealth });
+
+        Assert.Contains("Review and label", summary);
+        Assert.Contains("Open the pictures folder", summary);
+
+        pictures.ReviewCommand.Execute(null);
+        var stops = Check(new WealthView { DataContext = app.Shell.Wealth });
+
+        Assert.Equal(["Open the pictures folder", "Back to what you hold"], stops[..2]);
+        Assert.Contains(stops, s => s.StartsWith("Currency tab: the picture from ", StringComparison.Ordinal));
+        Assert.Contains(stops, s => s.StartsWith("Aldur panel: the picture from ", StringComparison.Ordinal));
+        Assert.Single(stops, s => s.StartsWith("Currency subtab of the picture from ", StringComparison.Ordinal));
+        Assert.Equal(2, stops.Count(s => s.StartsWith("In-game UI scale of the picture from ", StringComparison.Ordinal)));
+        Assert.Equal(2, stops.Count(s => s.StartsWith("Held out: the picture from ", StringComparison.Ordinal)));
+        Assert.Equal(2, stops.Count(s => s.StartsWith("Delete the picture from ", StringComparison.Ordinal)));
+        Assert.DoesNotContain("Review and label", stops);
     });
 
     [Fact]

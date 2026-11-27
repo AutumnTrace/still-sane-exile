@@ -3,9 +3,10 @@ using System.Text;
 
 namespace StillSaneExile.Desktop.Infrastructure;
 
-/// <summary>The complete list of Windows calls the app makes. Every one of them is OS window, keyboard,
-/// mouse button, cursor position or clipboard metadata. None touches the game process, its memory, its
-/// files or its input.</summary>
+/// <summary>The complete list of Windows calls the app makes, apart from the stash picture collector's
+/// one-frame window capture, which is off by default and has its own list in <see cref="CaptureInterop"/>.
+/// Every one of them is OS window, keyboard, mouse button, cursor position or clipboard metadata. None
+/// touches the game process, its memory, its files or its input.</summary>
 internal static class NativeMethods
 {
     public const int WH_KEYBOARD_LL = 13;

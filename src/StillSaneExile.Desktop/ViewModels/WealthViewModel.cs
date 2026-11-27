@@ -29,7 +29,22 @@ public sealed partial class WealthViewModel : ObservableObject
     {
         _shell = shell;
         Reload();
+        shell.StashPictures.PropertyChanged += (_, e) =>
+        {
+            if (e.PropertyName == nameof(StashPicturesViewModel.IsReviewing))
+            {
+                OnPropertyChanged(nameof(ShowHoldings));
+                OnPropertyChanged(nameof(ShowPreview));
+            }
+        };
     }
+
+    /// <summary>"Stash pictures you collected": while reviewing, the list takes the holdings' place.</summary>
+    public StashPicturesViewModel Pictures => _shell.StashPictures;
+
+    public bool ShowHoldings => !HasPreview && !Pictures.IsReviewing;
+
+    public bool ShowPreview => HasPreview && !Pictures.IsReviewing;
 
     public bool IsDemo => _shell.Session.IsDemo;
 
@@ -80,7 +95,7 @@ public sealed partial class WealthViewModel : ObservableObject
     public partial IReadOnlyList<string> FormErrors { get; private set; } = [];
 
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(HasPreview))]
+    [NotifyPropertyChangedFor(nameof(HasPreview), nameof(ShowHoldings), nameof(ShowPreview))]
     [NotifyCanExecuteChangedFor(nameof(ApplyImportCommand))]
     public partial ImportPreviewViewModel? Preview { get; private set; }
 
@@ -133,6 +148,7 @@ public sealed partial class WealthViewModel : ObservableObject
         Preview = BuildPreview(_pending.Value.Bytes, name);
         SelectedHolding = null;
         Message = null;
+        Pictures.IsReviewing = false; // the preview takes the left side
     }
 
     private ImportPreviewViewModel BuildPreview(byte[] bytes, string name)

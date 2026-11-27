@@ -57,11 +57,20 @@ public sealed class Settings(Store store)
         set => store.Set("keys.openLast", value.ToString());
     }
 
-    /// <summary>Reserved for stash and Aldur labels (Milestone 2). Stored now so collisions can be checked.</summary>
+    /// <summary>For stash and Aldur labels (Milestone 2). Until then it takes stash pictures, one per press,
+    /// only while <see cref="CollectStashPictures"/> is on.</summary>
     public Hotkey StashKey
     {
         get => Hotkey.Parse(store.Get("keys.stash")) ?? Hotkey.Parse("RightAlt")!;
         set => store.Set("keys.stash", value.ToString());
+    }
+
+    /// <summary>"Collect stash pictures": each physical press of the stash key with the game in front saves
+    /// one picture of the game window in the data folder. Off until the player switches it on.</summary>
+    public bool CollectStashPictures
+    {
+        get => store.Get("stash.collect") == "1";
+        set => store.Set("stash.collect", value ? "1" : "0");
     }
 
     public HoldMode PeekMode
