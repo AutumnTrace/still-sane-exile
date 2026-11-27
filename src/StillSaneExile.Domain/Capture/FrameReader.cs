@@ -142,6 +142,8 @@ public sealed class FrameReader
         {
             if (!_gate.TryAccept(_command, decision.Generation))
             {
+                // Whatever the analysis made of the frame goes too, cleared if it can be.
+                (value as IDisposable)?.Dispose();
                 Counters.Late();
                 return new FrameRead<T>(FrameReadOutcome.Late, decision.Generation, default, error);
             }

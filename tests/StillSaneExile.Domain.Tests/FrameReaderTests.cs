@@ -159,6 +159,145 @@ public class FrameReaderTests
         Assert.Equal(0, reader.Counters.FramesInMemory);
     }
 
+    /// <summary>The stash picture collector's gate: one picture per press, kept even after a quick tap.</summary>
+    private static FrameReader ShotReader(IFrameSource source)
+    {
+        var gate = new CaptureGate();
+        gate.Configure(Stash, HoldMode.Shot);
+        return new FrameReader(gate, Stash, source);
+    }
+
+    [Fact]
+    public async Task Shot_one_press_takes_one_frame_and_a_quick_tap_keeps_it()
+    {
+        var source = new FakeFrameSource { HoldUntilReleased = true };
+        var reader = ShotReader(source);
+
+        var read = reader.ReadAsync(reader.KeyDown(injected: false, allowedForeground: true), Game, FrameStats.Of);
+        await source.Entered.WaitAsync(TimeSpan.FromSeconds(10));
+        Assert.Equal(GateAction.Ignore, reader.KeyUp(injected: false).Action); // let go before the frame is in
+        source.Release();
+
+        var result = await read;
+        Assert.Equal(FrameReadOutcome.Accepted, result.Outcome);
+        Assert.NotNull(result.Value);
+        Assert.Equal(1, source.Calls);
+        Assert.Equal(1, reader.Counters.Accepted);
+        Assert.Equal(0, reader.Counters.LateDropped);
+        Assert.True(Assert.Single(source.Handed).IsDisposed);
+        Assert.Equal(0, reader.Counters.FramesInMemory);
+    }
+
+    [Fact]
+    public async Task Shot_auto_repeat_injected_input_and_another_window_take_nothing()
+    {
+        var source = new FakeFrameSource();
+        var reader = ShotReader(source);
+
+        // Another window in front, then a key sent by another program: neither captures.
+        Assert.Equal(GateAction.Ignore, reader.KeyDown(injected: false, allowedForeground: false).Action);
+        reader.KeyUp(injected: false);
+        Assert.Equal(GateAction.Ignore, reader.KeyDown(injected: true, allowedForeground: true).Action);
+        Assert.Equal(0, source.Calls);
+
+        // A held key: one picture, then 300 auto-repeats that take nothing.
+        var reads = new List<Task<FrameRead<FrameStats>>>();
+        for (var i = 0; i <= 300; i++)
+        {
+            var d = reader.KeyDown(injected: false, allowedForeground: true);
+            if (d.Action == GateAction.Read)
+            {
+                reads.Add(reader.ReadAsync(d, Game, FrameStats.Of));
+            }
+        }
+
+        reader.KeyUp(injected: false);
+        Assert.Equal(FrameReadOutcome.Accepted, (await Assert.Single(reads)).Outcome);
+        Assert.Equal(1, source.Calls);
+        Assert.Equal(1, reader.GateCounters.Reads);
+        Assert.Equal(300, reader.GateCounters.AutoRepeatIgnored);
+        Assert.Equal(1, reader.GateCounters.InjectedIgnored);
+        Assert.Equal(1, reader.GateCounters.NotForegroundIgnored);
+    }
+
+    [Fact]
+    public async Task Shot_a_frame_that_comes_back_after_focus_loss_or_a_newer_press_is_dropped()
+    {
+        var source = new FakeFrameSource { HoldUntilReleased = true };
+        var reader = ShotReader(source);
+
+        var lostFocus = reader.ReadAsync(reader.KeyDown(false, true), Game, FrameStats.Of);
+        await source.Entered.WaitAsync(TimeSpan.FromSeconds(10));
+        reader.Invalidate("foreground changed");
+        reader.KeyUp(false);
+        source.Release();
+        Assert.Equal(FrameReadOutcome.Late, (await lostFocus).Outcome);
+
+        var source2 = new FakeFrameSource { HoldUntilReleased = true };
+        var reader2 = ShotReader(source2);
+        var first = reader2.ReadAsync(reader2.KeyDown(false, true), Game, FrameStats.Of);
+        await source2.Entered.WaitAsync(TimeSpan.FromSeconds(10));
+        reader2.KeyUp(false);
+        var second = reader2.ReadAsync(reader2.KeyDown(false, true), Game, FrameStats.Of);
+        source2.Release();
+
+        Assert.Equal(FrameReadOutcome.Late, (await first).Outcome);
+        Assert.Equal(FrameReadOutcome.Accepted, (await second).Outcome);
+        Assert.All(source.Handed.Concat(source2.Handed), f => Assert.True(f.IsDisposed));
+        Assert.Equal(1, reader.Counters.LateDropped);
+        Assert.Equal(1, reader2.Counters.LateDropped);
+    }
+
+    [Fact]
+    public async Task A_late_copy_of_the_frame_is_cleared_with_it()
+    {
+        var source = new FakeFrameSource { HoldUntilReleased = true };
+        var reader = ShotReader(source);
+        PictureCopy? copy = null;
+
+        var read = reader.ReadAsync(reader.KeyDown(false, true), Game, frame => copy = PictureCopy.Of(frame));
+        await source.Entered.WaitAsync(TimeSpan.FromSeconds(10));
+        reader.Invalidate("foreground changed");
+        source.Release();
+
+        Assert.Equal(FrameReadOutcome.Late, (await read).Outcome);
+        Assert.NotNull(copy);
+        Assert.True(copy.IsDisposed);
+        Assert.True(Assert.Single(source.Handed).IsDisposed);
+    }
+
+    [Fact]
+    public void A_picture_copy_is_the_same_8_bit_colour_for_sdr_and_hdr_frames()
+    {
+        using var sdr = FakeFrameSource.Solid(8, 4, 200, 100, 30, FramePixelFormat.Bgra8);
+        using var hdr = FakeFrameSource.Solid(8, 4, 200, 100, 30, FramePixelFormat.RgbaHalf, sdrWhite: 2.5);
+
+        using var a = PictureCopy.Of(sdr);
+        using var b = PictureCopy.Of(hdr);
+
+        Assert.Equal((8, 4, 32), (a.Width, a.Height, a.Stride));
+        Assert.Equal(new byte[] { 30, 100, 200, 255 }, a.Pixels[..4]);
+        Assert.Equal(a.Pixels, b.Pixels);
+        Assert.Equal(FramePixelFormat.RgbaHalf, b.SourceFormat);
+        Assert.InRange(b.PeakScRgb, 2.5 * FrameStats.DecodeSrgb(200) - 0.01, 2.5 * FrameStats.DecodeSrgb(200) + 0.01);
+        Assert.False(a.IsBlank);
+    }
+
+    [Fact]
+    public void A_black_picture_copy_is_blank_and_dispose_clears_it()
+    {
+        using var black = FakeFrameSource.Solid(16, 16, 0, 0, 0, FramePixelFormat.Bgra8);
+        var copy = PictureCopy.Of(black);
+        var pixels = copy.Pixels;
+
+        Assert.True(copy.IsBlank);
+        copy.Dispose();
+
+        Assert.True(copy.IsDisposed);
+        Assert.All(pixels, p => Assert.Equal(0, p));
+        Assert.Throws<ObjectDisposedException>(() => copy.Pixels);
+    }
+
     [Fact]
     public void A_disposed_frame_has_no_pixels_left()
     {

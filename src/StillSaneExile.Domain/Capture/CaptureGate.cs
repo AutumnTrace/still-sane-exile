@@ -7,6 +7,10 @@ public enum HoldMode
     Hold,
     /// <summary>Accessibility: first press shows a frozen snapshot, the next press dismisses it.</summary>
     Toggle,
+    /// <summary>One picture per press (the stash picture collector). Letting go changes nothing, so a quick
+    /// tap keeps the frame it took. Auto-repeat, synthetic input and another window in front still take
+    /// nothing, and focus loss or a newer press still drop a frame that comes back late.</summary>
+    Shot,
 }
 
 public enum GateAction
@@ -104,6 +108,11 @@ public sealed class CaptureGate
         }
 
         s.IsDown = false;
+        if (s.Mode == HoldMode.Shot)
+        {
+            return GateDecision.Ignore("released: the shot stays current");
+        }
+
         if (s.Mode == HoldMode.Hold && s.ActiveGeneration is { } active && s.Pinned)
         {
             return new GateDecision(GateAction.Keep, active, "released, pinned");
