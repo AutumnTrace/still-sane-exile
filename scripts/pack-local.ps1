@@ -26,8 +26,9 @@ dotnet tool restore
 if ($LASTEXITCODE -ne 0) { throw 'dotnet tool restore failed' }
 
 # --packTitle has no '?': it names the shortcuts, and Windows file names cannot contain '?'.
+# --runtime matches the publish above: without it vpk labels the package x86.
 $packArgs = @(
-    '--packId', $PackId, '--packVersion', $Version, '--packDir', $PublishDir, '--mainExe', 'StillSaneExile.exe',
+    '--packId', $PackId, '--packVersion', $Version, '--packDir', $PublishDir, '--mainExe', 'StillSaneExile.exe', '--runtime', 'win-x64',
     '--packTitle', 'Still Sane, Exile', '--packAuthors', 'Mina Rotari',
     '--icon', (Join-Path $root 'src/StillSaneExile.Desktop/Assets/sse.ico'), '--outputDir', $OutDir
 )
