@@ -16,11 +16,14 @@ public sealed class Session
 {
     private readonly Store _store;
     private readonly IReadOnlyList<(string SetKey, Comparable Comparable)> _seeded;
+    private readonly IReadOnlySet<string> _practiceTexts;
 
     private Session(Store store, ProfileKind kind, string league, string displayCurrency, string? listingDenomination,
-        PriceBook book, DataPack? pack, string packStatus, TimeProvider clock, IReadOnlyList<(string, Comparable)> seeded)
+        PriceBook book, DataPack? pack, string packStatus, TimeProvider clock, IReadOnlyList<(string, Comparable)> seeded,
+        IReadOnlySet<string>? practiceTexts = null)
     {
         _store = store;
+        _practiceTexts = practiceTexts ?? new HashSet<string>();
         Kind = kind;
         League = league;
         DisplayCurrency = displayCurrency;
@@ -53,11 +56,16 @@ public sealed class Session
     /// <summary>The status bar's one line about where prices come from.</summary>
     public string FooterStatus => IsDemo ? "Demo prices, made up for practice" : "No live prices yet: they come in a later update";
 
-    /// <summary>Listings the price check searches. The demo profile gets synthetic ones made around the
-    /// item; a live profile has none until live prices arrive, and says so.</summary>
+    /// <summary>Whether this session's prices may be shown for <paramref name="item"/>. The demo's prices
+    /// are made up, so they cover its practice items only: an item copied from the game gets no price
+    /// rather than an invented one that looks real (a Mageblood "worth 25–35 ex").</summary>
+    public bool HasPricesFor(ItemSnapshot item) => !IsDemo || _practiceTexts.Contains(PracticeKey(item.RawText));
+
+    /// <summary>Listings the price check searches. The demo profile gets synthetic ones made around its
+    /// practice items; anything else has none until live prices arrive, and says so.</summary>
     public IReadOnlyList<Listing>? Listings(ItemSnapshot item, ComparisonWorksheet worksheet)
     {
-        if (!IsDemo)
+        if (!IsDemo || !HasPricesFor(item))
         {
             return null;
         }
@@ -120,8 +128,20 @@ public sealed class Session
         PriceBookGuard.EnsureAllowed(ProfileKind.Demo, Settings.DemoLeague, book);
         return new Session(store, ProfileKind.Demo, book.League, settings.DisplayCurrency(ProfileKind.Demo), settings.ListingDenomination(ProfileKind.Demo), book,
             load.Pack, load.Pack is null ? $"Pack failed to load: {load.Error}" : "Synthetic demo pack (not game data)",
-            new DemoTimeProvider(DemoTimeProvider.Start), LoadSeeded(paths));
+            new DemoTimeProvider(DemoTimeProvider.Start), LoadSeeded(paths), LoadPracticeTexts(paths));
     }
+
+    /// <summary>The practice items' text, so the demo can tell them from items copied from the game.</summary>
+    private static HashSet<string> LoadPracticeTexts(AppPaths paths)
+    {
+        var dir = Path.Combine(paths.Fixtures, "items");
+        return Directory.Exists(dir)
+            ? Directory.EnumerateFiles(dir, "*.txt").Select(f => PracticeKey(File.ReadAllText(f))).ToHashSet(StringComparer.Ordinal)
+            : [];
+    }
+
+    /// <summary>Line endings and surrounding blank lines don't make a different item.</summary>
+    private static string PracticeKey(string text) => text.Replace("\r\n", "\n", StringComparison.Ordinal).Trim();
 
     public IReadOnlyList<Comparable> Comparables(string setKey) =>
         _seeded.Where(s => s.SetKey == setKey).Select(s => s.Comparable)

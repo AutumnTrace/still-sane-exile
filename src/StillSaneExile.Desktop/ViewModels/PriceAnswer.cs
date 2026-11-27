@@ -66,6 +66,14 @@ public sealed record PriceAnswer(string Lead, string Big, string? Line, string N
             note, false, null, noMarketData ? "No price yet · live prices come later" : "Not in the price list");
     }
 
+    /// <summary>An item copied from the game while the demo profile is on: the demo's prices are made up
+    /// for its practice items, so this item gets none rather than an invented one that looks real.</summary>
+    public static PriceAnswer PracticeOnly(bool searchable, bool canWriteDown) =>
+        new(searchable ? "Items like yours" : "Price", "No real price", "Demo prices are made up and only cover the practice items.",
+            canWriteDown ? "Pick a live league in Settings for real prices, or open the search on the trade site and write down what you find."
+                : "Pick a live league in Settings for real prices.",
+            true, null, "Demo · no real prices for game items");
+
     public static PriceAnswer Unidentified() =>
         new("Unidentified item", "No price", null, "Only the base is known. Identify it, then check again.", true, null, "Identify it to price it");
 
