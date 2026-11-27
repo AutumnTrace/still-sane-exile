@@ -1,5 +1,6 @@
 using System.Windows.Controls;
 using StillSaneExile.Desktop.Infrastructure;
+using StillSaneExile.Desktop.ViewModels;
 using StillSaneExile.Desktop.Views;
 using StillSaneExile.Domain.Pricing;
 
@@ -10,6 +11,7 @@ public class HudControllerTests
     private const string Crossbow = "rare-crossbow-advanced.txt";
     private static readonly Hotkey CtrlC = Hotkey.Parse("Ctrl+C")!;
     private static readonly Hotkey F3 = Hotkey.Parse("F3")!;
+    private static readonly Hotkey Mouse4 = Hotkey.Parse("Mouse4")!;
 
     [Fact]
     public void A_physical_press_over_the_game_reads_once_and_shows_the_card() => Sta.Run(() =>
@@ -24,6 +26,7 @@ public class HudControllerTests
         var card = Assert.Single(rig.Peek.Shown);
         Assert.False(card.IsMessage);
         Assert.Equal("Doom Thirst", card.Title);
+        Assert.False(card.HasNote); // the game just copied the hovered item
         Assert.True(rig.Peek.IsVisible);
         Assert.Equal(FakeForeground.GameWindow, rig.Peek.ShownOver);
         Assert.Equal(1, rig.Hud.Counters.Reads);
@@ -286,6 +289,80 @@ public class HudControllerTests
         Assert.False(MainWindow.IsTextInput(new Button()));
         Assert.False(MainWindow.IsTextInput(new ListBox()));
         Assert.False(MainWindow.IsTextInput(null));
+    });
+
+    [Fact]
+    public void A_side_button_peek_reads_once_per_physical_press_and_ignores_synthetic_clicks() => Sta.Run(() =>
+    {
+        using var rig = new HudRig(s => s.PeekKey = Mouse4);
+        rig.Clipboard.Text = rig.App.ItemText(Crossbow);
+
+        rig.Keys.Press(Mouse4);
+        rig.Keys.Press(Mouse4, injected: true);
+        rig.Keys.Release(Mouse4, injected: true);
+        Sta.Drain();
+
+        Assert.Equal(1, rig.Clipboard.Reads);
+        var card = Assert.Single(rig.Peek.Shown);
+        Assert.Equal("Doom Thirst", card.Title);
+        Assert.Equal(PeekViewModel.LastCopiedNote, card.Note); // not the game's copy key: says what it shows
+        Assert.True(rig.Peek.IsVisible);
+
+        rig.Keys.Release(Mouse4);
+        Sta.Drain();
+        Assert.False(rig.Peek.IsVisible);
+
+        rig.Keys.Press(Mouse4, injected: true); // a fresh click, but sent by software
+        Sta.Drain();
+        Assert.Equal(1, rig.Clipboard.Reads);
+
+        rig.Keys.Press(Mouse4);
+        rig.Keys.Release(Mouse4);
+        Sta.Drain();
+
+        Assert.Equal(2, rig.Clipboard.Reads);
+        Assert.Equal(2, rig.Hud.Counters.Reads);
+        Assert.Equal(2, rig.Hud.Counters.InjectedIgnored);
+    });
+
+    [Fact]
+    public void Side_buttons_are_observed_only_while_bound_or_on_the_settings_page() => Sta.Run(() =>
+    {
+        using var rig = new HudRig();
+        Assert.False(rig.Keys.ObserveMouseButtons);
+
+        rig.Shell.Navigate(rig.Shell.SettingsPage);
+        Assert.True(rig.Keys.ObserveMouseButtons);
+
+        rig.Shell.BackCommand.Execute(null);
+        Assert.False(rig.Keys.ObserveMouseButtons);
+
+        rig.Shell.Settings.OpenLastKey = Hotkey.Parse("Mouse5")!;
+        rig.Hud.ApplySettings();
+        Assert.True(rig.Keys.ObserveMouseButtons);
+    });
+
+    [Fact]
+    public void The_key_tester_shows_a_side_button_only_while_SSE_is_in_front() => Sta.Run(() =>
+    {
+        using var rig = new HudRig();
+        rig.Shell.Navigate(rig.Shell.SettingsPage);
+        var untouched = rig.Shell.SettingsPage.TestLog;
+
+        rig.Foreground.Current = ForegroundKind.Other;
+        rig.Keys.Press(Mouse4);
+        rig.Keys.Release(Mouse4);
+        Sta.Drain();
+        Assert.Equal(untouched, rig.Shell.SettingsPage.TestLog);
+
+        rig.Foreground.Current = ForegroundKind.ThisApp;
+        rig.Keys.Press(Mouse4);
+        Sta.Drain();
+        Assert.Equal("Mouse 4 (back): press", rig.Shell.SettingsPage.TestLog);
+
+        rig.Keys.Release(Mouse4);
+        Sta.Drain();
+        Assert.StartsWith("Mouse 4 (back): release after", rig.Shell.SettingsPage.TestLog);
     });
 
     [Fact]

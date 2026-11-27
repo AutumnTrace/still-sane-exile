@@ -121,7 +121,7 @@
                   <Border DockPanel.Dock="Right" Style="{StaticResource KeyCap}" Margin="14,0,0,0"><TextBlock Text="{Binding PeekKey}" FontSize="13" FontWeight="SemiBold" /></Border>
                   <StackPanel VerticalAlignment="Center">
                     <TextBlock Text="Quick price (hold)" FontSize="14.5" FontWeight="SemiBold" />
-                    <TextBlock Text="Hover an item and hold. Let go to hide." Style="{StaticResource Small}" Margin="0,2,0,0" />
+                    <TextBlock Text="{Binding PeekHowTo}" Style="{StaticResource Small}" Margin="0,2,0,0" />
                   </StackPanel>
                 </DockPanel>
               </Border>

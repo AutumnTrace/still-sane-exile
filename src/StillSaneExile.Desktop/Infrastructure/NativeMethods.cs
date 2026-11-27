@@ -3,8 +3,8 @@ using System.Text;
 
 namespace StillSaneExile.Desktop.Infrastructure;
 
-/// <summary>The complete list of Windows calls the app makes. Every one of them is OS window, keyboard
-/// or clipboard metadata. None touches the game process, its memory, its files or its input.</summary>
+/// <summary>The complete list of Windows calls the app makes. Every one of them is OS window, keyboard,
+/// mouse button or clipboard metadata. None touches the game process, its memory, its files or its input.</summary>
 internal static class NativeMethods
 {
     public const int WH_KEYBOARD_LL = 13;
@@ -14,6 +14,14 @@ internal static class NativeMethods
     public const int WM_SYSKEYUP = 0x0105;
     public const uint LLKHF_LOWER_IL_INJECTED = 0x02;
     public const uint LLKHF_INJECTED = 0x10;
+
+    public const int WH_MOUSE_LL = 14;
+    public const int WM_XBUTTONDOWN = 0x020B;
+    public const int WM_XBUTTONUP = 0x020C;
+    public const uint XBUTTON1 = 0x0001;
+    public const uint XBUTTON2 = 0x0002;
+    public const uint LLMHF_INJECTED = 0x01;
+    public const uint LLMHF_LOWER_IL_INJECTED = 0x02;
 
     public const int GWL_EXSTYLE = -20;
     public const long WS_EX_TRANSPARENT = 0x20;
@@ -49,6 +57,18 @@ internal static class NativeMethods
         public int Y;
     }
 
+    /// <summary>The low-level mouse hook's data, decoded for side-button messages only. The cursor
+    /// position is part of the layout; the app never uses it.</summary>
+    [StructLayout(LayoutKind.Sequential)]
+    public struct MSLLHOOKSTRUCT
+    {
+        public POINT pt;
+        public uint mouseData;
+        public uint flags;
+        public uint time;
+        public nuint dwExtraInfo;
+    }
+
     [StructLayout(LayoutKind.Sequential)]
     public struct RECT
     {
@@ -70,12 +90,13 @@ internal static class NativeMethods
         public uint dwFlags;
     }
 
-    public delegate nint LowLevelKeyboardProc(int nCode, nint wParam, nint lParam);
+    /// <summary>The callback of both low-level hooks, keyboard and mouse.</summary>
+    public delegate nint LowLevelHookProc(int nCode, nint wParam, nint lParam);
 
     public delegate void WinEventDelegate(nint hWinEventHook, uint eventType, nint hwnd, int idObject, int idChild, uint idEventThread, uint dwmsEventTime);
 
     [DllImport("user32.dll", SetLastError = true)]
-    public static extern nint SetWindowsHookEx(int idHook, LowLevelKeyboardProc lpfn, nint hMod, uint dwThreadId);
+    public static extern nint SetWindowsHookEx(int idHook, LowLevelHookProc lpfn, nint hMod, uint dwThreadId);
 
     [DllImport("user32.dll", SetLastError = true)]
     [return: MarshalAs(UnmanagedType.Bool)]

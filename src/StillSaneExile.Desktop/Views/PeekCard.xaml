@@ -19,6 +19,7 @@
           <StackPanel>
             <TextBlock x:Name="NameText" Text="{Binding Title}" FontSize="17" FontWeight="Bold" TextWrapping="Wrap" Foreground="{Binding Rarity, Converter={StaticResource RarityBrush}}" />
             <TextBlock Text="{Binding Subtitle}" FontSize="12.5" Foreground="{StaticResource TextDim}" TextWrapping="Wrap" Margin="0,1,0,0" Visibility="{Binding HasSubtitle, Converter={StaticResource Vis}}" />
+            <TextBlock Text="{Binding Note}" FontSize="11.5" Foreground="{StaticResource TextFaint}" TextWrapping="Wrap" Margin="0,3,0,0" Visibility="{Binding HasNote, Converter={StaticResource Vis}}" />
           </StackPanel>
           <Border Grid.Column="1" Style="{StaticResource DemoBadge}" Padding="6,2" VerticalAlignment="Top" Margin="10,2,0,0" Visibility="{Binding IsDemo, Converter={StaticResource Vis}}">
             <TextBlock Text="DEMO" FontSize="10" FontWeight="Bold" />

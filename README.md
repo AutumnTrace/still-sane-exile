@@ -49,7 +49,7 @@ An advanced copy (`Ctrl+Alt+C`) prints each affix on its own with its tier and r
 | Hold `Ctrl+Alt+C` | The same card from the game's advanced copy, with tiers and ranges |
 | `F3` | Opens the price check for your last item over the game; `Esc` closes it |
 
-Settings can change every key, and a toggle mode can replace holding.
+Settings can change every key, including to a side mouse button (Mouse 4 or 5), and a toggle mode can replace holding. A side button isn't the game's copy key, so the game copies nothing when you press it: the card shows the last item you copied with `Ctrl+C`, which may not be the one under your cursor.
 
 The game copies the item. SSE reads the changed clipboard once for that press and draws a click-through card that never takes focus; releasing the key hides it. `F3` reopens the saved item without another read, and takes focus so you can type until you close it. SSE never sends input to the game. Its only network request is the update check against this repository's GitHub releases, which Settings can switch off. Details: [Capture and privacy](docs/CAPTURE-AND-PRIVACY.md).
 

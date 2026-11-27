@@ -8,6 +8,7 @@
              mc:Ignorable="d"
              d:DataContext="{d:DesignInstance Type=vm:SettingsViewModel}"
              PreviewKeyDown="OnPreviewKeyDown"
+             PreviewMouseDown="OnPreviewMouseDown"
              Focusable="True">
   <Grid>
   <!-- First start shows onboarding instead; it is only created while onboarding is open. -->
@@ -129,12 +130,12 @@
           </ItemsControl>
           <Border Background="{StaticResource Well}" BorderBrush="{StaticResource Edge}" BorderThickness="1" CornerRadius="8" Padding="12,10" Margin="0,12,0,0">
             <StackPanel>
-              <TextBlock Text="KEY TESTER: press, hold and release any key while this page is in front" FontSize="11" Foreground="{StaticResource TextFaint}" />
+              <TextBlock Text="KEY TESTER: press, hold and release any key or side mouse button while this page is in front" FontSize="11" Foreground="{StaticResource TextFaint}" />
               <TextBlock Text="{Binding TestLog}" FontSize="14" Margin="0,4,0,0" />
             </StackPanel>
           </Border>
           <TextBlock FontSize="12" Foreground="{StaticResource TextFaint}" TextWrapping="Wrap" Margin="0,10,0,0"
-                     Text="The app observes physical key presses and passes every key on to the game unchanged. It ignores synthetic input, never sends keys, clicks or chat, and never reads game memory or files." />
+                     Text="The app observes physical key presses (and side mouse buttons, while one is bound or this page is open) and passes every one on to the game unchanged. It ignores synthetic input, never sends keys, clicks or chat, never looks at mouse movement, and never reads game memory or files." />
         </StackPanel>
       </Border>
 

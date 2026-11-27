@@ -1,3 +1,4 @@
+using System.ComponentModel;
 using System.Diagnostics;
 using System.Windows.Threading;
 using Microsoft.Win32;
@@ -50,6 +51,7 @@ public sealed class HudController : IDisposable
     {
         _keys.Key += OnKey;
         _foreground.Changed += OnForegroundChanged;
+        _shell.PropertyChanged += OnShellChanged;
         SystemEvents.SessionSwitch += OnSessionSwitch;
         SystemEvents.DisplaySettingsChanged += OnDisplayChanged;
         _keys.Start();
@@ -62,6 +64,7 @@ public sealed class HudController : IDisposable
         _peekKey = _shell.Settings.PeekKey;
         _openLastKey = _shell.Settings.OpenLastKey;
         _gate.Configure(PeekCommand, _shell.Settings.PeekMode);
+        UpdateMouseButtons();
         Invalidate("settings changed");
     }
 
@@ -69,13 +72,28 @@ public sealed class HudController : IDisposable
     {
         _keys.Key -= OnKey;
         _foreground.Changed -= OnForegroundChanged;
+        _shell.PropertyChanged -= OnShellChanged;
         SystemEvents.SessionSwitch -= OnSessionSwitch;
         SystemEvents.DisplaySettingsChanged -= OnDisplayChanged;
         _keys.Dispose();
         _foreground.Dispose();
     }
 
-    /// <summary>Runs inside the keyboard hook callback: decide quickly, defer any work.</summary>
+    /// <summary>Side buttons are observed only while one is bound to something active, or while the
+    /// Settings page is open so the key tester can show them. Otherwise no mouse hook runs at all.</summary>
+    private void UpdateMouseButtons() =>
+        _keys.ObserveMouseButtons = _peekKey.IsMouseButton || _openLastKey.IsMouseButton || _shell.CurrentPage is SettingsViewModel;
+
+    private void OnShellChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName == nameof(ShellViewModel.CurrentPage))
+        {
+            UpdateMouseButtons();
+        }
+    }
+
+    /// <summary>Runs inside the hook callback (the keyboard's, or the mouse's for a side button):
+    /// decide quickly, defer any work.</summary>
     private void OnKey(KeyEvent e)
     {
         TraceForSettings(e);
@@ -131,10 +149,12 @@ public sealed class HudController : IDisposable
             var selected = _shell.Inspect.Selected;
             card = selected is null
                 ? PeekViewModel.Message("Load a practice item first, then hold the key again.", true, release)
-                : PeekViewModel.From(selected, true, release, _openLastKey.ToString());
+                : PeekViewModel.From(selected, true, release, _openLastKey.Label);
         }
         else
         {
+            // Only the game's own copy key makes the game copy the hovered item. Any other binding (a
+            // side button, say) reads what is already on the clipboard, and the card says so.
             var read = _peekKey.IsNativeCopy
                 ? await _clipboard.ReadAfterChangeAsync(clipboardSequence, TimeSpan.FromMilliseconds(250))
                 : _clipboard.ReadNow();
@@ -147,7 +167,7 @@ public sealed class HudController : IDisposable
                 var vm = _shell.Inspect.AddFromText(read.Text, "hud");
                 card = vm is null
                     ? PeekViewModel.Message(_shell.Inspect.Message ?? "Not an item.", _shell.Session.IsDemo, release)
-                    : PeekViewModel.From(vm, _shell.Session.IsDemo, release, _openLastKey.ToString());
+                    : PeekViewModel.From(vm, _shell.Session.IsDemo, release, _openLastKey.Label, note: _peekKey.IsNativeCopy ? null : PeekViewModel.LastCopiedNote);
             }
         }
 
@@ -250,7 +270,7 @@ public sealed class HudController : IDisposable
             return;
         }
 
-        var name = new Hotkey(e.Vk, e.Mods.Ctrl && e.Vk is not (0xA2 or 0xA3), e.Mods.Shift && e.Vk is not (0xA0 or 0xA1), e.Mods.Alt && e.Vk is not (0xA4 or 0xA5)).ToString();
+        var name = new Hotkey(e.Vk, e.Mods.Ctrl && e.Vk is not (0xA2 or 0xA3), e.Mods.Shift && e.Vk is not (0xA0 or 0xA1), e.Mods.Alt && e.Vk is not (0xA4 or 0xA5)).Label;
         _dispatcher.BeginInvoke(() => settings.OnTestKey(e, name, held));
     }
 }

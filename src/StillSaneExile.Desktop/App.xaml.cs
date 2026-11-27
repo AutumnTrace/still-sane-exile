@@ -48,7 +48,7 @@ public partial class App : Application
 
         _peek = new PeekWindow();
         _priceCheck = new PriceCheckWindow();
-        _hud = new HudController(shell, new KeyboardObserver(), new ForegroundWatcher(), clipboard, _peek, _priceCheck, main);
+        _hud = new HudController(shell, new InputObserver(), new ForegroundWatcher(), clipboard, _peek, _priceCheck, main);
         shell.Hud = _hud;
 
         main.Closed += (_, _) => Shutdown();

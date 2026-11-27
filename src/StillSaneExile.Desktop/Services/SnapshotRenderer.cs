@@ -81,7 +81,7 @@ public static class SnapshotRenderer
         foreach (var (title, name) in new[] { ("Doom Thirst", "peek-advanced"), ("Storm Mark", "peek-hybrid"), ("Sanity's Last Loop", "peek-unique"), ("Exalted Orb", "peek-currency") })
         {
             var item = shell.Inspect.Recent.First(r => r.Title == title);
-            peek.DataContext = PeekViewModel.From(item, true, PeekViewModel.ReleaseHintFor(shell.Settings.PeekMode), shell.Settings.OpenLastKey.ToString());
+            peek.DataContext = PeekViewModel.From(item, true, PeekViewModel.ReleaseHintFor(shell.Settings.PeekMode), shell.Settings.OpenLastKey.Label);
             peek.Show();
             Save(peek, Path.Combine(dir, $"{name}.png"));
         }

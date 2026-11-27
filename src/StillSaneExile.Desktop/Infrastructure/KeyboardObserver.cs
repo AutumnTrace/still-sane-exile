@@ -11,9 +11,16 @@ public readonly record struct Modifiers(bool Ctrl, bool Shift, bool Alt);
 public readonly record struct KeyEvent(int Vk, bool Down, bool Injected, Modifiers Mods, uint ClipboardSequence, long Timestamp);
 
 /// <summary>A key plus required modifiers. Extra modifiers are allowed, so a Ctrl+C binding also fires
-/// on the game's advanced copy, Ctrl+Alt+C.</summary>
+/// on the game's advanced copy, Ctrl+Alt+C. A side mouse button counts as a key: Windows gives Mouse 4
+/// and 5 virtual-key codes of their own.</summary>
 public sealed record Hotkey(int Vk, bool Ctrl, bool Shift, bool Alt)
 {
+    /// <summary>VK_XBUTTON1 and VK_XBUTTON2: the side buttons, usually back and forward.</summary>
+    public const int VkXButton1 = 0x05, VkXButton2 = 0x06;
+
+    // WPF's Key enum has no side buttons, so they are stored under names of their own.
+    private const string Mouse4 = "Mouse4", Mouse5 = "Mouse5";
+
     public static Hotkey? Parse(string? text)
     {
         if (string.IsNullOrWhiteSpace(text))
@@ -22,7 +29,7 @@ public sealed record Hotkey(int Vk, bool Ctrl, bool Shift, bool Alt)
         }
 
         bool ctrl = false, shift = false, alt = false;
-        Key? key = null;
+        int? vk = null;
         foreach (var part in text.Split('+', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries))
         {
             switch (part.ToLowerInvariant())
@@ -36,17 +43,23 @@ public sealed record Hotkey(int Vk, bool Ctrl, bool Shift, bool Alt)
                 case "alt":
                     alt = true;
                     break;
+                case "mouse4":
+                    vk = VkXButton1;
+                    break;
+                case "mouse5":
+                    vk = VkXButton2;
+                    break;
                 default:
                     if (Enum.TryParse<Key>(part, ignoreCase: true, out var k))
                     {
-                        key = k;
+                        vk = KeyInterop.VirtualKeyFromKey(k);
                     }
 
                     break;
             }
         }
 
-        return key is { } kk ? new Hotkey(KeyInterop.VirtualKeyFromKey(kk), ctrl, shift, alt) : null;
+        return vk is { } v ? new Hotkey(v, ctrl, shift, alt) : null;
     }
 
     public bool Matches(int vk, Modifiers mods) =>
@@ -54,49 +67,36 @@ public sealed record Hotkey(int Vk, bool Ctrl, bool Shift, bool Alt)
 
     public bool IsNativeCopy => Ctrl && Vk == KeyInterop.VirtualKeyFromKey(Key.C);
 
-    public override string ToString()
+    public bool IsMouseButton => Vk is VkXButton1 or VkXButton2;
+
+    /// <summary>How the app shows the binding, with the side buttons spelled out. <see cref="ToString"/>
+    /// is the stored form.</summary>
+    public string Label => Prefix + Vk switch
     {
-        var parts = new List<string>();
-        if (Ctrl)
-        {
-            parts.Add("Ctrl");
-        }
+        VkXButton1 => "Mouse 4 (back)",
+        VkXButton2 => "Mouse 5 (forward)",
+        _ => KeyInterop.KeyFromVirtualKey(Vk).ToString(),
+    };
 
-        if (Shift)
-        {
-            parts.Add("Shift");
-        }
+    public override string ToString() => Prefix + Vk switch
+    {
+        VkXButton1 => Mouse4,
+        VkXButton2 => Mouse5,
+        _ => KeyInterop.KeyFromVirtualKey(Vk).ToString(),
+    };
 
-        if (Alt)
-        {
-            parts.Add("Alt");
-        }
-
-        parts.Add(KeyInterop.KeyFromVirtualKey(Vk).ToString());
-        return string.Join("+", parts);
-    }
-}
-
-/// <summary>What the HUD needs from the keyboard observer, so its decisions can be tested with a fake.</summary>
-public interface IKeySource : IDisposable
-{
-    /// <summary>Raised on the thread that started the source, inside the hook callback.</summary>
-    event Action<KeyEvent>? Key;
-
-    bool AltGrDetected { get; }
-
-    void Start();
+    private string Prefix => (Ctrl ? "Ctrl+" : "") + (Shift ? "Shift+" : "") + (Alt ? "Alt+" : "");
 }
 
 /// <summary>Observes physical key presses system-wide with a low-level keyboard hook. It never
 /// swallows, delays or sends a key: every event is passed on unchanged with CallNextHookEx. The hook
 /// runs in this process (no DLL is loaded into the game).</summary>
-public sealed class KeyboardObserver : IKeySource
+public sealed class KeyboardObserver : IDisposable
 {
     private const int VkLShift = 0xA0, VkRShift = 0xA1, VkLControl = 0xA2, VkRControl = 0xA3, VkLMenu = 0xA4, VkRMenu = 0xA5;
     private const uint AltGrFakeCtrlScan = 0x21D;
 
-    private readonly NativeMethods.LowLevelKeyboardProc _proc;
+    private readonly NativeMethods.LowLevelHookProc _proc;
     private nint _hook;
     private bool _lctrl, _rctrl, _lshift, _rshift, _lalt, _ralt;
 
@@ -111,6 +111,9 @@ public sealed class KeyboardObserver : IKeySource
     public bool AltGrDetected { get; private set; }
 
     public bool IsRunning => _hook != 0;
+
+    /// <summary>The modifiers physically held right now, as this observer has tracked them.</summary>
+    public Modifiers Modifiers => new(_lctrl || _rctrl, _lshift || _rshift, _lalt || _ralt);
 
     public void Start()
     {
@@ -162,8 +165,7 @@ public sealed class KeyboardObserver : IKeySource
 
                     if (!isAltGrCtrl)
                     {
-                        Key?.Invoke(new KeyEvent(vk, down, injected, new Modifiers(_lctrl || _rctrl, _lshift || _rshift, _lalt || _ralt),
-                            NativeMethods.GetClipboardSequenceNumber(), Stopwatch.GetTimestamp()));
+                        Key?.Invoke(new KeyEvent(vk, down, injected, Modifiers, NativeMethods.GetClipboardSequenceNumber(), Stopwatch.GetTimestamp()));
                     }
                 }
             }
