@@ -53,6 +53,8 @@ Settings can change every key, including to a side mouse button (Mouse 4 or 5), 
 
 The game copies the item. SSE reads the changed clipboard once for that press and draws a click-through card that never takes focus; releasing the key hides it. `F3` reopens the saved item without another read, and takes focus so you can type until you close it. SSE never sends input to the game. Its only network request is the update check against this repository's GitHub releases, which Settings can switch off. Details: [Capture and privacy](docs/CAPTURE-AND-PRIVACY.md).
 
+Every control in SSE works from the keyboard and has a name for screen readers, and its windows follow the Windows text size setting as far as they fit your screen. Details and contrast measurements: [Accessibility](docs/ACCESSIBILITY.md).
+
 ## What's next
 
 Shared market data comes next, bringing prices to live leagues and held-key price labels to stash and Aldur reward panels. Wealth history, the campaign guide and crafting plans follow; see the [roadmap](docs/ROADMAP.md). Players can help with two open issues: [English item copies to check the parser against](https://github.com/AutumnTrace/still-sane-exile/issues/1) and [how the card behaves on your screen](https://github.com/AutumnTrace/still-sane-exile/issues/5). Item text and measurements are enough; leave out account names and stash screenshots.

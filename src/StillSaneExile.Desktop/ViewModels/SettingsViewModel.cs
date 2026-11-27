@@ -12,7 +12,11 @@ using StillSaneExile.Domain.Pricing;
 
 namespace StillSaneExile.Desktop.ViewModels;
 
-public sealed record GuideStep(int Number, string Title, string Text);
+public sealed record GuideStep(int Number, string Title, string Text)
+{
+    /// <summary>What a screen reader says for the step (WPF reads a list row through ToString).</summary>
+    public override string ToString() => $"{Number}. {Title}. {Text}";
+}
 
 /// <summary>Settings and first-run onboarding (same page, different heading).</summary>
 public sealed partial class SettingsViewModel : ObservableObject

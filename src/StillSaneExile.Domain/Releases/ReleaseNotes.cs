@@ -21,7 +21,11 @@ public enum NoteStyle
 /// <summary>A run of text in one style. <see cref="Url"/> is set only for http(s) links.</summary>
 public sealed record NoteSpan(string Text, NoteStyle Style = NoteStyle.None, string? Url = null);
 
-public sealed record NoteBlock(NoteBlockKind Kind, IReadOnlyList<NoteSpan> Spans);
+public sealed record NoteBlock(NoteBlockKind Kind, IReadOnlyList<NoteSpan> Spans)
+{
+    /// <summary>The block's plain text, as a screen reader says it.</summary>
+    public override string ToString() => string.Concat(Spans.Select(s => s.Text));
+}
 
 /// <summary>The small markdown subset the changelog uses (bullets, <c>### </c> headings, <c>**bold**</c>,
 /// <c>`code`</c> and <c>[links](https://…)</c>), turned into blocks and spans the app can draw with plain

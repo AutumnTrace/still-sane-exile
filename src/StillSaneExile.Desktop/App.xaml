@@ -7,7 +7,9 @@
   <Application.Resources>
     <ResourceDictionary>
       <!-- Colour rules: the accent is only for the search (tick boxes, numbers you can change, the stat
-           count, the search button). Rarity colours only on item names. Everything else is grey. -->
+           count, the search button). Rarity colours only on item names. Everything else is grey.
+           Contrast (docs/ACCESSIBILITY.md): every text colour, TextFaint included, reads at 4.5:1 or more
+           on every surface up to Surface4; the empty tick box (Unchecked) at 3:1 or more on Surface3. -->
       <SolidColorBrush x:Key="Surface" Color="#101114" />
       <SolidColorBrush x:Key="Surface2" Color="#15161A" />
       <SolidColorBrush x:Key="Surface3" Color="#1B1D22" />
@@ -17,12 +19,12 @@
       <SolidColorBrush x:Key="RowLine" Color="#202227" />
       <SolidColorBrush x:Key="Edge" Color="#2C2F36" />
       <SolidColorBrush x:Key="EdgeStrong" Color="#3A3D45" />
-      <SolidColorBrush x:Key="Unchecked" Color="#4A4E57" />
+      <SolidColorBrush x:Key="Unchecked" Color="#666A73" />
       <SolidColorBrush x:Key="Text" Color="#F1F2F4" />
       <SolidColorBrush x:Key="TextSoft" Color="#C7CBD2" />
       <SolidColorBrush x:Key="TextDim" Color="#A6ABB5" />
-      <SolidColorBrush x:Key="TextOff" Color="#8C929C" />
-      <SolidColorBrush x:Key="TextFaint" Color="#7E848F" />
+      <SolidColorBrush x:Key="TextOff" Color="#959BA5" />
+      <SolidColorBrush x:Key="TextFaint" Color="#868C97" />
       <SolidColorBrush x:Key="Accent" Color="#3D8BFF" />
       <SolidColorBrush x:Key="AccentHover" Color="#5C9DFF" />
       <SolidColorBrush x:Key="OnAccent" Color="#07111F" />
@@ -82,8 +84,11 @@
         <Setter Property="v:Ui.Radius" Value="6" />
         <Setter Property="Template" Value="{StaticResource ButtonTemplate}" />
         <Style.Triggers>
+          <!-- Tag = "active" marks the chosen one of a few (page, currency, card position...). Screen
+               readers hear it as the item status "Selected"; the derived styles only change colours. -->
           <DataTrigger Binding="{Binding Tag, RelativeSource={RelativeSource Self}}" Value="active">
             <Setter Property="Background" Value="{StaticResource Surface4}" />
+            <Setter Property="AutomationProperties.ItemStatus" Value="Selected" />
           </DataTrigger>
         </Style.Triggers>
       </Style>
@@ -126,10 +131,23 @@
         </Style.Triggers>
       </Style>
 
+      <!-- The keyboard focus ring for what has no template of its own to show focus: links inside text.
+           WPF draws it only when focus arrives from the keyboard. -->
+      <Style x:Key="FocusRing">
+        <Setter Property="Control.Template">
+          <Setter.Value>
+            <ControlTemplate>
+              <Rectangle Margin="-2,-1" Stroke="{StaticResource Text}" StrokeThickness="1" RadiusX="2" RadiusY="2" SnapsToDevicePixels="True" />
+            </ControlTemplate>
+          </Setter.Value>
+        </Setter>
+      </Style>
+
       <!-- Links inside text (release notes), coloured like LinkButton. -->
       <Style TargetType="Hyperlink">
         <Setter Property="Foreground" Value="{StaticResource Link}" />
         <Setter Property="Cursor" Value="Hand" />
+        <Setter Property="FocusVisualStyle" Value="{StaticResource FocusRing}" />
         <Style.Triggers>
           <Trigger Property="IsMouseOver" Value="True">
             <Setter Property="Foreground" Value="{StaticResource LinkHover}" />
@@ -232,6 +250,8 @@
         <Setter Property="MinHeight" Value="36" />
         <Setter Property="VerticalContentAlignment" Value="Center" />
         <Setter Property="v:Ui.Radius" Value="6" />
+        <!-- The border while typing. A box whose border is already the accent switches it to Text. -->
+        <Setter Property="v:Ui.FocusBrush" Value="{StaticResource Accent}" />
         <Setter Property="Template">
           <Setter.Value>
             <ControlTemplate TargetType="TextBox">
@@ -241,7 +261,7 @@
               </Border>
               <ControlTemplate.Triggers>
                 <Trigger Property="IsKeyboardFocused" Value="True">
-                  <Setter TargetName="b" Property="BorderBrush" Value="{StaticResource Accent}" />
+                  <Setter TargetName="b" Property="BorderBrush" Value="{Binding (v:Ui.FocusBrush), RelativeSource={RelativeSource TemplatedParent}}" />
                 </Trigger>
               </ControlTemplate.Triggers>
             </ControlTemplate>
@@ -287,17 +307,33 @@
         </Setter>
       </Style>
 
-      <!-- Thin dark scroll bars. -->
+      <!-- Thin dark scroll bars. Clicking the bar above or below the thumb pages, as in Windows. -->
       <Style x:Key="ScrollThumb" TargetType="Thumb">
         <Setter Property="Template">
           <Setter.Value>
             <ControlTemplate TargetType="Thumb">
-              <Border x:Name="t" Background="{StaticResource Edge}" CornerRadius="4" />
+              <Border x:Name="t" Background="{StaticResource Edge}" CornerRadius="4" Margin="2" />
               <ControlTemplate.Triggers>
                 <Trigger Property="IsMouseOver" Value="True">
                   <Setter TargetName="t" Property="Background" Value="{StaticResource Unchecked}" />
                 </Trigger>
+                <Trigger Property="IsDragging" Value="True">
+                  <Setter TargetName="t" Property="Background" Value="{StaticResource Unchecked}" />
+                </Trigger>
               </ControlTemplate.Triggers>
+            </ControlTemplate>
+          </Setter.Value>
+        </Setter>
+      </Style>
+      <!-- The empty part of a scroll bar's track: clickable, never a tab stop. -->
+      <Style x:Key="TrackPart" TargetType="RepeatButton">
+        <Setter Property="OverridesDefaultStyle" Value="True" />
+        <Setter Property="Focusable" Value="False" />
+        <Setter Property="IsTabStop" Value="False" />
+        <Setter Property="Template">
+          <Setter.Value>
+            <ControlTemplate TargetType="RepeatButton">
+              <Border Background="Transparent" />
             </ControlTemplate>
           </Setter.Value>
         </Setter>
@@ -309,7 +345,13 @@
         <Setter Property="Template">
           <Setter.Value>
             <ControlTemplate TargetType="ScrollBar">
-              <Track x:Name="PART_Track" IsDirectionReversed="True" Margin="2">
+              <Track x:Name="PART_Track" IsDirectionReversed="True">
+                <Track.DecreaseRepeatButton>
+                  <RepeatButton Style="{StaticResource TrackPart}" Command="{x:Static ScrollBar.PageUpCommand}" AutomationProperties.Name="Page up" />
+                </Track.DecreaseRepeatButton>
+                <Track.IncreaseRepeatButton>
+                  <RepeatButton Style="{StaticResource TrackPart}" Command="{x:Static ScrollBar.PageDownCommand}" AutomationProperties.Name="Page down" />
+                </Track.IncreaseRepeatButton>
                 <Track.Thumb>
                   <Thumb Style="{StaticResource ScrollThumb}" />
                 </Track.Thumb>
@@ -325,7 +367,13 @@
             <Setter Property="Template">
               <Setter.Value>
                 <ControlTemplate TargetType="ScrollBar">
-                  <Track x:Name="PART_Track" Margin="2">
+                  <Track x:Name="PART_Track">
+                    <Track.DecreaseRepeatButton>
+                      <RepeatButton Style="{StaticResource TrackPart}" Command="{x:Static ScrollBar.PageLeftCommand}" AutomationProperties.Name="Page left" />
+                    </Track.DecreaseRepeatButton>
+                    <Track.IncreaseRepeatButton>
+                      <RepeatButton Style="{StaticResource TrackPart}" Command="{x:Static ScrollBar.PageRightCommand}" AutomationProperties.Name="Page right" />
+                    </Track.IncreaseRepeatButton>
                     <Track.Thumb>
                       <Thumb Style="{StaticResource ScrollThumb}" />
                     </Track.Thumb>
@@ -335,6 +383,107 @@
             </Setter>
           </Trigger>
         </Style.Triggers>
+      </Style>
+
+      <!-- Every scroll area: the dark bars above, and a clear corner where the system one would draw a
+           light grey square when both bars show. Never a focus stop of its own: the keys scroll it from
+           whatever inside has focus, and Tab brings that into view. -->
+      <Style TargetType="ScrollViewer">
+        <Setter Property="Focusable" Value="False" />
+        <Setter Property="Template">
+          <Setter.Value>
+            <ControlTemplate TargetType="ScrollViewer">
+              <Grid Background="{TemplateBinding Background}">
+                <Grid.ColumnDefinitions>
+                  <ColumnDefinition Width="*" />
+                  <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                  <RowDefinition Height="*" />
+                  <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+                <ScrollContentPresenter x:Name="PART_ScrollContentPresenter" Margin="{TemplateBinding Padding}" Content="{TemplateBinding Content}" ContentTemplate="{TemplateBinding ContentTemplate}"
+                                        CanContentScroll="{TemplateBinding CanContentScroll}" CanHorizontallyScroll="False" CanVerticallyScroll="False" />
+                <ScrollBar x:Name="PART_VerticalScrollBar" Grid.Column="1" Cursor="Arrow" AutomationProperties.AutomationId="VerticalScrollBar"
+                           Minimum="0" Maximum="{TemplateBinding ScrollableHeight}" ViewportSize="{TemplateBinding ViewportHeight}"
+                           Value="{Binding VerticalOffset, Mode=OneWay, RelativeSource={RelativeSource TemplatedParent}}" Visibility="{TemplateBinding ComputedVerticalScrollBarVisibility}" />
+                <ScrollBar x:Name="PART_HorizontalScrollBar" Grid.Row="1" Orientation="Horizontal" Cursor="Arrow" AutomationProperties.AutomationId="HorizontalScrollBar"
+                           Minimum="0" Maximum="{TemplateBinding ScrollableWidth}" ViewportSize="{TemplateBinding ViewportWidth}"
+                           Value="{Binding HorizontalOffset, Mode=OneWay, RelativeSource={RelativeSource TemplatedParent}}" Visibility="{TemplateBinding ComputedHorizontalScrollBarVisibility}" />
+              </Grid>
+            </ControlTemplate>
+          </Setter.Value>
+        </Setter>
+      </Style>
+
+      <!-- A list of things that is not itself a control (rows, choices, notes): never a focus stop with
+           nothing to show for it. The buttons and boxes in it still are. -->
+      <Style TargetType="ItemsControl">
+        <Setter Property="Focusable" Value="False" />
+      </Style>
+
+      <!-- Slider (the quick price card's size): a grey track that fills up to a light thumb, in the
+           roll bars' colours, with the buttons' focus outline. Background colours the track part. -->
+      <Style x:Key="SliderPart" TargetType="RepeatButton" BasedOn="{StaticResource TrackPart}">
+        <Setter Property="Template">
+          <Setter.Value>
+            <ControlTemplate TargetType="RepeatButton">
+              <Grid Background="Transparent">
+                <Border Height="4" VerticalAlignment="Center" CornerRadius="2" Background="{TemplateBinding Background}" />
+              </Grid>
+            </ControlTemplate>
+          </Setter.Value>
+        </Setter>
+      </Style>
+      <Style x:Key="SliderThumb" TargetType="Thumb">
+        <Setter Property="OverridesDefaultStyle" Value="True" />
+        <Setter Property="Focusable" Value="False" />
+        <Setter Property="Template">
+          <Setter.Value>
+            <ControlTemplate TargetType="Thumb">
+              <Ellipse x:Name="e" Width="16" Height="16" Fill="{StaticResource TextSoft}" />
+              <ControlTemplate.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                  <Setter TargetName="e" Property="Fill" Value="{StaticResource Text}" />
+                </Trigger>
+                <Trigger Property="IsDragging" Value="True">
+                  <Setter TargetName="e" Property="Fill" Value="{StaticResource Text}" />
+                </Trigger>
+              </ControlTemplate.Triggers>
+            </ControlTemplate>
+          </Setter.Value>
+        </Setter>
+      </Style>
+      <Style TargetType="Slider">
+        <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+        <Setter Property="MinHeight" Value="32" />
+        <Setter Property="Template">
+          <Setter.Value>
+            <ControlTemplate TargetType="Slider">
+              <Border x:Name="b" Background="Transparent" BorderBrush="Transparent" BorderThickness="1" CornerRadius="6" Padding="8,0" SnapsToDevicePixels="True">
+                <Track x:Name="PART_Track" VerticalAlignment="Center">
+                  <Track.DecreaseRepeatButton>
+                    <RepeatButton Style="{StaticResource SliderPart}" Background="{StaticResource BarFill}" Command="{x:Static Slider.DecreaseLarge}" AutomationProperties.Name="Decrease" />
+                  </Track.DecreaseRepeatButton>
+                  <Track.IncreaseRepeatButton>
+                    <RepeatButton Style="{StaticResource SliderPart}" Background="{StaticResource Unchecked}" Command="{x:Static Slider.IncreaseLarge}" AutomationProperties.Name="Increase" />
+                  </Track.IncreaseRepeatButton>
+                  <Track.Thumb>
+                    <Thumb Style="{StaticResource SliderThumb}" />
+                  </Track.Thumb>
+                </Track>
+              </Border>
+              <ControlTemplate.Triggers>
+                <Trigger Property="IsKeyboardFocused" Value="True">
+                  <Setter TargetName="b" Property="BorderBrush" Value="{StaticResource Text}" />
+                </Trigger>
+                <Trigger Property="IsEnabled" Value="False">
+                  <Setter Property="Opacity" Value="0.45" />
+                </Trigger>
+              </ControlTemplate.Triggers>
+            </ControlTemplate>
+          </Setter.Value>
+        </Setter>
       </Style>
 
       <Style TargetType="ToolTip">
@@ -455,7 +604,7 @@
                         <Setter TargetName="b" Property="Background" Value="{StaticResource Surface4}" />
                       </Trigger>
                       <Trigger Property="IsKeyboardFocused" Value="True">
-                        <Setter TargetName="b" Property="BorderBrush" Value="{StaticResource EdgeStrong}" />
+                        <Setter TargetName="b" Property="BorderBrush" Value="{StaticResource Text}" />
                       </Trigger>
                     </ControlTemplate.Triggers>
                   </ControlTemplate>

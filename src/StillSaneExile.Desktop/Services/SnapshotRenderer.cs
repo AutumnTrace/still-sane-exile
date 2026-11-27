@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.IO;
 using System.Windows;
 using System.Windows.Media;
@@ -10,17 +11,23 @@ namespace StillSaneExile.Desktop.Services;
 
 /// <summary><c>--render-snapshots &lt;dir&gt;</c>: renders the demo screens to PNG and exits. Used for
 /// README screenshots and visual checks; run it with <c>--data &lt;empty dir&gt;</c> so it starts from a
-/// clean demo profile. It installs no hooks and reads no clipboard.</summary>
+/// clean demo profile. It installs no hooks and reads no clipboard. <c>--text-scale &lt;percent&gt;</c>
+/// renders as if Windows' text size were set to it, and <c>--window &lt;width&gt;x&lt;height&gt;</c> sets the
+/// main window's size, which also stands for the screen the scaled window must fit.</summary>
 public static class SnapshotRenderer
 {
-    public static void Render(ShellViewModel shell, MainWindow main, string dir)
+    private static readonly Size UsualSize = new(1440, 1000);
+
+    public static void Render(ShellViewModel shell, MainWindow main, string dir, double textScale = 1, Size? window = null)
     {
         Directory.CreateDirectory(dir);
         shell.Settings.Onboarded = false;
         shell.SettingsPage.Load();
         shell.Navigate(shell.SettingsPage);
-        main.Width = 1440;
-        main.Height = 1000;
+        var size = window ?? new Size(UsualSize.Width * textScale, UsualSize.Height * textScale);
+        main.UseTextScale(TextScale.Fixed(textScale), screen: size);
+        main.Width = size.Width;
+        main.Height = size.Height;
         main.Left = -20000;
         main.Top = 0;
         main.ShowActivated = false;
@@ -99,6 +106,7 @@ public static class SnapshotRenderer
 
         // The in-game price check window (F3), unpositioned and never activated.
         var priceCheck = new PriceCheckWindow { Left = -20000, Top = 0, ShowActivated = false };
+        priceCheck.SetContentScale(main.ContentScale);
         priceCheck.DataContext = shell.Inspect.Recent.First(r => r.Title == "Doom Thirst");
         priceCheck.Show();
         Save(priceCheck, Path.Combine(dir, "price-check-window.png"));
@@ -171,12 +179,27 @@ public static class SnapshotRenderer
         Save(main, Path.Combine(dir, $"{name}.png"));
     }
 
+    /// <summary>"150" → 1.5; nothing → 1.</summary>
+    public static double ParseScale(string? percent) =>
+        int.TryParse(percent, NumberStyles.Integer, CultureInfo.InvariantCulture, out var p) ? p / 100.0 : 1;
+
+    /// <summary>"1920x1032" → that size; nothing or anything else → none.</summary>
+    public static Size? ParseSize(string? size) =>
+        size?.Split('x') is [var w, var h]
+        && double.TryParse(w, NumberStyles.Float, CultureInfo.InvariantCulture, out var width)
+        && double.TryParse(h, NumberStyles.Float, CultureInfo.InvariantCulture, out var height)
+            ? new Size(width, height)
+            : null;
+
     private static void Save(Window window, string path)
     {
         Flush(window);
         var content = (FrameworkElement)window.Content;
-        var w = (int)Math.Ceiling(content.ActualWidth);
-        var h = (int)Math.Ceiling(content.ActualHeight);
+
+        // A text size scales the content with a layout transform; ActualWidth is the size before it.
+        var bounds = content.LayoutTransform.TransformBounds(new Rect(content.RenderSize));
+        var w = (int)Math.Ceiling(bounds.Width);
+        var h = (int)Math.Ceiling(bounds.Height);
         var bmp = new RenderTargetBitmap(Math.Max(w, 1), Math.Max(h, 1), 96, 96, PixelFormats.Pbgra32);
         var visual = new DrawingVisual();
         using (var dc = visual.RenderOpen())

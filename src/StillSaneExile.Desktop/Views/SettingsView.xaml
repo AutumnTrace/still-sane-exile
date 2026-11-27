@@ -51,7 +51,7 @@
             <Button Style="{StaticResource ChoiceButton}" Content="Practice with demo data" Command="{Binding UseDemoCommand}" Margin="0,0,8,0"
                     Tag="{Binding LiveSelected, Converter={StaticResource Active}, ConverterParameter=False}" />
             <TextBlock Text="or a live league:" VerticalAlignment="Center" Foreground="{StaticResource TextDim}" Margin="4,0,8,0" />
-            <TextBox Width="220" Text="{Binding LeagueDraft, UpdateSourceTrigger=PropertyChanged}" VerticalContentAlignment="Center" ToolTip="Type the league name exactly as the game shows it" />
+            <TextBox Width="220" Text="{Binding LeagueDraft, UpdateSourceTrigger=PropertyChanged}" VerticalContentAlignment="Center" AutomationProperties.Name="Live league name" ToolTip="Type the league name exactly as the game shows it" />
             <Button Content="Confirm league" Command="{Binding ConfirmLeagueCommand}" Margin="8,0,0,0" />
           </WrapPanel>
           <TextBlock FontSize="12" Foreground="{StaticResource TextFaint}" TextWrapping="Wrap" Margin="0,8,0,0">
@@ -67,7 +67,7 @@
       <TextBlock Text="SHOW PRICES IN" Style="{StaticResource SectionTitle}" />
       <Border Style="{StaticResource Card}">
         <StackPanel>
-          <ItemsControl ItemsSource="{Binding CurrencyChoices}">
+          <ItemsControl ItemsSource="{Binding CurrencyChoices}" AutomationProperties.Name="Show prices in">
             <ItemsControl.ItemsPanel>
               <ItemsPanelTemplate>
                 <WrapPanel />
@@ -109,19 +109,19 @@
             </Grid.RowDefinitions>
             <TextBlock Grid.Row="0" Text="Quick price (hold)" VerticalAlignment="Center" />
             <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding PeekKey}" FontWeight="SemiBold" VerticalAlignment="Center" />
-            <Button Grid.Row="0" Grid.Column="2" HorizontalAlignment="Left" Content="Change" Command="{Binding StartRecordingCommand}" CommandParameter="peek" Margin="0,3" />
+            <Button Grid.Row="0" Grid.Column="2" HorizontalAlignment="Left" Content="Change" AutomationProperties.Name="Change the quick price key" Command="{Binding StartRecordingCommand}" CommandParameter="peek" Margin="0,3" />
             <TextBlock Grid.Row="1" Text="Change the search" VerticalAlignment="Center" />
             <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding OpenLastKey}" FontWeight="SemiBold" VerticalAlignment="Center" />
-            <Button Grid.Row="1" Grid.Column="2" HorizontalAlignment="Left" Content="Change" Command="{Binding StartRecordingCommand}" CommandParameter="openLast" Margin="0,3" />
+            <Button Grid.Row="1" Grid.Column="2" HorizontalAlignment="Left" Content="Change" AutomationProperties.Name="Change the key that changes the search" Command="{Binding StartRecordingCommand}" CommandParameter="openLast" Margin="0,3" />
             <TextBlock Grid.Row="2" Text="Stash prices (hold)" VerticalAlignment="Center" Foreground="{StaticResource TextDim}" />
             <TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding StashKey}" FontWeight="SemiBold" VerticalAlignment="Center" Foreground="{StaticResource TextDim}" />
             <StackPanel Grid.Row="2" Grid.Column="2" Orientation="Horizontal">
-              <Button Content="Change" Command="{Binding StartRecordingCommand}" CommandParameter="stash" Margin="0,3" />
+              <Button Content="Change" AutomationProperties.Name="Change the stash prices key" Command="{Binding StartRecordingCommand}" CommandParameter="stash" Margin="0,3" />
               <TextBlock Text="coming later" Foreground="{StaticResource TextFaint}" FontSize="12" VerticalAlignment="Center" Margin="10,0,0,0" />
             </StackPanel>
           </Grid>
           <TextBlock Text="{Binding ReadsExplanation}" TextWrapping="Wrap" FontSize="12" Foreground="{StaticResource TextDim}" Margin="0,10,0,0" />
-          <ItemsControl ItemsSource="{Binding KeyWarnings}" Margin="0,6,0,0">
+          <ItemsControl ItemsSource="{Binding KeyWarnings}" Margin="0,6,0,0" AutomationProperties.Name="Key warnings">
             <ItemsControl.ItemTemplate>
               <DataTemplate>
                 <TextBlock Text="{Binding}" FontSize="12" Foreground="{StaticResource Warn}" TextWrapping="Wrap" />
@@ -155,11 +155,14 @@
           </WrapPanel>
           <StackPanel Orientation="Horizontal" Margin="0,10,0,0">
             <TextBlock Text="Scale" VerticalAlignment="Center" Margin="0,0,10,0" />
-            <Slider Width="220" Minimum="0.75" Maximum="1.6" TickFrequency="0.05" IsSnapToTickEnabled="True" Value="{Binding PeekScale}" />
+            <Slider Width="220" Minimum="0.75" Maximum="1.6" TickFrequency="0.05" SmallChange="0.05" LargeChange="0.25" IsSnapToTickEnabled="True" Value="{Binding PeekScale}"
+                    AutomationProperties.Name="Quick price card scale" />
             <TextBlock Text="{Binding PeekScale, StringFormat='{}{0:0.00}×'}" VerticalAlignment="Center" Margin="10,0,0,0" />
           </StackPanel>
           <TextBlock FontSize="12" Foreground="{StaticResource TextFaint}" TextWrapping="Wrap" Margin="0,8,0,0"
                      Text="The card keeps clear of the screen centre, the skill bar and the top-right map. It is click-through, never takes focus, and hides on release, focus loss, minimize, lock and resolution change. Windowed or borderless only; exclusive fullscreen cannot show it." />
+          <TextBlock FontSize="12" Foreground="{StaticResource TextFaint}" TextWrapping="Wrap" Margin="0,6,0,0"
+                     Text="Scale is the card's own size. The Windows text size setting (Accessibility, Text size) enlarges this window and the price check over the game, not the card." />
         </StackPanel>
       </Border>
 
@@ -169,7 +172,7 @@
         <StackPanel>
           <StackPanel Orientation="Horizontal">
             <TextBlock Text="Prices you write down expire after" VerticalAlignment="Center" />
-            <TextBox Width="44" Margin="8,0" Text="{Binding ExpiryDays, UpdateSourceTrigger=PropertyChanged}" />
+            <TextBox Width="44" Margin="8,0" Text="{Binding ExpiryDays, UpdateSourceTrigger=PropertyChanged}" AutomationProperties.Name="Days until prices you write down expire" />
             <TextBlock Text="days" VerticalAlignment="Center" />
           </StackPanel>
           <Button Content="Remove demo prices and holdings I added" Command="{Binding ResetDemoDataCommand}" HorizontalAlignment="Left" Margin="0,10,0,0" />

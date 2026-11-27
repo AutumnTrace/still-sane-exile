@@ -12,6 +12,7 @@
 | HUD card | Topmost, layered, click-through, no-activate window | Show the result over the game | Take focus or intercept clicks |
 | Guide lines (off until you switch them on) | Topmost, layered, click-through, no-activate window, with its own foreground watcher (same `SetWinEventHook` calls as above) | Show two route lines while the game is in front, or for a few seconds over SSE when you press Preview | Take focus, intercept clicks, open anything when you change zone, or stay up while the item card, another window, minimize or lock is in front. It knows your zone only because you pick it. |
 | Price check window (`F3`) | Topmost window that takes focus while open; `SetForegroundWindow` hands focus back to the game when it closes | Tick stats and type numbers over the game | Send input to the game; stay open once you press `Esc`, press `F3` again or click back into the game |
+| Text size | Reads `HKCU\Software\Microsoft\Accessibility\TextScaleFactor` at start and when Windows reports a changed setting | Scale SSE's windows with the Windows text size ([Accessibility](ACCESSIBILITY.md)) | Change the setting or read any other value |
 
 ## What is stored
 

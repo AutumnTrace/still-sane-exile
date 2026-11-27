@@ -37,6 +37,17 @@ public sealed partial class SearchRowViewModel : ObservableObject
     public bool IsAtMost => Row.Match == MatchType.Maximum;
     public decimal Step => Row.Actual is >= 100 ? 5 : 1;
 
+    /// <summary>What a screen reader calls the number box ("Minimum for 17% increased Attack Speed")
+    /// and its − and + buttons, so each says which stat and which bound it changes.</summary>
+    public string BoundName => $"{(IsAtMost ? "Maximum" : "Minimum")} for {Text}";
+
+    public string LowerName => $"Lower the {(IsAtMost ? "maximum" : "minimum")} for {Text}";
+
+    public string RaiseName => $"Raise the {(IsAtMost ? "maximum" : "minimum")} for {Text}";
+
+    /// <summary>The row as a screen reader says it (WPF reads a list row through ToString).</summary>
+    public override string ToString() => Text;
+
     public string Tier => Reading?.Tier is { } t ? $"T{t}" : Row.Kind switch
     {
         RowKind.Rune => "Rune",
@@ -180,6 +191,9 @@ public sealed class RollRowViewModel
     /// and for a line that could be two stats, the explanations that fit.</summary>
     public string Details { get; }
 
+    /// <summary>What a screen reader says for the row (WPF reads a list row through ToString).</summary>
+    public override string ToString() => string.Join(", ", new[] { Text, TierText, Note }.Where(s => s.Length > 0));
+
     private static GridLength Star(double v) => new(Math.Max(v, 0.0001), GridUnitType.Star);
 
     private static (string, bool) NoteFor(LineReading l, List<RollAssessment> scored, List<RollAssessment> placed, bool advancedCopy)
@@ -246,9 +260,17 @@ public sealed class RollRowViewModel
 }
 
 /// <summary>One of the cheapest listings that match the search.</summary>
-public sealed record MatchViewModel(string Price, string Stats, string How, string Age);
+public sealed record MatchViewModel(string Price, string Stats, string How, string Age)
+{
+    /// <summary>What a screen reader says for the row (WPF reads a list row through ToString).</summary>
+    public override string ToString() => $"{Price}, {Stats}, {How}, {Age}";
+}
 
-public sealed record StrictnessChoice(string Key, string Label, decimal Tolerance);
+public sealed record StrictnessChoice(string Key, string Label, decimal Tolerance)
+{
+    /// <summary>What a screen reader says for the choice (WPF reads a list row through ToString).</summary>
+    public override string ToString() => Label;
+}
 
 public sealed class ComparableViewModel(Comparable c, string display, bool seeded, DateTimeOffset now)
 {
@@ -262,6 +284,9 @@ public sealed class ComparableViewModel(Comparable c, string display, bool seede
     public bool Seeded { get; } = seeded;
     public bool Expired => Comparable.ExpiresAt is { } e && e <= now;
     public string Tags => string.Join(" · ", new[] { Seeded ? "demo" : "you wrote this", Expired ? "expired" : null, Comparable.ListingLink is null && Comparable.ListingId is null ? "no link" : null, Notes }.Where(t => t is not null));
+
+    /// <summary>What a screen reader says for the row (WPF reads a list row through ToString).</summary>
+    public override string ToString() => $"{Price}{(Converted.Length > 0 ? $" {Converted}" : "")}, {Seller}, {Age}";
 }
 
 /// <summary>Everything the price check shows for one item snapshot. The Inspect page and the in-game
@@ -322,7 +347,14 @@ public sealed partial class ItemViewModel : ObservableObject
     public string ListTitle => Item.Rarity == ItemRarity.Currency && Item.StackSize is > 1 ? $"{Title} ×{Item.StackSize}" : Title;
 
     /// <summary>"Rare crossbow · 13:30".</summary>
-    public string ListSubtitle => $"{Labels.Kind(Item)} · {Item.CapturedAt.ToLocalTime().ToString("HH:mm", CultureInfo.InvariantCulture)}";
+    public string ListSubtitle => $"{Labels.Kind(Item)} · {ListTime}";
+
+    private string ListTime => Item.CapturedAt.ToLocalTime().ToString("HH:mm", CultureInfo.InvariantCulture);
+
+    /// <summary>The session list row as a screen reader says it: "Doom Thirst, Rare crossbow, checked at
+    /// 13:30". WPF names a list row after its data object's ToString.</summary>
+    public override string ToString() =>
+        $"{Title}{(Item.Rarity == ItemRarity.Currency && Item.StackSize is > 1 ? $", stack of {Item.StackSize}" : "")}, {Labels.Kind(Item)}, checked at {ListTime}";
 
     public string CapturedAt => Item.CapturedAt.ToLocalTime().ToString("HH:mm:ss", CultureInfo.InvariantCulture);
     public IReadOnlyList<string> Unparsed => Item.UnparsedLines;
