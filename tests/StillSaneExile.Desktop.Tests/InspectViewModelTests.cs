@@ -19,6 +19,37 @@ public class InspectViewModelTests
         Assert.Null(inspect.Message);
     });
 
+    // Hand-written in the shape of a game copy; not one of the practice items.
+    private const string GameUnique = "Item Class: Belts\nRarity: Unique\nMageblood\nHeavy Belt\n--------\nItem Level: 84\n--------\n+25 to Strength (implicit)\n--------\n+30 to Dexterity\n--------\nCorrupted";
+    private const string GameCurrency = "Item Class: Stackable Currency\nRarity: Currency\nDivine Orb\n--------\nStack Size: 3/20\n--------\nRandomises the numeric values of the random modifiers on an item";
+
+    [Fact]
+    public void The_demo_prices_its_practice_items() => Sta.Run(() =>
+    {
+        using var app = new TestApp();
+
+        var practice = app.Shell.Inspect.AddFromText(app.ItemText(Crossbow), "practice")!;
+
+        Assert.True(practice.HasListings);
+        Assert.NotEqual("No real price", practice.Answer.Big);
+    });
+
+    [Theory]
+    [InlineData(GameUnique)]
+    [InlineData(GameCurrency)]
+    public void The_demo_never_invents_a_price_for_an_item_copied_from_the_game(string text) => Sta.Run(() =>
+    {
+        using var app = new TestApp();
+
+        var item = app.Shell.Inspect.AddFromText(text, "hud")!;
+
+        Assert.True(app.Shell.Session.IsDemo);
+        Assert.False(item.HasListings);
+        Assert.Equal("No real price", item.Answer.Big);
+        Assert.Null(item.Answer.Count);
+        Assert.Contains("practice items", item.Answer.Line);
+    });
+
     [Theory]
     [InlineData(null)]
     [InlineData("")]

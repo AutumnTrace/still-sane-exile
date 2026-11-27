@@ -512,6 +512,10 @@ public sealed partial class ItemViewModel : ObservableObject
         {
             Answer = written;
         }
+        else if (!_session.HasPricesFor(Item))
+        {
+            Answer = PriceAnswer.PracticeOnly(ShowsWorksheet, ShowsComparables);
+        }
         else if (Price.Kind == PriceKind.Commodity || Item.Rarity == ItemRarity.Currency)
         {
             Answer = PriceAnswer.Stack(Item, ItemPricer.Identify(Item, _session.Book), Price, _session.Converter, price, _session.Now);
