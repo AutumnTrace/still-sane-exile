@@ -2,6 +2,14 @@
 
 Every release is a tag `vX.Y.Z` on `main` that matches `<Version>` in `Directory.Build.props`. See [docs/RELEASING.md](docs/RELEASING.md).
 
+## [0.5.0] - 2026-11-27
+
+- **The pinned card keeps you in the game:** ticking stats on it no longer pulls the game out of focus. The game keeps your keyboard the whole time; close the card with its ×.
+- **Search for the cheapest listings:** ticking stats no longer searches by itself. Press **Search** on the card or in the price check, and SSE asks the official trade site for the cheapest listings like yours: the price, how long ago each was listed, and the rolls you searched for. The price band comes from instant buyout listings only. Settings can switch this off.
+- **A smaller card:** the quick price card is more compact, and Settings → Quick price card → Scale now goes down to 0.5.
+- Stats written in the plural, like "Has 3 Charm Slots" on a Mageblood, now go into the trade search.
+- **Help build stash reading:** switch on **Collect stash pictures** in Settings, open your stash and tap the stash key, and SSE saves one picture of the game window on your computer, to label on My wealth. Nothing is uploaded. The coming stash reader is built from these pictures.
+
 ## [0.4.0] - 2026-11-27
 
 - **Keep the price card open:** hold `Ctrl+C` as before, and move the mouse onto the card while you hold it. The card stays when you let go, so you can tick stats and step the numbers, and the price updates as you go. Let go without moving and it hides, as before. Close it with ×, Esc or your next price check.
