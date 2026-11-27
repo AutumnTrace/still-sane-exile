@@ -25,7 +25,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Content Include="..\..\fixtures\**\*" LinkBase="fixtures" CopyToOutputDirectory="PreserveNewest" />
+    <!-- fixtures\poeninja holds poe.ninja-shaped test answers; the app never reads them, so they don't ship. -->
+    <Content Include="..\..\fixtures\**\*" Exclude="..\..\fixtures\poeninja\**" LinkBase="fixtures" CopyToOutputDirectory="PreserveNewest" />
     <Content Include="..\..\data\**\*" LinkBase="data" CopyToOutputDirectory="PreserveNewest" />
     <Resource Include="Assets\sse.ico" />
     <!-- "What's new" shows this build's own changelog sections, so it works offline and covers skipped versions. -->

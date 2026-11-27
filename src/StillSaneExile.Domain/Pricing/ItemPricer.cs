@@ -13,8 +13,9 @@ public enum PriceKind
     Unpriced,
 }
 
-/// <summary>The one price line the HUD and inspector show for an item.</summary>
-public sealed record PriceLine(PriceKind Kind, string Headline, string? Detail, Freshness? Freshness, bool Uncertain, EvidenceSummary? Evidence = null);
+/// <summary>The one price line the HUD and inspector show for an item. <see cref="ObservedTo"/> is when the
+/// price book's figure was last observed, for showing its age; null for prices the player wrote down.</summary>
+public sealed record PriceLine(PriceKind Kind, string Headline, string? Detail, Freshness? Freshness, bool Uncertain, EvidenceSummary? Evidence = null, DateTimeOffset? ObservedTo = null);
 
 public static class ItemPricer
 {
@@ -25,11 +26,27 @@ public static class ItemPricer
         {
             ItemRarity.Currency => ids.FirstOrDefault(i => i.Kind is IdentityKind.Currency or IdentityKind.Commodity
                 && i.Name.Equals(item.BaseType, StringComparison.Ordinal)),
-            ItemRarity.Unique => ids.FirstOrDefault(i => i.Kind == IdentityKind.Unique
-                && i.Name.Equals(item.Name, StringComparison.Ordinal)
-                && string.Equals(i.BaseType, item.BaseType, StringComparison.Ordinal)),
+            ItemRarity.Unique => Unique(ids, item),
             _ => null,
         };
+    }
+
+    /// <summary>Name and base must both match. A corrupted copy takes the corrupted line when the book has
+    /// one, else the uncorrupted baseline (and says so); a clean copy never takes a corrupted line. When
+    /// several variants fit and none is the plain one, the item stays unpriced rather than guessed.</summary>
+    private static MarketIdentity? Unique(IReadOnlyList<MarketIdentity> ids, ItemSnapshot item)
+    {
+        var all = ids.Where(i => i.Kind == IdentityKind.Unique
+            && i.Name.Equals(item.Name, StringComparison.Ordinal)
+            && string.Equals(i.BaseType, item.BaseType, StringComparison.Ordinal)).ToList();
+        var corrupted = item.States.HasFlag(ItemStates.Corrupted);
+        var same = all.Where(i => UniqueVariant.IsCorrupted(i.Variant) == corrupted).ToList();
+        if (same.Count == 0 && corrupted)
+        {
+            same = [.. all.Where(i => !UniqueVariant.IsCorrupted(i.Variant))];
+        }
+
+        return same.Count == 1 ? same[0] : same.FirstOrDefault(i => UniqueVariant.IsPlain(i.Variant));
     }
 
     public static PriceLine Price(
@@ -72,7 +89,9 @@ public static class ItemPricer
         }
 
         var shown = unit.Ok ? unit : new Conversion(true, quote!.Amount, quote.Denomination, ConversionPath.NoRate, Freshness.Fresh, quote.ObservedTo, "original denomination");
-        var observedTo = quote?.ObservedTo ?? unit.OldestObservation ?? now;
+        // A currency valued at par (a Divine Orb shown in Divine) has no observation of its own: it is as
+        // old as the book's newest figure.
+        var observedTo = quote?.ObservedTo ?? unit.OldestObservation ?? (book.Quotes.Count > 0 ? book.Quotes.Max(q => q.ObservedTo) : now);
         var freshness = new[] { shown.Freshness, StalenessPolicy.Hourly.Classify(observedTo, now) }.Max();
         var age = ValueFormat.Age(now - observedTo);
         var kindLabel = quote?.Kind switch
@@ -82,7 +101,10 @@ public static class ItemPricer
             ObservationKind.PlayerEntered => "player-entered",
             _ => "exchange estimate",
         };
-        var volume = quote?.Volume is { } v ? $" · volume {ValueFormat.Amount(v)}" : "";
+        var from = quote is not null && !book.IsSynthetic && quote.Source.Length > 0 ? $"{quote.Source} " : "";
+        var volume = quote?.Volume is not { } v ? ""
+            : quote?.Kind == ObservationKind.CategoryBaseline ? $" · {ValueFormat.Amount(v)} listed"
+            : $" · volume {ValueFormat.Amount(v)}";
         var staleTag = freshness switch
         {
             Freshness.Stale => " · stale",
@@ -92,16 +114,19 @@ public static class ItemPricer
 
         if (item.Rarity == ItemRarity.Unique)
         {
+            var caveat = item.States.HasFlag(ItemStates.Corrupted) && !UniqueVariant.IsCorrupted(identity.Variant)
+                ? "This copy is corrupted and there is no separate price for corrupted ones: this is the uncorrupted baseline."
+                : "Perfect or corrupted specimens can sell far from the baseline.";
             return new PriceLine(PriceKind.UniqueBaseline,
                 $"≈ {ValueFormat.Money(shown.Value, shown.Denomination)} baseline · check rolls",
-                $"{kindLabel}, {age}{volume}{staleTag}. Perfect or corrupted specimens can sell far from the baseline.",
-                freshness, true);
+                $"{from}{kindLabel}, {age}{volume}{staleTag}. {caveat}",
+                freshness, true, ObservedTo: observedTo);
         }
 
         var stack = item.StackSize ?? 1;
         var headline = stack > 1
             ? $"{ValueFormat.Money(shown.Value, shown.Denomination)} each · {ValueFormat.Money(shown.Value * stack, shown.Denomination)} for {stack}"
             : ValueFormat.Money(shown.Value, shown.Denomination);
-        return new PriceLine(PriceKind.Commodity, headline, $"{kindLabel}, {age}{volume}{staleTag}", freshness, freshness != Freshness.Fresh || !unit.Ok);
+        return new PriceLine(PriceKind.Commodity, headline, $"{from}{kindLabel}, {age}{volume}{staleTag}", freshness, freshness != Freshness.Fresh || !unit.Ok, ObservedTo: observedTo);
     }
 }
