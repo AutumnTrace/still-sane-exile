@@ -39,14 +39,17 @@ public interface IPeekSurface
     void HideCard(bool returnFocus = false);
 }
 
-/// <summary>The HUD card: topmost and never in the taskbar. While the key is held it is click-through
-/// and never activated; pinned, it takes clicks, and the focus when the player clicks it.</summary>
+/// <summary>The HUD card: topmost, never in the taskbar and never activated. While the key is held it is
+/// click-through; pinned, it takes clicks but still never becomes the active window, the way an on-screen
+/// keyboard does. Activating it would take the foreground from the game, and a game in fullscreen drops out
+/// as if alt-tabbed (which then hides the card). So the game keeps the keyboard the whole time.</summary>
 public partial class PeekWindow : Window, IPeekSurface
 {
     /// <summary>How far around the card, in device-independent pixels, the cursor counts as on it.</summary>
     public const double Reach = 20;
 
-    private const long Passive = NativeMethods.WS_EX_TRANSPARENT | NativeMethods.WS_EX_NOACTIVATE;
+    /// <summary>Only click-through comes off when pinned; WS_EX_NOACTIVATE stays on at all times.</summary>
+    private const long Passive = NativeMethods.WS_EX_TRANSPARENT;
 
     private nint _over;
     private bool _pinned;
@@ -148,18 +151,6 @@ public partial class PeekWindow : Window, IPeekSurface
         }
 
         base.OnPreviewKeyDown(e);
-    }
-
-    /// <summary>The player clicked the pinned card, then moved off it: the game gets the keyboard back, so
-    /// the next press over an item reaches the game (and copies it). The card stays.</summary>
-    protected override void OnMouseLeave(MouseEventArgs e)
-    {
-        base.OnMouseLeave(e);
-        if (_pinned && IsVisible && IsActive && Mouse.Captured is null && CanFocus(_over)
-            && NativeMethods.GetCursorPos(out var p) && CardView.ScreenBounds() is { } card && !card.Contains(p.X, p.Y))
-        {
-            NativeMethods.SetForegroundWindow(_over);
-        }
     }
 
     private static bool CanFocus(nint window) => window != 0 && NativeMethods.IsWindow(window) && !NativeMethods.IsIconic(window);
