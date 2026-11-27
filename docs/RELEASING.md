@@ -26,14 +26,19 @@ On the tag push (`.github/workflows/release.yml`, Windows runner):
 
 1. Checks the release rule.
 2. Builds and runs all tests in Release.
-3. Publishes a self-contained win-x64 build with that version.
-4. Downloads the previous release so Velopack can make a small delta package.
-5. Packs with Velopack (`vpk pack`) and publishes the GitHub release with:
+3. Downloads the previous release so Velopack can make a small delta package.
+4. Publishes a self-contained win-x64 build with that version and packs it with Velopack (`vpk pack`), both through `scripts/pack-local.ps1`.
+5. Starts the packed portable build once, unattended (`scripts/smoke-packed.ps1`, which renders the demo screens with `--render-snapshots`), so a build that cannot start is never published.
+6. Publishes the GitHub release with:
    - `StillSaneExile-win-Setup.exe`: the installer (per-user, no admin rights, Start menu and desktop shortcuts),
    - `StillSaneExile-win-Portable.zip`: the portable build (also self-updating; settings in `data\` next to it),
    - `StillSaneExile-X.Y.Z-full.nupkg`, `-delta.nupkg` and `releases.win.json`: the update feed.
 
 Release notes come from the version's `CHANGELOG.md` section, or the commit subjects since the previous tag.
+
+## Packaging is checked on every pull request
+
+The CI workflow's `pack` job runs steps 4 and 5 on every pull request and every push to `main`, into the runner's temp folder, and uploads nothing. Packaging problems therefore show up before a tag is pushed. Because the Release workflow packs with the same script, a change to the packaging only has to be made in `scripts/pack-local.ps1`.
 
 ## How installed copies update
 
