@@ -1,5 +1,7 @@
 # Wealth CSV import
 
+> **My wealth is switched off for now** while it is rethought: the app has no page to import from. Holdings imported or typed in with earlier versions stay in `sse.db`, untouched. This page describes the format as it was, for when the page comes back.
+
 **My wealth → Import CSV…** reads a file of holdings, checks every row, shows you the result, and stores nothing until you press **Apply**. Apply stores all the file's new rows in one transaction, or none of them.
 
 The file stays on your computer. SSE keeps the rows in its local database (`sse.db`) with the file's name, never its folder, and sends nothing anywhere.

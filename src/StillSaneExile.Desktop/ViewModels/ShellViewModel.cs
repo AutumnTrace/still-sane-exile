@@ -20,7 +20,7 @@ public sealed partial class ShellViewModel : ObservableObject
         Inspect = new InspectViewModel(this, clipboard);
         Craft = PlaceholderViewModel.Craft();
         StashPictures = new StashPicturesViewModel(this);
-        Wealth = new WealthViewModel(this);
+        Wealth = PlaceholderViewModel.Wealth();
         Guide = new GuideViewModel(this);
         WhatsNew = new WhatsNewViewModel(settings, updates);
         SettingsPage = new SettingsViewModel(this);
@@ -94,7 +94,6 @@ public sealed partial class ShellViewModel : ObservableObject
 
         Session = Session.Create(Store, Settings, Paths, book);
         Inspect.Rebuild();
-        Wealth.Reload();
         SettingsPage.OnPricesChanged();
         return true;
     }
@@ -106,10 +105,11 @@ public sealed partial class ShellViewModel : ObservableObject
     public InspectViewModel Inspect { get; }
     public PlaceholderViewModel Craft { get; }
 
-    /// <summary>"Collect stash pictures": the switch in Settings and the review list on My wealth.</summary>
+    /// <summary>"Collect stash pictures": the switch and the pictures to label, in Settings.</summary>
     public StashPicturesViewModel StashPictures { get; }
 
-    public WealthViewModel Wealth { get; }
+    /// <summary>My wealth is switched off for now: a page that says so.</summary>
+    public PlaceholderViewModel Wealth { get; }
     public GuideViewModel Guide { get; }
     public SettingsViewModel SettingsPage { get; }
     public WhatsNewViewModel WhatsNew { get; }
@@ -135,7 +135,6 @@ public sealed partial class ShellViewModel : ObservableObject
     public string PageName => CurrentPage switch
     {
         InspectViewModel => "Price check",
-        WealthViewModel => "My wealth",
         PlaceholderViewModel p => p.Title,
         GuideViewModel => "Campaign guide",
         SettingsViewModel => "Settings",
@@ -204,7 +203,6 @@ public sealed partial class ShellViewModel : ObservableObject
         Session = Session.Create(Store, Settings, Paths);
         TrackPrices();
         Inspect.Rebuild();
-        Wealth.Reload();
         SettingsPage.Load();
     }
 

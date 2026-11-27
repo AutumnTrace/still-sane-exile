@@ -16,6 +16,19 @@ public sealed partial class PlaceholderViewModel(string title, string milestone,
 
     public bool HasContext => Context is not null;
 
+    /// <summary>My wealth, switched off while its design is rethought. Holdings saved by earlier versions
+    /// stay in the data folder untouched.</summary>
+    public static PlaceholderViewModel Wealth() => new(
+        "My wealth",
+        "Switched off for now · coming back later",
+        "Keeping count of what you hold, tab by tab, is being rethought. Counts and CSV imports saved by earlier versions stay in your data folder, untouched.",
+        [
+            "\"Save visible stash\" previews recognized holdings and omissions; you confirm the tab before anything is stored.",
+            "History keeps quantities and the price book used: value at the time, or revalue at today's rates.",
+            "Session rate only from comparable holdings at fixed prices; transfers between tracked tabs net to zero.",
+            "Held-key price chips never create history on their own.",
+        ]);
+
     public static PlaceholderViewModel Craft() => new(
         "Crafting",
         "Milestone 5 · not available yet",

@@ -11,7 +11,7 @@ using StillSaneExile.Desktop.Services;
 
 namespace StillSaneExile.Desktop.ViewModels;
 
-/// <summary>"Collect stash pictures" (Settings) and "Stash pictures you collected" (My wealth): the switch,
+/// <summary>"Collect stash pictures" and "Label your pictures" (Settings, Stash pictures): the switch,
 /// the pictures on disk, and the labels the player adds to them for #3. Reading the stash comes later; the
 /// pictures are what it will be built and checked against.</summary>
 public sealed partial class StashPicturesViewModel : ObservableObject

@@ -61,23 +61,9 @@ public static class SnapshotRenderer
         SeedPlanChange(shell.Guide.Plan);
         Save(main, Path.Combine(dir, "guide-plan-change.png"));
 
-        // Wealth with demo holdings: the practice file applied (idempotent, so a re-run adds nothing),
-        // one count typed in, then a preview of the practice file with mistakes.
-        var wealth = shell.Wealth;
+        // My wealth is switched off for now: its page says so.
         shell.GoWealthCommand.Execute(null);
-        wealth.PreviewPracticeCommand.Execute("example.csv");
-        wealth.ApplyImportCommand.Execute(null);
-        wealth.NewTab = "Currency";
-        wealth.NewItemId = "vaal";
-        wealth.NewQuantity = "6";
-        wealth.SaveManualCommand.Execute(null);
-        wealth.NewTab = "";
-        wealth.Message = null;
         Save(main, Path.Combine(dir, "wealth.png"));
-        wealth.PreviewPracticeCommand.Execute("needs-fixing.csv");
-        Save(main, Path.Combine(dir, "wealth-import.png"));
-        wealth.CancelImportCommand.Execute(null);
-        wealth.Message = null;
 
         // Settings, one section at a time, then back on the first.
         foreach (var section in SettingsViewModel.Sections.Where(s => s.Key != "pictures"))
@@ -137,8 +123,8 @@ public static class SnapshotRenderer
         main.Close();
     }
 
-    /// <summary>"Collect stash pictures" switched on with three made-up pictures: its Settings card, the
-    /// review list and the card on My wealth, and the note over the game. The made-up pictures are deleted
+    /// <summary>"Collect stash pictures" switched on with three made-up pictures: its
+    /// Settings section with the pictures to label, and the note over the game. The made-up pictures are deleted
     /// and the switch put back afterwards; pictures already in the data folder are left alone.</summary>
     private static void RenderStashPictures(ShellViewModel shell, MainWindow main, string dir)
     {
@@ -171,8 +157,6 @@ public static class SnapshotRenderer
                 p.LoadThumbnailNow();
             }
 
-            shell.GoWealthCommand.Execute(null);
-            Save(main, Path.Combine(dir, "wealth-stash-card.png"));
             pictures.ReviewCommand.Execute(null);
             Flush(main);
             Find<FrameworkElement>(main, "StashPicturesCard")?.BringIntoView();
