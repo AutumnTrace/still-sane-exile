@@ -1,3 +1,4 @@
+using System.ComponentModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using StillSaneExile.Desktop.Infrastructure;
@@ -21,8 +22,11 @@ public sealed partial class ShellViewModel : ObservableObject
         Craft = PlaceholderViewModel.Craft();
         Wealth = PlaceholderViewModel.Wealth();
         Guide = PlaceholderViewModel.Guide();
+        WhatsNew = new WhatsNewViewModel(settings, updates);
         SettingsPage = new SettingsViewModel(this);
         _currentPage = settings.Onboarded ? Inspect : SettingsPage;
+        WhatsNew.PropertyChanged += OnWhatsNewInputChanged;
+        SettingsPage.PropertyChanged += OnWhatsNewInputChanged;
     }
 
     public AppPaths Paths { get; }
@@ -41,6 +45,11 @@ public sealed partial class ShellViewModel : ObservableObject
     public PlaceholderViewModel Wealth { get; }
     public PlaceholderViewModel Guide { get; }
     public SettingsViewModel SettingsPage { get; }
+    public WhatsNewViewModel WhatsNew { get; }
+
+    /// <summary>The "What's new" card sits above every page once opened, but never over onboarding: it
+    /// waits until onboarding is done, and only then counts as seen.</summary>
+    public bool ShowWhatsNew => WhatsNew.IsOpen && !SettingsPage.IsOnboarding;
 
     private object _currentPage;
 
@@ -117,6 +126,18 @@ public sealed partial class ShellViewModel : ObservableObject
         Session = Session.Create(Store, Settings, Paths);
         Inspect.Rebuild();
         SettingsPage.Load();
+    }
+
+    private void OnWhatsNewInputChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName is nameof(WhatsNewViewModel.IsOpen) or nameof(SettingsViewModel.IsOnboarding))
+        {
+            OnPropertyChanged(nameof(ShowWhatsNew));
+            if (ShowWhatsNew)
+            {
+                WhatsNew.MarkShown();
+            }
+        }
     }
 
     [RelayCommand]

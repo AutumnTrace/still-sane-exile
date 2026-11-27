@@ -67,6 +67,8 @@ public sealed partial class SettingsViewModel : ObservableObject
 
     public UpdateService Updates => _shell.Updates;
 
+    public WhatsNewViewModel WhatsNew => _shell.WhatsNew;
+
     [ObservableProperty]
     public partial string TestLog { get; set; } = "Press any key while this page is open to see press, hold and release.";
 

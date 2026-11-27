@@ -51,6 +51,13 @@ public static class SnapshotRenderer
         shell.GoSettingsCommand.Execute(null);
         Save(main, Path.Combine(dir, "settings.png"));
 
+        // "What's new" as the first start after an update shows it, over the price check. A development
+        // build never decides to show it, so it is opened directly.
+        shell.GoInspectCommand.Execute(null);
+        shell.WhatsNew.Show(since: null, afterUpdate: true);
+        Save(main, Path.Combine(dir, "whats-new.png"));
+        shell.WhatsNew.DismissCommand.Execute(null);
+
         var peek = new PeekWindow { Left = -20000, Top = 0 };
         foreach (var (title, name) in new[] { ("Doom Thirst", "peek-advanced"), ("Storm Mark", "peek-hybrid"), ("Sanity's Last Loop", "peek-unique"), ("Exalted Orb", "peek-currency") })
         {

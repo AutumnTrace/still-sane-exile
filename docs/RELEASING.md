@@ -16,7 +16,7 @@ A release exists only as a tag `vMAJOR.MINOR.PATCH` that
 ./scripts/release.ps1 -Version 0.2.0
 ```
 
-This bumps `<Version>`, adds a `CHANGELOG.md` section from the commit subjects if you have not written one, commits `chore: release 0.2.0`, tags `v0.2.0`, and pushes `main` and the tag. Edit the changelog section first if you want hand-written notes; the script keeps an existing section.
+This bumps `<Version>`, adds a `CHANGELOG.md` section from the commit subjects if you have not written one, commits `chore: release 0.2.0`, tags `v0.2.0`, and pushes `main` and the tag. Edit the changelog section first if you want hand-written notes; the script keeps an existing section. Players read that section in the app after the update ([What's new](#whats-new-after-an-update)), so write it for them.
 
 Doing it by hand works too: bump `<Version>`, commit to `main`, `git tag -a v0.2.0 -m "Still Sane, Exile? 0.2.0"`, push the commit and the tag.
 
@@ -47,6 +47,14 @@ The CI workflow's `pack` job runs steps 4 and 5 on every pull request and every 
 - The update installs when SSE closes, without restarting it, so a game session is never interrupted. "Restart now" installs it immediately. If SSE is killed instead of closed, Velopack installs the pending update on the next start.
 - Players can turn automatic checks off in Settings and use "Check now". Development builds (run from source) never update.
 - The check is an unauthenticated GitHub API request (60 per hour per IP address), so a 6-hour interval is far inside the limit.
+
+## What's new after an update
+
+- On the first start after an update, the main window shows a "What's new" card above the current page: the `CHANGELOG.md` section of every version since the one that last ran (so skipped updates are covered), newest first, and a link to the version's GitHub release. It never appears on the HUD or as a dialog; if the game is in front, it waits in the main window. While onboarding is open it waits until onboarding is done. "Got it" hides it for good; Settings → Version and updates → "What's new in X" shows it again.
+- The notes are the `CHANGELOG.md` the build was made from, embedded in the app, so they need no network. The Release workflow builds the tagged commit, which has the version's section (`release.ps1` adds one if missing), so players see the same text as the GitHub release. The card draws bullets, `###` headings, `**bold**`, `` `code` `` and `https://` links; anything else shows as plain text, and relative links (to `docs/`, say) as their text only.
+- With no section for the version (a tag cut by hand without one), the card says "Updated to X" and links to the GitHub release, whose notes then come from the commit subjects.
+- How a start counts as an update: settings keep the newest version that has run (`app.lastRunVersion`). A lower stored version means an update. Nothing stored but onboarding finished means an update from 0.2.0 or earlier, which did not store it; only the new version's section is shown. Nothing stored and not onboarded is a first install: no card. The same version, a downgrade and development builds show nothing. The version is stored once the card has been on screen, so it shows once.
+- The local update test below shows it too: 0.0.2's first start says "Updated to 0.0.2" (the changelog has no 0.0.2 section) once onboarding is done.
 
 ## Test an update locally without publishing
 

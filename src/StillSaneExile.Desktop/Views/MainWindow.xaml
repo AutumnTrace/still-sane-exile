@@ -4,6 +4,7 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:vm="clr-namespace:StillSaneExile.Desktop.ViewModels"
+        xmlns:v="clr-namespace:StillSaneExile.Desktop.Views"
         mc:Ignorable="d"
         d:DataContext="{d:DesignInstance Type=vm:ShellViewModel}"
         Title="Still Sane, Exile?"
@@ -78,6 +79,70 @@
         </TextBlock>
         <TextBlock Text="{Binding FooterStatus}" FontSize="12" Foreground="{StaticResource TextFaint}" TextTrimming="CharacterEllipsis" ToolTip="{Binding FooterDetail}" />
       </DockPanel>
+    </Border>
+
+    <!-- What's new: once after an update, above every page until "Got it", held back while onboarding is open.
+         Only ever here in the main window: never on the HUD, never a dialog, never steals focus. -->
+    <Border DockPanel.Dock="Top" Margin="20,20,20,0" Visibility="{Binding ShowWhatsNew, Converter={StaticResource Vis}}">
+      <Border Style="{StaticResource Card}" Margin="0" DataContext="{Binding WhatsNew}">
+        <Grid>
+          <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="260" />
+            <ColumnDefinition Width="32" />
+            <ColumnDefinition Width="*" />
+          </Grid.ColumnDefinitions>
+          <StackPanel>
+            <TextBlock Style="{StaticResource CardTitle}" Text="{Binding Title}" TextWrapping="Wrap" />
+            <TextBlock Style="{StaticResource CardLead}" Text="{Binding Lead}" />
+            <Button Style="{StaticResource LinkButton}" Content="Open the release on GitHub" Command="{Binding OpenReleaseCommand}"
+                    HorizontalAlignment="Left" FontSize="12.5" Margin="-2,10,0,0" ToolTip="{Binding ReleaseUrl}" />
+            <Button Style="{StaticResource GhostButton}" Content="Got it" Command="{Binding DismissCommand}"
+                    HorizontalAlignment="Left" MinHeight="34" Padding="18,0" Margin="0,14,0,0"
+                    ToolTip="Hides this. You can open it again from Settings." />
+          </StackPanel>
+
+          <ScrollViewer Grid.Column="2" MaxHeight="250" MaxWidth="900" HorizontalAlignment="Left" VerticalScrollBarVisibility="Auto" Focusable="False">
+            <ItemsControl ItemsSource="{Binding Sections}" Focusable="False">
+              <ItemsControl.ItemTemplate>
+                <DataTemplate>
+                  <StackPanel Margin="0,0,12,8">
+                    <TextBlock Text="{Binding Heading}" FontSize="12" FontWeight="SemiBold" Foreground="{StaticResource TextFaint}" Margin="0,2,0,6"
+                               Visibility="{Binding DataContext.ShowSectionHeadings, RelativeSource={RelativeSource AncestorType=ItemsControl}, Converter={StaticResource Vis}}" />
+                    <ItemsControl ItemsSource="{Binding Blocks}" Focusable="False">
+                      <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                          <Grid Margin="0,0,0,5">
+                            <Grid.ColumnDefinitions>
+                              <ColumnDefinition Width="16" />
+                              <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <TextBlock x:Name="Dot" Text="•" FontSize="13" LineHeight="20" Foreground="{StaticResource TextFaint}" />
+                            <TextBlock x:Name="Body" Grid.Column="1" v:NoteText.Spans="{Binding Spans}" FontSize="13" LineHeight="20" TextWrapping="Wrap" Foreground="{StaticResource TextSoft}" />
+                          </Grid>
+                          <DataTemplate.Triggers>
+                            <DataTrigger Binding="{Binding Kind}" Value="Paragraph">
+                              <Setter TargetName="Dot" Property="Visibility" Value="Collapsed" />
+                              <Setter TargetName="Body" Property="Grid.Column" Value="0" />
+                              <Setter TargetName="Body" Property="Grid.ColumnSpan" Value="2" />
+                            </DataTrigger>
+                            <DataTrigger Binding="{Binding Kind}" Value="Heading">
+                              <Setter TargetName="Dot" Property="Visibility" Value="Collapsed" />
+                              <Setter TargetName="Body" Property="Grid.Column" Value="0" />
+                              <Setter TargetName="Body" Property="Grid.ColumnSpan" Value="2" />
+                              <Setter TargetName="Body" Property="FontWeight" Value="SemiBold" />
+                              <Setter TargetName="Body" Property="Foreground" Value="{StaticResource Text}" />
+                            </DataTrigger>
+                          </DataTemplate.Triggers>
+                        </DataTemplate>
+                      </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                  </StackPanel>
+                </DataTemplate>
+              </ItemsControl.ItemTemplate>
+            </ItemsControl>
+          </ScrollViewer>
+        </Grid>
+      </Border>
     </Border>
 
     <ContentControl Content="{Binding CurrentPage}" Focusable="False" />

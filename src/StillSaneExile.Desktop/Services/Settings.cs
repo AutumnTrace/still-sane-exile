@@ -89,6 +89,14 @@ public sealed class Settings(Store store)
         set => store.Set("updates.auto", value ? "1" : "0");
     }
 
+    /// <summary>The newest version that has run with this data, so the first start after an update can
+    /// show "What's new". A downgrade leaves it alone. Builds up to 0.2.0 did not store it.</summary>
+    public string? LastRunVersion
+    {
+        get => NullIfEmpty(store.Get("app.lastRunVersion"));
+        set => store.Set("app.lastRunVersion", value ?? "");
+    }
+
     public int ComparableExpiryDays
     {
         get => int.TryParse(store.Get("comparables.expiryDays"), out var d) ? Math.Clamp(d, 1, 60) : 3;
