@@ -1,6 +1,6 @@
 # Campaign guide
 
-The guide page tracks one route through the campaign for each of your characters, and can pin two short lines over the game: where you are and what to do there, then what comes next.
+The guide page tracks one route through the campaign for each of your characters, turns your own build notes into gem steps that come up one stage at a time, and can pin two short lines over the game: where you are and what to do there, then your next gem step or the route's next stop.
 
 SSE never reads the game's memory, files or logs, so it does not know which zone you are in. You tell it, with the zone list or Next and Back. Picking a zone only moves you: it never ticks a step. Everything works offline.
 
@@ -43,4 +43,44 @@ Progress is per character and stays on this PC (see [CAPTURE-AND-PRIVACY.md](CAP
 
 Off by default; switch them on in the guide page. They show only while the game is in front (or for a few seconds over SSE when you press Preview), in a topmost, click-through window that never takes focus. They step aside while the item price card is showing and come back when it hides, and they hide on minimize and lock. Changing zone only changes the text: nothing pops up.
 
-Line 1 is the zone and the first open step there (or the leg's hint). Line 2 is the route's next stop. Placement (top left, below the buffs) has not been measured on real screens yet (#5).
+Line 1 is the zone and the first open step there (or the leg's hint). Line 2 is the build plan's next gem step when one is due ("Next gem · Upgrade Entangle"), otherwise the route's next stop. Placement (top left, below the buffs) has not been measured on real screens yet (#5).
+
+## Build plans
+
+### The guide link: save and open, nothing else
+
+Mobalytics' terms restrict software access, downloads, mirroring and framing, and there is no authorized export. So SSE only **saves the link you paste** and, when you click "Open in browser", asks Windows to open it in your default browser. It never fetches, embeds, frames or reads the page. Any `https://` link is accepted (Mobalytics or another planner; the same rule holds for all of them); `http`, `file`, `javascript`, addresses with a user name or password, and bare IP addresses are refused. An automatic import will only be added if Mobalytics offers an authorized one.
+
+### Your notes become the checklist
+
+You type or paste your own steps, one per line. `PlanNotesParser` reads them locally and the page shows a preview of every line next to what SSE made of it; lines it cannot read say what to write instead. Nothing is saved until you press Save, so you correct the notes while watching the preview.
+
+| You write | SSE reads |
+|---|---|
+| `cut Entangle` | Cut a skill gem |
+| `cut support Zenith I` | Cut a support gem |
+| `upgrade Entangle to level 5` | Upgrade a gem (with the uncut gem's level) |
+| `socket Zenith I into Entangle` | Socket a support into a skill |
+| `move Zenith I: Entangle → Essence Drain` (or `move … from … to …`) | Move a support to another skill |
+| `reserve Herald of Ash` | Reserve spirit for a gem |
+| `respec …` | Respec, with whatever you wrote |
+| `Act 2:` or `after ascendancy:` (alone or in front of a step) | The stage, from that line down |
+| `at Mud Burrow`, `(level 3 uncut)`, `(needs Essence Drain)`, `(priority: high)`, `(optional)` | Where, uncut gem type and level, prerequisites, the author's priority |
+
+Bullets, numbering and tick boxes are ignored, and so are lines starting with `#` or `//`. A step with no priority shows "Author did not specify". A place that names a zone in the route pack makes the step wait until you reach that zone; any other place (an NPC) is shown as written.
+
+Each step is a milestone: stage, zone or NPC, trigger (stage, or zone), prerequisites, action, gem, target skill, uncut gem type and level, and priority.
+
+### Stage gating
+
+A step comes up only when all of these hold:
+
+- **Its stage is reached.** The act comes from the zone you picked (or the act you set past the route); ascendancies are the count you set on the page. Stage labels only move forward through the notes, and an act label after "after ascendancy" keeps the ascendancy. So entering Act 2 keeps the pre-ascendancy plan going until you say the ascendancy is done, and steps for later stages stay hidden: they are counted, never shown as a prompt and never put on the HUD.
+- **Every gem it acts on is in hand.** A gem the plan cuts is in hand once that cut is ticked. A gem the plan never cuts is taken as already in hand. So `move Zenith I: Entangle → Essence Drain` waits until `cut Essence Drain` is ticked, whatever the act.
+- **Its zone is reached**, if it names one.
+
+The first step that passes, in note order, is the HUD's "Next gem". The acceptance journey is a unit test (`PlanGateTests`) with notes written for SSE: cut Entangle, then Contagion, and the Zenith I move only once Essence Drain exists. It was not copied from any guide.
+
+### Revisions
+
+Each save is a revision, stored with the steps as they were read, so a later version of the parser never changes a saved plan. The first plan is used straight away. When you change a plan in use, the new revision waits: the page lists what was added, removed and changed (a new target, stage, level, place or priority), and the old revision stays in use, on the HUD too, until you press "Use revision N". "Keep revision N" drops the new one. Ticks are kept per step, so they carry over to every step that did not change.

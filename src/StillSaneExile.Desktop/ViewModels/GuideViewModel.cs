@@ -40,8 +40,12 @@ public sealed partial class GuideViewModel : ObservableObject
         _routes.Load();
         Zones = BuildZones(_routes.Pack);
         HudEnabled = shell.Settings.GuideHud;
+        Plan = new BuildPlanViewModel(shell, () => _progress, () => Pack, RaiseAll);
         LoadCharacters(shell.Settings.GuideCharacter);
     }
+
+    /// <summary>The character's build plan: saved guide link, their own steps, and the next gem step.</summary>
+    public BuildPlanViewModel Plan { get; }
 
     /// <summary>Raised when the player asks to see the HUD lines over this window for a moment.</summary>
     public event EventHandler? PreviewRequested;
@@ -206,7 +210,11 @@ public sealed partial class GuideViewModel : ObservableObject
 
     partial void OnHudEnabledChanged(bool value) => _shell.Settings.GuideHud = value;
 
-    public HudLines? Hud => _progress?.Lines();
+    /// <summary>Line 1 from the route. Line 2 is the plan's next gem step once a plan is active and has
+    /// one due; otherwise the route's next stop.</summary>
+    public HudLines? Hud => _progress?.Lines() is { } lines
+        ? Plan.NextGem is { } gem ? lines with { ThenLabel = "Next gem", Then = gem } : lines
+        : null;
 
     public bool HasHudLines => Hud is not null;
     public string HudZone => Hud?.Zone ?? "";
@@ -343,6 +351,7 @@ public sealed partial class GuideViewModel : ObservableObject
             _shell.Settings.GuideCharacter = name;
         }
 
+        Plan.Open(_progress is null ? null : name);
         Refresh();
     }
 
@@ -399,6 +408,13 @@ public sealed partial class GuideViewModel : ObservableObject
             SkippedSteps = [];
         }
 
+        Plan.Refresh(); // the zone and act decide which plan steps are due
+        RaiseAll();
+    }
+
+    /// <summary>Tells every binding (and the HUD) to re-read.</summary>
+    private void RaiseAll()
+    {
         _refreshing = true;
         OnPropertyChanged(string.Empty);
         _refreshing = false;

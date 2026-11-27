@@ -20,10 +20,16 @@
       <RowDefinition Height="*" />
     </Grid.RowDefinitions>
 
-    <Border Grid.Row="0" Grid.ColumnSpan="5" Background="{StaticResource Surface2}" BorderBrush="{StaticResource Edge}" BorderThickness="1" CornerRadius="8" Padding="12,8" Margin="0,0,0,16"
-            Visibility="{Binding Message, Converter={StaticResource Vis}}">
-      <TextBlock Text="{Binding Message}" TextWrapping="Wrap" />
-    </Border>
+    <StackPanel Grid.Row="0" Grid.ColumnSpan="5">
+      <Border Background="{StaticResource Surface2}" BorderBrush="{StaticResource Edge}" BorderThickness="1" CornerRadius="8" Padding="12,8" Margin="0,0,0,16"
+              Visibility="{Binding Message, Converter={StaticResource Vis}}">
+        <TextBlock Text="{Binding Message}" TextWrapping="Wrap" />
+      </Border>
+      <Border Background="{StaticResource Surface2}" BorderBrush="{StaticResource Edge}" BorderThickness="1" CornerRadius="8" Padding="12,8" Margin="0,0,0,16"
+              Visibility="{Binding Plan.Message, Converter={StaticResource Vis}}">
+        <TextBlock Text="{Binding Plan.Message}" TextWrapping="Wrap" />
+      </Border>
+    </StackPanel>
 
     <!-- Left: characters, then the zone picker -->
     <DockPanel Grid.Row="1" Grid.Column="0">
@@ -171,6 +177,61 @@
           </StackPanel>
         </Border>
 
+        <!-- The build plan's gem steps for the stage the player is at. Later stages stay hidden. -->
+        <Border Style="{StaticResource Card}" Visibility="{Binding HasCharacter, Converter={StaticResource Vis}}">
+          <StackPanel DataContext="{Binding Plan}">
+            <DockPanel>
+              <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Top" Margin="12,0,0,0"
+                          ToolTip="Tell SSE when you finish an ascendancy trial. Steps for after it stay hidden until then.">
+                <TextBlock Text="Ascendancies done" FontSize="12.5" Foreground="{StaticResource TextDim}" VerticalAlignment="Center" Margin="0,0,10,0" />
+                <Button Style="{StaticResource StepButton}" Content="−" Command="{Binding AscendancyDownCommand}" AutomationProperties.Name="One fewer ascendancy" />
+                <TextBlock Text="{Binding Ascendancies}" Width="30" TextAlignment="Center" VerticalAlignment="Center" FontSize="15" FontWeight="Bold" />
+                <Button Style="{StaticResource StepButton}" Content="+" Command="{Binding AscendancyUpCommand}" AutomationProperties.Name="One more ascendancy" />
+              </StackPanel>
+              <StackPanel>
+                <TextBlock Text="Your gem steps" Style="{StaticResource CardTitle}" />
+                <TextBlock Text="{Binding StageLine}" Style="{StaticResource CardLead}" />
+              </StackPanel>
+            </DockPanel>
+            <TextBlock Style="{StaticResource CardLead}" Margin="0,12,0,0" Visibility="{Binding HasPlan, Converter={StaticResource Vis}, ConverterParameter=invert}"
+                       Text="No plan yet. Write your steps in Your build notes and save them. They show up here one stage at a time, and the next one goes on the HUD." />
+            <Border Background="{StaticResource Surface3}" CornerRadius="8" Padding="14,10" Margin="0,14,0,6" Visibility="{Binding NextGem, Converter={StaticResource Vis}}">
+              <TextBlock TextWrapping="Wrap"><Run Text="Next gem   " FontSize="12.5" Foreground="{StaticResource TextFaint}" /><Run Text="{Binding NextGem, Mode=OneWay}" FontSize="16" FontWeight="Bold" /></TextBlock>
+            </Border>
+            <ItemsControl ItemsSource="{Binding Checklist}" Focusable="False" Margin="0,4,0,0">
+              <ItemsControl.ItemTemplate>
+                <DataTemplate DataType="{x:Type vm:PlanStepViewModel}">
+                  <Border BorderBrush="{StaticResource RowLine}" BorderThickness="0,1,0,0" Padding="0,9" Background="Transparent">
+                    <CheckBox IsChecked="{Binding IsDone, Mode=OneWay}" AutomationProperties.Name="{Binding Text}"
+                              Command="{Binding DataContext.Plan.ToggleStepCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{Binding}">
+                      <StackPanel>
+                        <TextBlock Text="{Binding Text}" FontSize="14" TextWrapping="Wrap">
+                          <TextBlock.Style>
+                            <Style TargetType="TextBlock">
+                              <Setter Property="Foreground" Value="{StaticResource TextOff}" />
+                              <Style.Triggers>
+                                <DataTrigger Binding="{Binding IsDue}" Value="True">
+                                  <Setter Property="Foreground" Value="{StaticResource Text}" />
+                                  <Setter Property="FontWeight" Value="SemiBold" />
+                                </DataTrigger>
+                                <DataTrigger Binding="{Binding IsWaiting}" Value="True">
+                                  <Setter Property="Foreground" Value="{StaticResource TextDim}" />
+                                </DataTrigger>
+                              </Style.Triggers>
+                            </Style>
+                          </TextBlock.Style>
+                        </TextBlock>
+                        <TextBlock Text="{Binding Detail}" FontSize="12" Foreground="{StaticResource TextFaint}" TextWrapping="Wrap" Margin="0,1,0,0" />
+                      </StackPanel>
+                    </CheckBox>
+                  </Border>
+                </DataTemplate>
+              </ItemsControl.ItemTemplate>
+            </ItemsControl>
+            <TextBlock Text="{Binding HiddenText}" FontSize="12.5" Foreground="{StaticResource TextFaint}" TextWrapping="Wrap" Margin="0,8,0,0" Visibility="{Binding HasHidden, Converter={StaticResource Vis}}" />
+          </StackPanel>
+        </Border>
+
         <Border Style="{StaticResource Card}" Visibility="{Binding HasCharacter, Converter={StaticResource Vis}}">
           <StackPanel>
             <TextBlock Text="Missed permanent rewards" Style="{StaticResource CardTitle}" />
@@ -228,6 +289,109 @@
             <CheckBox IsChecked="{Binding HudEnabled}" Content="Show these lines while the game is in front" Margin="0,16,0,0" />
             <Button Style="{StaticResource TextButton}" Content="Preview them over this window for a few seconds" Command="{Binding PreviewHudCommand}" HorizontalAlignment="Left" Margin="0,4,0,0"
                     IsEnabled="{Binding HasHudLines}" />
+          </StackPanel>
+        </Border>
+
+        <!-- The guide the player follows: a saved link only. Opened in the browser on a click; never fetched or shown here. -->
+        <Border Style="{StaticResource Card}" Visibility="{Binding HasCharacter, Converter={StaticResource Vis}}">
+          <StackPanel DataContext="{Binding Plan}">
+            <TextBlock Text="Your build guide" Style="{StaticResource CardTitle}" />
+            <TextBlock Style="{StaticResource CardLead}"
+                       Text="Paste the link to the guide you follow, from Mobalytics or any other site. SSE keeps the link and opens it in your browser when you ask. It never downloads, copies or shows the page itself." />
+            <Border Background="{StaticResource Surface3}" CornerRadius="8" Padding="12,10" Margin="0,12,0,0" Visibility="{Binding HasLink, Converter={StaticResource Vis}}">
+              <DockPanel>
+                <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center">
+                  <Button Content="Open in browser" Command="{Binding OpenLinkCommand}" MinHeight="34" ToolTip="{Binding SavedLink}" />
+                  <Button Style="{StaticResource TextButton}" Content="Forget" Command="{Binding ForgetLinkCommand}" Padding="0" Margin="12,0,0,0" />
+                </StackPanel>
+                <StackPanel VerticalAlignment="Center">
+                  <TextBlock Text="{Binding LinkKind}" FontSize="13.5" FontWeight="SemiBold" />
+                  <TextBlock Text="{Binding LinkHost}" FontSize="12" Foreground="{StaticResource TextFaint}" TextTrimming="CharacterEllipsis" ToolTip="{Binding SavedLink}" />
+                </StackPanel>
+              </DockPanel>
+            </Border>
+            <DockPanel Margin="0,12,0,0" Visibility="{Binding HasLink, Converter={StaticResource Vis}, ConverterParameter=invert}">
+              <Button DockPanel.Dock="Right" Content="Save link" Command="{Binding SaveLinkCommand}" MinHeight="36" Margin="6,0,0,0" />
+              <TextBox Text="{Binding LinkDraft, UpdateSourceTrigger=PropertyChanged}" AutomationProperties.Name="Build guide link" ToolTip="The guide's address, starting with https://" />
+            </DockPanel>
+          </StackPanel>
+        </Border>
+
+        <!-- A changed plan waits here until the player accepts it; the old one stays in use. -->
+        <Border Style="{StaticResource Card}" BorderBrush="{StaticResource EdgeStrong}" Visibility="{Binding Plan.HasPending, Converter={StaticResource Vis}}">
+          <StackPanel DataContext="{Binding Plan}">
+            <TextBlock Text="{Binding PendingTitle}" Style="{StaticResource CardTitle}" />
+            <TextBlock Text="{Binding PendingLead}" Style="{StaticResource CardLead}" />
+            <ItemsControl ItemsSource="{Binding PendingChanges}" Margin="0,10,0,0" Focusable="False">
+              <ItemsControl.ItemTemplate>
+                <DataTemplate DataType="{x:Type vm:PlanChangeViewModel}">
+                  <Border BorderBrush="{StaticResource RowLine}" BorderThickness="0,1,0,0" Padding="0,7">
+                    <DockPanel>
+                      <TextBlock DockPanel.Dock="Left" Text="{Binding Sign}" Width="20" FontSize="15" FontWeight="Bold" Foreground="{StaticResource TextSoft}" />
+                      <StackPanel>
+                        <TextBlock Text="{Binding Text}" FontSize="13.5" TextWrapping="Wrap" />
+                        <TextBlock Text="{Binding Detail}" FontSize="12" Foreground="{StaticResource TextFaint}" TextWrapping="Wrap" />
+                      </StackPanel>
+                    </DockPanel>
+                  </Border>
+                </DataTemplate>
+              </ItemsControl.ItemTemplate>
+            </ItemsControl>
+            <StackPanel Orientation="Horizontal" Margin="0,12,0,0">
+              <Button Content="{Binding AcceptLabel}" Command="{Binding AcceptPendingCommand}" FontWeight="SemiBold" />
+              <Button Style="{StaticResource TextButton}" Content="{Binding KeepLabel}" Command="{Binding DiscardPendingCommand}" Margin="14,0,0,0" />
+            </StackPanel>
+          </StackPanel>
+        </Border>
+
+        <!-- The player's own notes, read into steps with a preview they can correct before saving. -->
+        <Border Style="{StaticResource Card}" Visibility="{Binding HasCharacter, Converter={StaticResource Vis}}">
+          <StackPanel DataContext="{Binding Plan}">
+            <TextBlock Text="Your build notes" Style="{StaticResource CardTitle}" />
+            <TextBlock Style="{StaticResource CardLead}"
+                       Text="Your gem steps in your own words, one per line, typed or pasted from your own notes. SSE turns them into the checklist; nothing is imported from a guide site." />
+            <DockPanel Margin="0,12,0,0" Visibility="{Binding EditingNotes, Converter={StaticResource Vis}, ConverterParameter=invert}">
+              <Button DockPanel.Dock="Right" Content="Edit notes" Command="{Binding EditNotesCommand}" MinHeight="34" Margin="10,0,0,0" />
+              <TextBlock Text="{Binding PlanSummary}" FontSize="12.5" Foreground="{StaticResource TextDim}" VerticalAlignment="Center" TextWrapping="Wrap" />
+            </DockPanel>
+            <StackPanel Margin="0,12,0,0" Visibility="{Binding EditingNotes, Converter={StaticResource Vis}}">
+              <TextBox Text="{Binding NotesDraft, UpdateSourceTrigger=PropertyChanged}" AcceptsReturn="True" AcceptsTab="False" TextWrapping="Wrap" Height="190" Padding="8,6"
+                       VerticalContentAlignment="Top" VerticalScrollBarVisibility="Auto" FontSize="13" AutomationProperties.Name="Your build notes" />
+              <TextBlock FontSize="12" Foreground="{StaticResource TextFaint}" TextWrapping="Wrap" LineHeight="18" Margin="0,8,0,0"
+                         Text="SSE reads lines like cut Entangle, cut support Zenith I, upgrade Entangle to level 5, socket Zenith I into Entangle, move Zenith I: Entangle → Essence Drain, reserve …, respec …. Label stages with Act 2: or after ascendancy:. Optional extras: at Mud Burrow, (level 3 uncut), (needs Essence Drain), (priority: high)." />
+              <TextBlock Text="PREVIEW" Style="{StaticResource SectionTitle}" Margin="0,14,0,2" />
+              <TextBlock Text="{Binding PreviewSummary}" FontSize="12.5" Foreground="{StaticResource TextDim}" />
+              <ItemsControl ItemsSource="{Binding Preview}" Margin="0,6,0,0" Focusable="False">
+                <ItemsControl.ItemTemplate>
+                  <DataTemplate DataType="{x:Type vm:NoteLineViewModel}">
+                    <Border BorderBrush="{StaticResource RowLine}" BorderThickness="0,1,0,0" Padding="0,6">
+                      <DockPanel>
+                        <TextBlock DockPanel.Dock="Left" Text="{Binding Number}" Width="26" FontSize="11.5" Foreground="{StaticResource TextFaint}" />
+                        <StackPanel>
+                          <TextBlock Text="{Binding Text}" FontSize="13" TextWrapping="Wrap" />
+                          <TextBlock Text="{Binding Reading}" FontSize="12" TextWrapping="Wrap" Visibility="{Binding HasReading, Converter={StaticResource Vis}}">
+                            <TextBlock.Style>
+                              <Style TargetType="TextBlock">
+                                <Setter Property="Foreground" Value="{StaticResource TextFaint}" />
+                                <Style.Triggers>
+                                  <DataTrigger Binding="{Binding IsProblem}" Value="True">
+                                    <Setter Property="Foreground" Value="{StaticResource Hint}" />
+                                  </DataTrigger>
+                                </Style.Triggers>
+                              </Style>
+                            </TextBlock.Style>
+                          </TextBlock>
+                        </StackPanel>
+                      </DockPanel>
+                    </Border>
+                  </DataTemplate>
+                </ItemsControl.ItemTemplate>
+              </ItemsControl>
+              <StackPanel Orientation="Horizontal" Margin="0,12,0,0">
+                <Button Content="{Binding SaveLabel}" Command="{Binding SavePlanCommand}" FontWeight="SemiBold" />
+                <Button Style="{StaticResource TextButton}" Content="Cancel" Command="{Binding CancelEditCommand}" Margin="14,0,0,0" Visibility="{Binding HasPlan, Converter={StaticResource Vis}}" />
+              </StackPanel>
+            </StackPanel>
           </StackPanel>
         </Border>
 

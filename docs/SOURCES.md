@@ -18,8 +18,8 @@ The source ledger below comes from the project handoff spec (reviewed 27 Novembe
 | 8 | GGG Return of the Ancients | Aldur Remnant panel with selectable rewards and a common bonus | Row geometry plus per-row reward identity | Milestone 2 |
 | 9 | Aldur Appraiser | Separates selectable rewards from the shared bonus | Design reference | Milestone 2 |
 | 10 | Community campaign guide (0.5.5) | Route structure and optional steps | Structure reference only; original route text | Route engine built. The shipped Act 1 draft was written from general campaign knowledge, copies no prose and is marked unverified until walked in game ([GUIDE.md](GUIDE.md)) |
-| 11 | MisoxShiru's Varashta guide (0.5.5) | Stage-specific gem instructions | Manual acceptance journey; no redistribution of prose or art | Milestone 4 |
-| 12 | Mobalytics Terms of Service | Restrict software access, downloads, mirroring and framing | Save link, open in browser, user-authored steps; import only through an authorized export | Milestone 4 |
+| 11 | MisoxShiru's Varashta guide (0.5.5) | Stage-specific gem instructions | Manual acceptance journey; no redistribution of prose or art | Stage gating built. The journey (cut Entangle, then Contagion; move Zenith I to Essence Drain only once it exists) is a unit test with notes written for SSE; nothing from the guide is in the repo. The manual run against the guide is still to do ([GUIDE.md](GUIDE.md)) |
+| 12 | Mobalytics Terms of Service | Restrict software access, downloads, mirroring and framing | Save link, open in browser, user-authored steps; import only through an authorized export | Followed by design: the link is saved and opened in the browser on a click; steps come from the player's own notes; no fetching, embedding or import ([GUIDE.md](GUIDE.md)) |
 | 13 | Wealthy Exile | Per-tab breakdowns, snapshots, currency per hour | Interaction reference | Milestone 3 |
 | 14 | PoE2Scout | Swagger API | Optional adapter after usage terms are checked; no production dependency | Not planned |
 | 15 | GGG full-release announcement | Full release on 11 December 2026 | 0.5.5 guides become a historical test pack until re-reviewed | Noted |

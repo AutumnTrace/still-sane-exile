@@ -49,6 +49,8 @@ public static class SnapshotRenderer
         SeedGuide(shell.Guide);
         shell.GoGuideCommand.Execute(null);
         Save(main, Path.Combine(dir, "guide.png"));
+        SeedPlanChange(shell.Guide.Plan);
+        Save(main, Path.Combine(dir, "guide-plan-change.png"));
 
         // Wealth with demo holdings: the practice file applied (idempotent, so a re-run adds nothing),
         // one count typed in, then a preview of the practice file with mistakes.
@@ -104,8 +106,24 @@ public static class SnapshotRenderer
         main.Close();
     }
 
+    /// <summary>Example build notes, written for the snapshots in a player's own words.</summary>
+    private const string ExampleNotes = """
+        Act 1
+        cut Entangle
+        upgrade Entangle at Mud Burrow
+        cut Contagion (level 3 uncut)
+        cut support Zenith I (priority: high)
+        socket Zenith I into Entangle
+        Act 2
+        cut Essence Drain
+        move Zenith I: Entangle → Essence Drain
+        After ascendancy
+        respec the passive tree
+        """;
+
     /// <summary>A practice character partway into the route, the way a player gets there: the first
-    /// boss ticked, the optional one skipped, and now in the Mud Burrow.</summary>
+    /// boss ticked, the optional one skipped, now in the Mud Burrow, with a saved guide link and their
+    /// own notes saved as a plan and the first cut ticked.</summary>
     private static void SeedGuide(GuideViewModel guide)
     {
         guide.NewCharacterName = "Practice exile";
@@ -120,6 +138,24 @@ public static class SnapshotRenderer
         guide.NextCommand.Execute(null);
         guide.SkipCommand.Execute(guide.Steps.FirstOrDefault());
         guide.NextCommand.Execute(null);
+
+        var plan = guide.Plan;
+        plan.LinkDraft = "https://mobalytics.gg/poe-2/builds";
+        plan.SaveLinkCommand.Execute(null);
+        plan.NotesDraft = ExampleNotes;
+        plan.SavePlanCommand.Execute(null);
+        plan.ToggleStepCommand.Execute(plan.Checklist.FirstOrDefault());
+        plan.Message = null;
+    }
+
+    /// <summary>The same notes edited into a second revision that waits for the player's say-so.</summary>
+    private static void SeedPlanChange(BuildPlanViewModel plan)
+    {
+        plan.EditNotesCommand.Execute(null);
+        plan.NotesDraft = ExampleNotes
+            .Replace("(level 3 uncut)", "(level 5 uncut)", StringComparison.Ordinal)
+            .Replace("respec the passive tree", "upgrade Essence Drain", StringComparison.Ordinal);
+        plan.SavePlanCommand.Execute(null);
     }
 
     private static void Shot(ShellViewModel shell, MainWindow main, string dir, string file, string name)
