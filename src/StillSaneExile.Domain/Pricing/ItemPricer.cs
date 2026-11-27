@@ -15,7 +15,8 @@ public enum PriceKind
 
 /// <summary>The one price line the HUD and inspector show for an item. <see cref="ObservedTo"/> is when the
 /// price book's figure was last observed, for showing its age; null for prices the player wrote down.</summary>
-public sealed record PriceLine(PriceKind Kind, string Headline, string? Detail, Freshness? Freshness, bool Uncertain, EvidenceSummary? Evidence = null, DateTimeOffset? ObservedTo = null);
+/// <param name="Amount">The price itself in <paramref name="Denomination"/>, for a baseline or a commodity: the label's colour step.</param>
+public sealed record PriceLine(PriceKind Kind, string Headline, string? Detail, Freshness? Freshness, bool Uncertain, EvidenceSummary? Evidence = null, DateTimeOffset? ObservedTo = null, decimal? Amount = null, string? Denomination = null);
 
 public static class ItemPricer
 {
@@ -120,13 +121,13 @@ public static class ItemPricer
             return new PriceLine(PriceKind.UniqueBaseline,
                 $"≈ {ValueFormat.Money(shown.Value, shown.Denomination)} baseline · check rolls",
                 $"{from}{kindLabel}, {age}{volume}{staleTag}. {caveat}",
-                freshness, true, ObservedTo: observedTo);
+                freshness, true, ObservedTo: observedTo, Amount: shown.Value, Denomination: shown.Denomination);
         }
 
         var stack = item.StackSize ?? 1;
         var headline = stack > 1
             ? $"{ValueFormat.Money(shown.Value, shown.Denomination)} each · {ValueFormat.Money(shown.Value * stack, shown.Denomination)} for {stack}"
             : ValueFormat.Money(shown.Value, shown.Denomination);
-        return new PriceLine(PriceKind.Commodity, headline, $"{from}{kindLabel}, {age}{volume}{staleTag}", freshness, freshness != Freshness.Fresh || !unit.Ok, ObservedTo: observedTo);
+        return new PriceLine(PriceKind.Commodity, headline, $"{from}{kindLabel}, {age}{volume}{staleTag}", freshness, freshness != Freshness.Fresh || !unit.Ok, ObservedTo: observedTo, Amount: shown.Value, Denomination: shown.Denomination);
     }
 }

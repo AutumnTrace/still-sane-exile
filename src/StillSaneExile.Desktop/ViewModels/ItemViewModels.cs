@@ -37,6 +37,10 @@ public sealed partial class SearchRowViewModel : ObservableObject
     public LineReading? Reading { get; }
 
     public string Text => Row.Kind == RowKind.Derived && Row.Actual is { } a ? $"{Row.Label} {RollQuality.Num(a)}" : Row.Label;
+
+    /// <summary>A number worked out from the item (physical DPS), drawn like the game's properties (grey and
+    /// white) rather than in the blue of a stat.</summary>
+    public bool IsProperty => Row.Kind == RowKind.Derived;
     public string ShortLabel => Labels.Short(Row);
     public bool IsAmbiguous => Reading?.Status == LineStatus.Ambiguous;
     public bool IsAtMost => Row.Match == MatchType.Maximum;
@@ -266,7 +270,8 @@ public sealed class RollRowViewModel
 
 /// <summary>One of the cheapest listings the search found: its price, the listed item's numbers for the
 /// stats searched, whether it can be bought at once, and how long ago it was listed. Never the seller.</summary>
-public sealed record MatchViewModel(string Price, string Stats, bool BuyNow, string Age)
+/// <param name="Tier">The price label's colour step; null draws the price plain.</param>
+public sealed record MatchViewModel(string Price, string Stats, bool BuyNow, string Age, ValueTier? Tier = null)
 {
     /// <summary>"Instant buyout" or "In person", as the trade site says it.</summary>
     public string How => BuyNow ? "Instant buyout" : "In person";
@@ -397,6 +402,21 @@ public sealed partial class ItemViewModel : ObservableObject
         Item.ItemLevel is { } il && Item.Rarity is not ItemRarity.Currency ? $"Item level {il}" : null,
     }.Where(s => s is not null));
 
+    /// <summary>The second line of the header, as the game's tooltip has it: the base of a named item.</summary>
+    public string? HeaderBase => Item.Name is null ? null : Item.BaseType;
+
+    public bool HasHeaderBase => HeaderBase is not null;
+
+    /// <summary>The rest of <see cref="Subtitle"/> under the name and base: "Item level 82", "Stack of 7".</summary>
+    public string HeaderDetail => string.Join(" · ", new[]
+    {
+        Item.Rarity == ItemRarity.Unique ? "Unique" : null,
+        Item.StackSize is { } s ? $"Stack of {s}" : null,
+        Item.ItemLevel is { } il && Item.Rarity is not ItemRarity.Currency ? $"Item level {il}" : null,
+    }.Where(s => s is not null));
+
+    public bool HasHeaderDetail => HeaderDetail.Length > 0;
+
     /// <summary>The name in the session list, with the stack size for currency ("Exalted Orb ×7").</summary>
     public string ListTitle => Item.Rarity == ItemRarity.Currency && Item.StackSize is > 1 ? $"{Title} ×{Item.StackSize}" : Title;
 
@@ -461,7 +481,7 @@ public sealed partial class ItemViewModel : ObservableObject
     public partial PriceLine? Price { get; set; }
 
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(PeekLine), nameof(PeekLineIsWarning), nameof(NoteLine), nameof(NoteLineIsWarning))]
+    [NotifyPropertyChangedFor(nameof(PeekLine), nameof(PeekLineIsWarning), nameof(PeekShowsCount), nameof(NoteLine), nameof(NoteLineIsWarning))]
     public partial PriceAnswer Answer { get; set; } = PriceAnswer.NoPrice(noMarketData: true);
 
     /// <summary>The cheapest listings of the last search, at most <see cref="ListingRows"/>.</summary>
@@ -484,13 +504,13 @@ public sealed partial class ItemViewModel : ObservableObject
 
     /// <summary>A Search is on its way to the trade site.</summary>
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(IsDimmed), nameof(PeekLine), nameof(PeekLineIsWarning), nameof(SearchLine), nameof(HasSearchLine), nameof(SearchLineIsWarning))]
+    [NotifyPropertyChangedFor(nameof(IsDimmed), nameof(PeekLine), nameof(PeekLineIsWarning), nameof(PeekShowsCount), nameof(SearchLine), nameof(HasSearchLine), nameof(SearchLineIsWarning))]
     public partial bool IsSearching { get; set; }
 
     /// <summary>What happened to the last Search click, when there is something to say: the trade site asks
     /// to wait, could not be reached, Search needs a live league...</summary>
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(PeekLine), nameof(PeekLineIsWarning), nameof(SearchLine), nameof(HasSearchLine))]
+    [NotifyPropertyChangedFor(nameof(PeekLine), nameof(PeekLineIsWarning), nameof(PeekShowsCount), nameof(SearchLine), nameof(HasSearchLine))]
     public partial string? SearchNote { get; set; }
 
     [ObservableProperty]
@@ -508,6 +528,9 @@ public sealed partial class ItemViewModel : ObservableObject
     public string PeekLine => IsSearching ? SearchingText : SearchNote ?? (IsStale ? StaleText : Answer.PeekNote);
 
     public bool PeekLineIsWarning => !IsSearching && (SearchNote is not null ? SearchNoteIsWarning : !IsStale && Answer.NoteIsWarning);
+
+    /// <summary>The card puts "29 for sale" before its line, unless the line already says how many.</summary>
+    public bool PeekShowsCount => Answer.HasCount && !PeekLine.Contains("for sale", StringComparison.Ordinal);
 
     /// <summary>The price check's note under the price: "Search to update" under an old result.</summary>
     public string NoteLine => IsStale ? $"{StaleText}: the price and listings are from your search before the changes." : Answer.Note;
@@ -636,6 +659,7 @@ public sealed partial class ItemViewModel : ObservableObject
         OnPropertyChanged(nameof(IsDimmed));
         OnPropertyChanged(nameof(PeekLine));
         OnPropertyChanged(nameof(PeekLineIsWarning));
+        OnPropertyChanged(nameof(PeekShowsCount));
         OnPropertyChanged(nameof(NoteLine));
         OnPropertyChanged(nameof(NoteLineIsWarning));
         OnPropertyChanged(nameof(SearchLine));
@@ -810,7 +834,7 @@ public sealed partial class ItemViewModel : ObservableObject
         }
         else if (Price.Kind == PriceKind.UniqueBaseline)
         {
-            Answer = PriceAnswer.Baseline(Price, _session.IsDemo ? null : _session.Now);
+            Answer = PriceAnswer.Baseline(Price, _session.IsDemo ? null : _session.Now, price);
         }
         else if (ShowsWorksheet && LiveSearchOn)
         {
@@ -835,7 +859,7 @@ public sealed partial class ItemViewModel : ObservableObject
             .ToList();
         var stats = shown.Count > 0 ? string.Join(" · ", shown) : IsUnique ? Title : $"Any {Labels.Singular(Item.ItemClass)}";
         var age = m.Listing.HasListedAt ? ValueFormat.Age(_session.Now - m.Listing.ListedAt) : "";
-        return new MatchViewModel(price.One(m.Value), stats, m.Listing.BuyNow, age);
+        return new MatchViewModel(price.One(m.Value), stats, m.Listing.BuyNow, age, price.Tier(m.Value));
     }
 
     [RelayCommand]

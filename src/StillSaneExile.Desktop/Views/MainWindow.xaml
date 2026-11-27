@@ -12,21 +12,19 @@
         Width="1440" Height="1000" MinWidth="1260" MinHeight="640"
         Background="{StaticResource Surface}"
         Foreground="{StaticResource Text}"
-        FontFamily="Segoe UI" FontSize="14"
-        Typography.NumeralAlignment="Tabular"
+        FontFamily="{StaticResource BodyFont}" FontSize="15"
+        Typography.NumeralAlignment="Tabular" Typography.NumeralStyle="Lining"
         UseLayoutRounding="True"
         TextOptions.TextFormattingMode="Display">
   <DockPanel>
     <!-- Header: destinations, then the demo badge, league and display currency always in view. -->
     <Border DockPanel.Dock="Top" Background="{StaticResource Surface2}" BorderBrush="{StaticResource Line}" BorderThickness="0,0,0,1" Padding="20,10">
       <DockPanel LastChildFill="False">
-        <Button DockPanel.Dock="Left" Style="{StaticResource TextButton}" Content="‹ Back" AutomationProperties.Name="Back" FontSize="13" Command="{Binding BackCommand}" Margin="0,0,14,0"
-                Visibility="{Binding CanGoBack, Converter={StaticResource Vis}}" ToolTip="Back keeps your selection and your search" />
-        <TextBlock DockPanel.Dock="Left" Text="Still Sane, Exile?" FontSize="16" FontWeight="ExtraBold" VerticalAlignment="Center" Margin="0,0,20,0" />
+        <TextBlock DockPanel.Dock="Left" Text="Still Sane, Exile?" Style="{StaticResource Heading}" FontSize="19" FontWeight="ExtraBold" Foreground="{StaticResource Title}" VerticalAlignment="Center" Margin="0,0,20,0" />
         <StackPanel DockPanel.Dock="Left" Orientation="Horizontal">
           <Button Style="{StaticResource TabButton}" Content="Price check" Command="{Binding GoInspectCommand}" Tag="{Binding PageName, Converter={StaticResource Active}, ConverterParameter='Price check'}" Margin="0,0,2,0" />
           <Button Style="{StaticResource TabButton}" Command="{Binding GoCraftCommand}" Tag="{Binding PageName, Converter={StaticResource Active}, ConverterParameter=Crafting}" Margin="0,0,2,0">
-            <TextBlock><Run Text="Crafting" /><Run Text=" later" FontSize="11" Foreground="{StaticResource TextFaint}" FontWeight="Normal" /></TextBlock>
+            <TextBlock><Run Text="Crafting" /><Run Text=" later" FontSize="12.5" Foreground="{StaticResource TextFaint}" FontWeight="Normal" /></TextBlock>
           </Button>
           <Button Style="{StaticResource TabButton}" Content="My wealth" Command="{Binding GoWealthCommand}" Tag="{Binding PageName, Converter={StaticResource Active}, ConverterParameter='My wealth'}" Margin="0,0,2,0" />
           <Button Style="{StaticResource TabButton}" Content="Campaign guide" Command="{Binding GoGuideCommand}" Tag="{Binding PageName, Converter={StaticResource Active}, ConverterParameter='Campaign guide'}" />
@@ -40,26 +38,30 @@
             <TextBlock><Run Text="Update " /><Run Text="{Binding Updates.ReadyVersion, Mode=OneWay}" /><Run Text=" ready · Restart" /></TextBlock>
           </Button>
           <Border Style="{StaticResource DemoBadge}" Visibility="{Binding IsDemo, Converter={StaticResource Vis}}">
-            <TextBlock Text="DEMO PRICES" FontSize="11" FontWeight="Bold" />
+            <TextBlock Text="demo prices" FontSize="12.5" FontWeight="Bold" />
           </Border>
           <Button Command="{Binding OpenLeagueSettingCommand}" ToolTip="Click to change the league" Margin="8,0,0,0">
             <TextBlock><Run Text="League: " Foreground="{StaticResource TextFaint}" /><Run Text="{Binding LeagueLabel, Mode=OneWay}" /></TextBlock>
           </Button>
           <Grid Margin="8,0,0,0">
-            <Button x:Name="CurrencyButton" Command="{Binding ToggleCurrencyMenuCommand}" PreviewKeyDown="OnCurrencyButtonKeyDown" ToolTip="Click to change the currency prices are shown in">
-              <TextBlock><Run Text="Show prices in: " Foreground="{StaticResource TextFaint}" /><Run Text="{Binding CurrencyWord, Mode=OneWay}" /></TextBlock>
+            <Button x:Name="CurrencyButton" Command="{Binding ToggleCurrencyMenuCommand}" PreviewKeyDown="OnCurrencyButtonKeyDown" ToolTip="Click to change the currency prices are shown in"
+                    AutomationProperties.Name="{Binding CurrencyWord, StringFormat='Show prices in: {0}'}">
+              <StackPanel Orientation="Horizontal">
+                <TextBlock VerticalAlignment="Center"><Run Text="Show prices in: " Foreground="{StaticResource TextFaint}" /><Run Text="{Binding CurrencyWord, Mode=OneWay}" /></TextBlock>
+                <v:CurrencyIcon Currency="{Binding Session.DisplayCurrency}" Width="18" Height="18" Margin="6,0,0,0" VerticalAlignment="Center" />
+              </StackPanel>
             </Button>
             <!-- Opened from the keyboard, focus moves into the menu: arrows or Tab to choose, Enter to pick,
                  Esc to close. -->
             <Popup x:Name="CurrencyMenu" IsOpen="{Binding CurrencyMenuOpen}" PlacementTarget="{Binding ElementName=CurrencyButton}" Placement="Bottom" StaysOpen="False" AllowsTransparency="True"
                    Opened="OnCurrencyMenuOpened" Closed="OnCurrencyMenuClosed">
-              <Border Background="{StaticResource Surface3}" BorderBrush="{StaticResource Edge}" BorderThickness="1" CornerRadius="8" Padding="6" Margin="0,4,0,0" MinWidth="160"
+              <Border Background="{StaticResource Surface3}" BorderBrush="{StaticResource EdgeStrong}" BorderThickness="1" Padding="6" Margin="0,4,0,0" MinWidth="180"
                       KeyboardNavigation.TabNavigation="Cycle" KeyboardNavigation.DirectionalNavigation="Cycle" PreviewKeyDown="OnCurrencyMenuKeyDown">
                 <ItemsControl x:Name="CurrencyMenuItems" ItemsSource="{Binding CurrencyChoices}" AutomationProperties.Name="Show prices in">
                   <ItemsControl.ItemTemplate>
                     <DataTemplate>
-                      <Button Style="{StaticResource TabButton}" FontSize="13" MinHeight="34" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left"
-                              Content="{Binding Converter={StaticResource CurrencyName}}"
+                      <Button Style="{StaticResource TabButton}" FontSize="15" MinHeight="36" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left" Padding="10,0"
+                              AutomationProperties.Name="{Binding Converter={StaticResource CurrencyName}}"
                               Command="{Binding DataContext.SetCurrencyCommand, RelativeSource={RelativeSource AncestorType=Window}}"
                               CommandParameter="{Binding}">
                         <Button.Tag>
@@ -68,6 +70,10 @@
                             <Binding Path="DataContext.Session.DisplayCurrency" RelativeSource="{RelativeSource AncestorType=Window}" />
                           </MultiBinding>
                         </Button.Tag>
+                        <StackPanel Orientation="Horizontal">
+                          <v:CurrencyIcon Currency="{Binding}" Width="22" Height="22" Margin="0,0,8,0" VerticalAlignment="Center" />
+                          <TextBlock Text="{Binding Converter={StaticResource CurrencyName}}" VerticalAlignment="Center" />
+                        </StackPanel>
                       </Button>
                     </DataTemplate>
                   </ItemsControl.ItemTemplate>
@@ -83,11 +89,11 @@
     <!-- Status: where prices come from, and the promise that nothing is sent to the game. -->
     <Border DockPanel.Dock="Bottom" Background="{StaticResource Surface2}" BorderBrush="{StaticResource Line}" BorderThickness="0,1,0,0" Padding="20,8">
       <DockPanel>
-        <TextBlock DockPanel.Dock="Right" Text="{Binding VersionLabel}" FontSize="12" Foreground="{StaticResource TextFaint}" Margin="18,0,0,0" />
-        <TextBlock DockPanel.Dock="Right" FontSize="12" Foreground="{StaticResource TextFaint}" ToolTip="{Binding Diagnostics}">
+        <TextBlock DockPanel.Dock="Right" Text="{Binding VersionLabel}" FontSize="13.5" Foreground="{StaticResource TextFaint}" Margin="18,0,0,0" />
+        <TextBlock DockPanel.Dock="Right" FontSize="13.5" Foreground="{StaticResource TextFaint}" ToolTip="{Binding Diagnostics}">
           <Run Text="Keys sent to the game: " /><Run Text="{Binding KeysSent, Mode=OneWay}" Foreground="{StaticResource Text}" FontWeight="Bold" /><Run Text=" · Items read: " /><Run Text="{Binding ItemsRead, Mode=OneWay}" Foreground="{StaticResource Text}" FontWeight="Bold" />
         </TextBlock>
-        <TextBlock Text="{Binding FooterStatus}" FontSize="12" Foreground="{StaticResource TextFaint}" TextTrimming="CharacterEllipsis" ToolTip="{Binding FooterDetail}" />
+        <TextBlock Text="{Binding FooterStatus}" FontSize="13.5" Foreground="{StaticResource TextFaint}" TextTrimming="CharacterEllipsis" ToolTip="{Binding FooterDetail}" />
       </DockPanel>
     </Border>
 
@@ -105,7 +111,7 @@
             <TextBlock Style="{StaticResource CardTitle}" Text="{Binding Title}" TextWrapping="Wrap" />
             <TextBlock Style="{StaticResource CardLead}" Text="{Binding Lead}" />
             <Button Style="{StaticResource LinkButton}" Content="Open the release on GitHub" Command="{Binding OpenReleaseCommand}"
-                    HorizontalAlignment="Left" FontSize="12.5" Margin="-2,10,0,0" ToolTip="{Binding ReleaseUrl}" />
+                    HorizontalAlignment="Left" FontSize="14" Margin="-2,10,0,0" ToolTip="{Binding ReleaseUrl}" />
             <Button Style="{StaticResource GhostButton}" Content="Got it" Command="{Binding DismissCommand}"
                     HorizontalAlignment="Left" MinHeight="34" Padding="18,0" Margin="0,14,0,0"
                     ToolTip="Hides this. You can open it again from Settings." />
@@ -116,7 +122,7 @@
               <ItemsControl.ItemTemplate>
                 <DataTemplate>
                   <StackPanel Margin="0,0,12,8">
-                    <TextBlock Text="{Binding Heading}" FontSize="12" FontWeight="SemiBold" Foreground="{StaticResource TextFaint}" Margin="0,2,0,6"
+                    <TextBlock Text="{Binding Heading}" FontSize="13.5" FontWeight="SemiBold" Foreground="{StaticResource TextFaint}" Margin="0,2,0,6"
                                Visibility="{Binding DataContext.ShowSectionHeadings, RelativeSource={RelativeSource AncestorType=ItemsControl}, Converter={StaticResource Vis}}" />
                     <ItemsControl ItemsSource="{Binding Blocks}" Focusable="False">
                       <ItemsControl.ItemTemplate>
@@ -126,8 +132,8 @@
                               <ColumnDefinition Width="16" />
                               <ColumnDefinition Width="*" />
                             </Grid.ColumnDefinitions>
-                            <TextBlock x:Name="Dot" Text="•" FontSize="13" LineHeight="20" Foreground="{StaticResource TextFaint}" />
-                            <TextBlock x:Name="Body" Grid.Column="1" v:NoteText.Spans="{Binding Spans}" FontSize="13" LineHeight="20" TextWrapping="Wrap" Foreground="{StaticResource TextSoft}" />
+                            <TextBlock x:Name="Dot" Text="•" FontSize="14.5" LineHeight="20" Foreground="{StaticResource TextFaint}" />
+                            <TextBlock x:Name="Body" Grid.Column="1" v:NoteText.Spans="{Binding Spans}" FontSize="14.5" LineHeight="20" TextWrapping="Wrap" Foreground="{StaticResource TextSoft}" />
                           </Grid>
                           <DataTemplate.Triggers>
                             <DataTrigger Binding="{Binding Kind}" Value="Paragraph">

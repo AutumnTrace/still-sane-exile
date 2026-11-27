@@ -11,11 +11,11 @@
         WindowStyle="None" AllowsTransparency="True" Background="Transparent"
         Topmost="True" ShowInTaskbar="False" ShowActivated="False" Focusable="False"
         ResizeMode="NoResize" SizeToContent="WidthAndHeight"
-        Foreground="{StaticResource Text}" FontFamily="Segoe UI" FontSize="14"
+        Foreground="{StaticResource Text}" FontFamily="{StaticResource BodyFont}" FontSize="15" Typography.NumeralStyle="Lining"
         UseLayoutRounding="True" TextOptions.TextFormattingMode="Display">
   <Border Padding="10,6,10,14">
     <Grid>
-      <Border CornerRadius="10" Background="#F715161A">
+      <Border Background="{StaticResource Panel}">
         <Border.Effect>
           <DropShadowEffect Color="Black" BlurRadius="20" ShadowDepth="6" Direction="270" Opacity="0.5" />
         </Border.Effect>

@@ -8,7 +8,7 @@ Windows 10/11 · x64 · Windowed or borderless · Game set to English (other lan
 
 <img src="docs/screenshots/peek-advanced.png" width="384" alt="Demo card for Doom Thirst: items like it sell for about 1.8 to 2.6 divine, 29 for sale, searched with physical DPS of at least 319 and attack speed of at least 15">
 
-Doom Thirst in the demo profile: items like it ask about 1.8–2.6 div, with 29 for sale. The search wanted physical DPS of at least 319 and attack speed of at least 15, 10% under its own rolls.
+Doom Thirst in the demo profile: items like it ask about 1.8–2.6 div, with 29 for sale. The search wanted physical DPS of at least 319 and attack speed of at least 15, 10% under its own rolls. The price is coloured like a loot filter label (white and red for a jackpot, red for Divines, orange to tan for Exalted money, dark for small change) and shows the game's own orbs instead of "div" and "ex".
 
 ## Try it on a crossbow
 

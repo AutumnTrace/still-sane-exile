@@ -334,7 +334,7 @@ public class HudControllerTests
         rig.Shell.Navigate(rig.Shell.SettingsPage);
         Assert.True(rig.Keys.ObserveMouseButtons);
 
-        rig.Shell.BackCommand.Execute(null);
+        rig.Shell.GoInspectCommand.Execute(null);
         Assert.False(rig.Keys.ObserveMouseButtons);
 
         rig.Shell.Settings.OpenLastKey = Hotkey.Parse("Mouse5")!;

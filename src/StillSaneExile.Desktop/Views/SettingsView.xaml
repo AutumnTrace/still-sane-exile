@@ -39,7 +39,7 @@
 
       <TextBlock Text="Settings" FontSize="28" FontWeight="ExtraBold" />
 
-      <Border BorderBrush="{StaticResource Edge}" BorderThickness="1" CornerRadius="8" Padding="12,8" Margin="0,14,0,0" Visibility="{Binding Message, Converter={StaticResource Vis}}">
+      <Border BorderBrush="{StaticResource Edge}" BorderThickness="1" CornerRadius="2" Padding="12,8" Margin="0,14,0,0" Visibility="{Binding Message, Converter={StaticResource Vis}}">
         <TextBlock Text="{Binding Message}" TextWrapping="Wrap" />
       </Border>
 
@@ -76,15 +76,15 @@
                 </DataTemplate>
               </ItemsControl.ItemTemplate>
             </ItemsControl>
-            <Button Style="{StaticResource LinkButton}" FontSize="12.5" Content="Get the league list from poe.ninja" Command="{Binding LoadLeaguesCommand}"
+            <Button Style="{StaticResource LinkButton}" FontSize="14" Content="Get the league list from poe.ninja" Command="{Binding LoadLeaguesCommand}"
                     Visibility="{Binding CanLoadLeagues, Converter={StaticResource Vis}}" ToolTip="One request to poe.ninja for the leagues it has prices for" />
           </WrapPanel>
-          <TextBlock Text="{Binding LeagueListStatus}" FontSize="12" Foreground="{StaticResource TextDim}" TextWrapping="Wrap" Margin="0,2,0,0"
+          <TextBlock Text="{Binding LeagueListStatus}" FontSize="13.5" Foreground="{StaticResource TextDim}" TextWrapping="Wrap" Margin="0,2,0,0"
                      Visibility="{Binding LeagueListStatus, Converter={StaticResource Vis}}" />
-          <TextBlock FontSize="12" Foreground="{StaticResource TextFaint}" TextWrapping="Wrap" Margin="0,8,0,0">
+          <TextBlock FontSize="13.5" Foreground="{StaticResource TextFaint}" TextWrapping="Wrap" Margin="0,8,0,0">
             <Run Text="The demo profile uses synthetic prices, ranges and listings so you can practice; they never appear in a live profile. A live league must be confirmed once and is remembered. Switching league swaps prices, comparables and holdings together, and never shows the previous league's prices, even while a refresh is running." />
           </TextBlock>
-          <TextBlock FontSize="12" Margin="0,6,0,0" Visibility="{Binding ConfirmedLeague, Converter={StaticResource Vis}}">
+          <TextBlock FontSize="13.5" Margin="0,6,0,0" Visibility="{Binding ConfirmedLeague, Converter={StaticResource Vis}}">
             <Run Text="Confirmed live league: " Foreground="{StaticResource TextDim}" /><Run Text="{Binding ConfirmedLeague, Mode=OneWay}" FontWeight="SemiBold" />
           </TextBlock>
         </StackPanel>
@@ -95,14 +95,14 @@
       <Border Style="{StaticResource Card}">
         <StackPanel>
           <CheckBox IsChecked="{Binding LivePricesOn}" Content="Live prices from poe.ninja for your live league, refreshed every hour" />
-          <TextBlock Text="{Binding LiveStatus}" TextWrapping="Wrap" FontSize="12.5" Foreground="{StaticResource TextDim}" Margin="0,8,0,0" />
-          <TextBlock Text="{Binding LiveHold}" TextWrapping="Wrap" FontSize="12.5" Foreground="{StaticResource Warn}" Margin="0,4,0,0"
+          <TextBlock Text="{Binding LiveStatus}" TextWrapping="Wrap" FontSize="14" Foreground="{StaticResource TextDim}" Margin="0,8,0,0" />
+          <TextBlock Text="{Binding LiveHold}" TextWrapping="Wrap" FontSize="14" Foreground="{StaticResource Warn}" Margin="0,4,0,0"
                      Visibility="{Binding LiveHold, Converter={StaticResource Vis}}" />
-          <TextBlock Text="{Binding LiveProblem}" TextWrapping="Wrap" FontSize="12.5" Foreground="{StaticResource Warn}" Margin="0,4,0,0"
+          <TextBlock Text="{Binding LiveProblem}" TextWrapping="Wrap" FontSize="14" Foreground="{StaticResource Warn}" Margin="0,4,0,0"
                      Visibility="{Binding LiveProblem, Converter={StaticResource Vis}}" />
-          <TextBlock FontSize="12" Foreground="{StaticResource TextFaint}" TextWrapping="Wrap" Margin="0,8,0,0"
+          <TextBlock FontSize="13.5" Foreground="{StaticResource TextFaint}" TextWrapping="Wrap" Margin="0,8,0,0"
                      Text="With a live league confirmed, SSE asks poe.ninja a few seconds after it starts, then every hour, for that league's exchange prices (currency, fragments, essences, runes, soul cores, idols, uncut gems, lineage supports, omens, delirium, expedition, verisium) and unique item prices: about 20 requests, one at a time, at least 5 seconds apart, following poe.ninja's cache headers. Each request names the league, the category and SSE's version, nothing about you, your account or your items. The last few refreshes stay in the data folder, so prices still show when you're offline, with their age." />
-          <TextBlock FontSize="12" Foreground="{StaticResource TextFaint}" TextWrapping="Wrap" Margin="0,6,0,0"
+          <TextBlock FontSize="13.5" Foreground="{StaticResource TextFaint}" TextWrapping="Wrap" Margin="0,6,0,0"
                      Text="The prices are poe.ninja's own estimates for the whole league. Unique prices are a baseline for the item, not for your rolls. Prices are marked stale after two missed hourly refreshes, and too old to rank after 24 hours. A key press never asks poe.ninja for anything: the card over the game only reads what is already here. Rares have no price list: Search finds their listings on the trade site." />
         </StackPanel>
       </Border>
@@ -112,7 +112,7 @@
       <Border Style="{StaticResource Card}">
         <StackPanel>
           <CheckBox IsChecked="{Binding TradeSearchOn}" Content="Search the trade site from SSE" />
-          <TextBlock FontSize="12" Foreground="{StaticResource TextFaint}" TextWrapping="Wrap" Margin="0,8,0,0"
+          <TextBlock FontSize="13.5" Foreground="{StaticResource TextFaint}" TextWrapping="Wrap" Margin="0,8,0,0"
                      Text="When you click Search on the price card or the price check of a live item, SSE asks the official Path of Exile trade site for the listings that match: one search, then one request for the ten cheapest. Only on that click, never on a key press, and never in the demo. The requests carry the search (the item's base, rarity, the stats and numbers you ticked, your live league) and SSE's version; no login, no cookies, nothing about your account. SSE keeps within the limits the site announces and waits when it asks. Prices come from instant buyout listings; the sellers' names are never read or shown. Off, Search tells you to open the search on the trade site instead." />
         </StackPanel>
       </Border>
@@ -141,7 +141,7 @@
               </DataTemplate>
             </ItemsControl.ItemTemplate>
           </ItemsControl>
-          <TextBlock FontSize="12" Foreground="{StaticResource TextFaint}" TextWrapping="Wrap" Margin="0,8,0,0"
+          <TextBlock FontSize="13.5" Foreground="{StaticResource TextFaint}" TextWrapping="Wrap" Margin="0,8,0,0"
                      Text="Most players price in Divine. Cheap items still show in Exalted. Prices convert with decimal math and round only for display; with no usable rate the original currency is shown." />
         </StackPanel>
       </Border>
@@ -171,24 +171,24 @@
             <TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding StashKey}" FontWeight="SemiBold" VerticalAlignment="Center" Foreground="{StaticResource TextDim}" />
             <StackPanel Grid.Row="2" Grid.Column="2" Orientation="Horizontal">
               <Button Content="Change" AutomationProperties.Name="Change the stash prices key" Command="{Binding StartRecordingCommand}" CommandParameter="stash" Margin="0,3" />
-              <TextBlock Text="{Binding StashKeyNote}" Foreground="{StaticResource TextFaint}" FontSize="12" VerticalAlignment="Center" Margin="10,0,0,0" />
+              <TextBlock Text="{Binding StashKeyNote}" Foreground="{StaticResource TextFaint}" FontSize="13.5" VerticalAlignment="Center" Margin="10,0,0,0" />
             </StackPanel>
           </Grid>
-          <TextBlock Text="{Binding ReadsExplanation}" TextWrapping="Wrap" FontSize="12" Foreground="{StaticResource TextDim}" Margin="0,10,0,0" />
+          <TextBlock Text="{Binding ReadsExplanation}" TextWrapping="Wrap" FontSize="13.5" Foreground="{StaticResource TextDim}" Margin="0,10,0,0" />
           <ItemsControl ItemsSource="{Binding KeyWarnings}" Margin="0,6,0,0" AutomationProperties.Name="Key warnings">
             <ItemsControl.ItemTemplate>
               <DataTemplate>
-                <TextBlock Text="{Binding}" FontSize="12" Foreground="{StaticResource Warn}" TextWrapping="Wrap" />
+                <TextBlock Text="{Binding}" FontSize="13.5" Foreground="{StaticResource Warn}" TextWrapping="Wrap" />
               </DataTemplate>
             </ItemsControl.ItemTemplate>
           </ItemsControl>
-          <Border Background="{StaticResource Well}" BorderBrush="{StaticResource Edge}" BorderThickness="1" CornerRadius="8" Padding="12,10" Margin="0,12,0,0">
+          <Border Background="{StaticResource Well}" BorderBrush="{StaticResource Edge}" BorderThickness="1" CornerRadius="2" Padding="12,10" Margin="0,12,0,0">
             <StackPanel>
-              <TextBlock Text="KEY TESTER: press, hold and release any key or side mouse button while this page is in front" FontSize="11" Foreground="{StaticResource TextFaint}" />
-              <TextBlock Text="{Binding TestLog}" FontSize="14" Margin="0,4,0,0" />
+              <TextBlock Text="KEY TESTER: press, hold and release any key or side mouse button while this page is in front" FontSize="12.5" Foreground="{StaticResource TextFaint}" />
+              <TextBlock Text="{Binding TestLog}" FontSize="15.5" Margin="0,4,0,0" />
             </StackPanel>
           </Border>
-          <TextBlock FontSize="12" Foreground="{StaticResource TextFaint}" TextWrapping="Wrap" Margin="0,10,0,0"
+          <TextBlock FontSize="13.5" Foreground="{StaticResource TextFaint}" TextWrapping="Wrap" Margin="0,10,0,0"
                      Text="The app observes physical key presses (and side mouse buttons, while one is bound or this page is open) and passes every one on to the game unchanged. It ignores synthetic input, never sends keys, clicks or chat, and never reads game memory or files. It looks at where the mouse cursor is only while you hold the quick price key, to notice you moving onto the card." />
         </StackPanel>
       </Border>
@@ -203,7 +203,7 @@
             <Button Style="{StaticResource ChoiceButton}" MinHeight="40" Content="Press again to hide (accessibility)" Command="{Binding SetPeekModeCommand}" CommandParameter="toggle" Margin="0,0,0,6"
                     Tag="{Binding ToggleMode, Converter={StaticResource Active}, ConverterParameter=True}" />
           </WrapPanel>
-          <TextBlock FontSize="12" Foreground="{StaticResource TextFaint}" TextWrapping="Wrap" Margin="0,2,0,0"
+          <TextBlock FontSize="13.5" Foreground="{StaticResource TextFaint}" TextWrapping="Wrap" Margin="0,2,0,0"
                      Text="Hold the key to see the price. Move the mouse onto the card to keep it open and tick stats on it; let go without moving and it hides. Press again to hide: one press shows the card, the next one hides it, so you never hold a key." />
           <WrapPanel Margin="0,10,0,0">
             <TextBlock Text="Place the card" VerticalAlignment="Center" Margin="0,0,10,0" />
@@ -220,9 +220,9 @@
                     AutomationProperties.Name="Quick price card scale" />
             <TextBlock Text="{Binding PeekScale, StringFormat='{}{0:0.00}×'}" VerticalAlignment="Center" Margin="10,0,0,0" />
           </StackPanel>
-          <TextBlock FontSize="12" Foreground="{StaticResource TextFaint}" TextWrapping="Wrap" Margin="0,8,0,0"
+          <TextBlock FontSize="13.5" Foreground="{StaticResource TextFaint}" TextWrapping="Wrap" Margin="0,8,0,0"
                      Text="The card keeps clear of the screen centre, the skill bar and the top-right map. While you hold the key it is click-through and never takes focus. Once you move onto it, it takes clicks (never the focus: the game keeps your keyboard) and stays until you close it (×) or check another item. Any card hides when another program comes to the front, on minimize, lock and resolution change. Windowed or borderless only; exclusive fullscreen cannot show it." />
-          <TextBlock FontSize="12" Foreground="{StaticResource TextFaint}" TextWrapping="Wrap" Margin="0,6,0,0"
+          <TextBlock FontSize="13.5" Foreground="{StaticResource TextFaint}" TextWrapping="Wrap" Margin="0,6,0,0"
                      Text="Scale is the card's own size. The Windows text size setting (Accessibility, Text size) enlarges this window and the price check over the game, not the card." />
         </StackPanel>
       </Border>
@@ -231,15 +231,15 @@
       <TextBlock Text="STASH READING (COMING SOON): HELP BUILD IT" Style="{StaticResource SectionTitle}" />
       <Border x:Name="StashPicturesCard" Style="{StaticResource Card}" DataContext="{Binding Pictures}">
         <StackPanel>
-          <TextBlock Text="{Binding Lead}" TextWrapping="Wrap" FontSize="13" LineHeight="19" />
+          <TextBlock Text="{Binding Lead}" TextWrapping="Wrap" FontSize="14.5" LineHeight="19" />
           <CheckBox IsChecked="{Binding IsCollecting}" Content="{Binding SwitchLabel}" Margin="0,12,0,0" />
-          <TextBlock Text="{Binding Problem}" TextWrapping="Wrap" FontSize="12.5" Foreground="{StaticResource Warn}" Margin="0,8,0,0"
+          <TextBlock Text="{Binding Problem}" TextWrapping="Wrap" FontSize="14" Foreground="{StaticResource Warn}" Margin="0,8,0,0"
                      Visibility="{Binding Problem, Converter={StaticResource Vis}}" />
-          <TextBlock Text="{Binding WhatIsTaken}" TextWrapping="Wrap" FontSize="12" Foreground="{StaticResource TextDim}" Margin="0,10,0,0" />
-          <TextBlock Text="{Binding WhereSaved}" TextWrapping="Wrap" FontSize="12" Foreground="{StaticResource TextDim}" Margin="0,6,0,0" />
-          <TextBlock Text="{Binding PrivacyText}" TextWrapping="Wrap" FontSize="12" Foreground="{StaticResource Hint}" Margin="0,6,0,0" />
+          <TextBlock Text="{Binding WhatIsTaken}" TextWrapping="Wrap" FontSize="13.5" Foreground="{StaticResource TextDim}" Margin="0,10,0,0" />
+          <TextBlock Text="{Binding WhereSaved}" TextWrapping="Wrap" FontSize="13.5" Foreground="{StaticResource TextDim}" Margin="0,6,0,0" />
+          <TextBlock Text="{Binding PrivacyText}" TextWrapping="Wrap" FontSize="13.5" Foreground="{StaticResource Hint}" Margin="0,6,0,0" />
           <WrapPanel Margin="0,12,0,0">
-            <TextBlock Text="{Binding Summary}" FontSize="12.5" VerticalAlignment="Center" Margin="0,0,14,0" />
+            <TextBlock Text="{Binding Summary}" FontSize="14" VerticalAlignment="Center" Margin="0,0,14,0" />
             <Button Content="Review and label them on My wealth" Command="{Binding ReviewCommand}" Margin="0,0,8,0"
                     Visibility="{Binding HasPictures, Converter={StaticResource Vis}}" />
             <Button Content="Open the pictures folder" Command="{Binding OpenFolderCommand}" ToolTip="Opens the folder in Explorer" />
@@ -268,11 +268,11 @@
             <TextBlock VerticalAlignment="Center">
               <Run Text="Still Sane, Exile? " Foreground="{StaticResource TextDim}" /><Run Text="{Binding Updates.CurrentVersion, Mode=OneWay}" FontWeight="SemiBold" />
             </TextBlock>
-            <Button Style="{StaticResource LinkButton}" FontSize="12.5" Margin="14,0,0,0" VerticalAlignment="Center"
+            <Button Style="{StaticResource LinkButton}" FontSize="14" Margin="14,0,0,0" VerticalAlignment="Center"
                     Content="{Binding WhatsNew.LinkLabel}" Command="{Binding WhatsNew.ShowCurrentCommand}"
                     ToolTip="Shows this version's notes at the top of the window" />
           </WrapPanel>
-          <TextBlock Text="{Binding Updates.Status}" TextWrapping="Wrap" FontSize="12" Foreground="{StaticResource TextDim}" Margin="0,4,0,0" />
+          <TextBlock Text="{Binding Updates.Status}" TextWrapping="Wrap" FontSize="13.5" Foreground="{StaticResource TextDim}" Margin="0,4,0,0" />
           <CheckBox IsChecked="{Binding AutoUpdate}" Margin="0,10,0,0" IsEnabled="{Binding Updates.IsInstalled}"
                     Content="Check for updates automatically (at start and every 6 hours)" />
           <WrapPanel Margin="0,10,0,0">
@@ -280,7 +280,7 @@
             <Button Content="Restart now to update" Command="{Binding RestartToUpdateCommand}"
                     Visibility="{Binding Updates.IsReady, Converter={StaticResource Vis}}" />
           </WrapPanel>
-          <TextBlock TextWrapping="Wrap" FontSize="12" Foreground="{StaticResource TextFaint}" Margin="0,8,0,0"
+          <TextBlock TextWrapping="Wrap" FontSize="13.5" Foreground="{StaticResource TextFaint}" Margin="0,8,0,0"
                      Text="Updates come from the project's GitHub releases. A downloaded update installs when you close SSE, so it never restarts in the middle of a game unless you ask." />
         </StackPanel>
       </Border>
@@ -289,12 +289,12 @@
       <TextBlock Text="DATA AND PRIVACY" Style="{StaticResource SectionTitle}" />
       <Border Style="{StaticResource Card}">
         <StackPanel>
-          <TextBlock TextWrapping="Wrap" FontSize="12" Foreground="{StaticResource TextDim}">
+          <TextBlock TextWrapping="Wrap" FontSize="13.5" Foreground="{StaticResource TextDim}">
             <Run Text="Data folder: " /><Run Text="{Binding DataFolder, Mode=OneWay}" Foreground="{StaticResource Text}" />
           </TextBlock>
-          <TextBlock TextWrapping="Wrap" FontSize="12" Foreground="{StaticResource TextDim}" Margin="0,6,0,0"
+          <TextBlock TextWrapping="Wrap" FontSize="13.5" Foreground="{StaticResource TextDim}" Margin="0,6,0,0"
                      Text="Clipboard text is kept in memory only while it is a parsed item, and saved to disk only with a comparison set you create. Anything that is not an item is discarded at once. SSE makes three kinds of network request: the update check to GitHub; for a live league with live prices on, that league's prices from poe.ninja every hour (plus poe.ninja's league list when you pick a league); and, only when you click Search on a live item, that search on the official trade site. None of them sends anything about you, and each has its switch above. &quot;Open this search on the trade site&quot; opens it in your browser." />
-          <TextBlock TextWrapping="Wrap" FontSize="12" Foreground="{StaticResource TextFaint}" Margin="0,6,0,0"
+          <TextBlock TextWrapping="Wrap" FontSize="13.5" Foreground="{StaticResource TextFaint}" Margin="0,6,0,0"
                      Text="This product isn't affiliated with or endorsed by Grinding Gear Games in any way." />
         </StackPanel>
       </Border>

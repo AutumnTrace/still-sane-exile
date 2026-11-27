@@ -32,17 +32,17 @@
       </Setter>
     </Style>
     <Style x:Key="ColumnHead" TargetType="TextBlock">
-      <Setter Property="FontSize" Value="11" />
+      <Setter Property="FontSize" Value="12.5" />
       <Setter Property="FontWeight" Value="SemiBold" />
       <Setter Property="Foreground" Value="{StaticResource TextFaint}" />
     </Style>
     <Style x:Key="FieldLabel" TargetType="TextBlock">
-      <Setter Property="FontSize" Value="12.5" />
+      <Setter Property="FontSize" Value="14" />
       <Setter Property="Foreground" Value="{StaticResource TextDim}" />
       <Setter Property="VerticalAlignment" Value="Center" />
     </Style>
     <Style x:Key="Cell" TargetType="TextBlock">
-      <Setter Property="FontSize" Value="13" />
+      <Setter Property="FontSize" Value="14.5" />
       <Setter Property="TextTrimming" Value="CharacterEllipsis" />
       <Setter Property="VerticalAlignment" Value="Center" />
       <Setter Property="Margin" Value="0,0,10,0" />
@@ -51,7 +51,7 @@
       <Setter Property="Background" Value="{StaticResource Surface3}" />
       <Setter Property="BorderBrush" Value="{StaticResource Warn}" />
       <Setter Property="BorderThickness" Value="1" />
-      <Setter Property="CornerRadius" Value="8" />
+      <Setter Property="CornerRadius" Value="2" />
       <Setter Property="Padding" Value="12,8" />
       <Setter Property="Margin" Value="0,12,0,0" />
     </Style>
@@ -74,14 +74,14 @@
         <TextBlock Text="My wealth" FontSize="28" FontWeight="ExtraBold" />
         <Border Style="{StaticResource DemoBadge}" Margin="14,4,0,0" Visibility="{Binding IsDemo, Converter={StaticResource Vis}}"
                 ToolTip="Holdings saved here belong to the demo profile and never appear in a live league. Their prices are made up.">
-          <TextBlock Text="DEMO PROFILE" FontSize="11" FontWeight="Bold" />
+          <TextBlock Text="demo profile" FontSize="12.5" FontWeight="Bold" />
         </Border>
       </StackPanel>
       <TextBlock TextWrapping="Wrap" Foreground="{StaticResource TextDim}" FontSize="15" Margin="0,8,0,0" MaxWidth="980" HorizontalAlignment="Left"
                  Text="Keep count of what you own, tab by tab: type a count or import a CSV file. Every count is kept, the list shows the latest, and it is valued with this league's prices where there are any. Saving a stash tab straight from the game, and your value over time, come later." />
     </StackPanel>
 
-    <Border Grid.Row="1" Grid.ColumnSpan="3" BorderBrush="{StaticResource Edge}" BorderThickness="1" CornerRadius="8" Padding="12,8" Margin="0,0,0,16"
+    <Border Grid.Row="1" Grid.ColumnSpan="3" BorderBrush="{StaticResource Edge}" BorderThickness="1" CornerRadius="2" Padding="12,8" Margin="0,0,0,16"
             Visibility="{Binding Message, Converter={StaticResource Vis}}">
       <TextBlock Text="{Binding Message}" TextWrapping="Wrap" />
     </Border>
@@ -94,14 +94,14 @@
           <StackPanel DockPanel.Dock="Right" Margin="20,0,0,0" Visibility="{Binding Holdings, Converter={StaticResource Vis}}"
                       ToolTip="The sum of the priced holdings. Unpriced ones are counted, never guessed.">
             <TextBlock Text="{Binding TotalText}" FontSize="22" FontWeight="Bold" HorizontalAlignment="Right" />
-            <TextBlock Text="{Binding PricedText}" FontSize="12" Foreground="{StaticResource TextFaint}" HorizontalAlignment="Right" Margin="0,2,0,0" />
+            <TextBlock Text="{Binding PricedText}" FontSize="13.5" Foreground="{StaticResource TextFaint}" HorizontalAlignment="Right" Margin="0,2,0,0" />
           </StackPanel>
           <StackPanel>
             <TextBlock Text="What you hold" Style="{StaticResource CardTitle}" />
             <TextBlock Style="{StaticResource CardLead}" Text="{Binding HoldingsLead}" />
           </StackPanel>
         </DockPanel>
-        <TextBlock DockPanel.Dock="Top" FontSize="13" Foreground="{StaticResource TextFaint}" TextWrapping="Wrap" Margin="0,16,0,4"
+        <TextBlock DockPanel.Dock="Top" FontSize="14.5" Foreground="{StaticResource TextFaint}" TextWrapping="Wrap" Margin="0,16,0,4"
                    Visibility="{Binding Holdings, Converter={StaticResource Vis}, ConverterParameter=invert}"
                    Text="Nothing counted yet. Type a quantity on the right, or import a CSV file." />
         <Grid DockPanel.Dock="Top" Margin="11,16,11,6" Visibility="{Binding Holdings, Converter={StaticResource Vis}}">
@@ -134,18 +134,18 @@
                   <ColumnDefinition Width="110" />
                 </Grid.ColumnDefinitions>
                 <TextBlock Grid.Column="0" Style="{StaticResource Cell}" Text="{Binding Tab}" Foreground="{StaticResource TextSoft}" ToolTip="{Binding Tab}" />
-                <TextBlock Grid.Column="1" Style="{StaticResource Cell}"><Run Text="{Binding Name, Mode=OneWay}" FontWeight="SemiBold" Foreground="{Binding Rarity, Mode=OneWay, Converter={StaticResource RarityBrush}}" /><Run Text="{Binding IdHint, Mode=OneWay}" FontSize="12" Foreground="{StaticResource TextFaint}" /></TextBlock>
+                <TextBlock Grid.Column="1" Style="{StaticResource Cell}"><Run Text="{Binding Name, Mode=OneWay}" FontWeight="SemiBold" Foreground="{Binding Rarity, Mode=OneWay, Converter={StaticResource RarityBrush}}" /><Run Text="{Binding IdHint, Mode=OneWay}" FontSize="13.5" Foreground="{StaticResource TextFaint}" /></TextBlock>
                 <TextBlock Grid.Column="2" Style="{StaticResource Cell}" Text="{Binding Variant}" Foreground="{StaticResource TextDim}" />
                 <TextBlock Grid.Column="3" Style="{StaticResource Cell}" Text="{Binding Quantity}" FontWeight="SemiBold" HorizontalAlignment="Right" />
-                <TextBlock Grid.Column="4" Style="{StaticResource Cell}" Text="{Binding AsOf}" Foreground="{StaticResource TextDim}" FontSize="12.5" ToolTip="{Binding AsOfDetail}" Margin="14,0,10,0" />
+                <TextBlock Grid.Column="4" Style="{StaticResource Cell}" Text="{Binding AsOf}" Foreground="{StaticResource TextDim}" FontSize="14" ToolTip="{Binding AsOfDetail}" Margin="14,0,10,0" />
                 <TextBlock Grid.Column="5" Text="{Binding ValueText}" ToolTip="{Binding ValueDetail}" HorizontalAlignment="Right" VerticalAlignment="Center" TextTrimming="CharacterEllipsis">
                   <TextBlock.Style>
                     <Style TargetType="TextBlock">
-                      <Setter Property="FontSize" Value="13" />
+                      <Setter Property="FontSize" Value="14.5" />
                       <Setter Property="FontWeight" Value="SemiBold" />
                       <Style.Triggers>
                         <DataTrigger Binding="{Binding Priced}" Value="False">
-                          <Setter Property="FontSize" Value="12.5" />
+                          <Setter Property="FontSize" Value="14" />
                           <Setter Property="FontWeight" Value="Normal" />
                           <Setter Property="Foreground" Value="{StaticResource TextFaint}" />
                         </DataTrigger>
@@ -173,7 +173,7 @@
             <TextBlock Text="{Binding Headline}" TextWrapping="Wrap" />
           </Border>
           <TextBlock Margin="0,14,0,0" TextWrapping="Wrap" Visibility="{Binding Rows, Converter={StaticResource Vis}}">
-            <Run Text="{Binding Summary, Mode=OneWay}" FontSize="15" FontWeight="Bold" /><Run Text="   " /><Run Text="{Binding Detail, Mode=OneWay}" FontSize="12.5" Foreground="{StaticResource TextFaint}" />
+            <Run Text="{Binding Summary, Mode=OneWay}" FontSize="15" FontWeight="Bold" /><Run Text="   " /><Run Text="{Binding Detail, Mode=OneWay}" FontSize="14" Foreground="{StaticResource TextFaint}" />
           </TextBlock>
         </StackPanel>
 
@@ -181,10 +181,10 @@
           <StackPanel Orientation="Horizontal">
             <Button Style="{StaticResource PrimaryButton}" Content="Apply" MinWidth="110"
                     Command="{Binding DataContext.ApplyImportCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" />
-            <Button Content="Cancel" MinHeight="44" MinWidth="90" Margin="10,0,0,0" v:Ui.Radius="8"
+            <Button Content="Cancel" MinHeight="44" MinWidth="90" Margin="10,0,0,0"
                     Command="{Binding DataContext.CancelImportCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" />
           </StackPanel>
-          <TextBlock Text="{Binding ApplyNote}" FontSize="12.5" Foreground="{StaticResource TextDim}" TextWrapping="Wrap" Margin="0,8,0,0" />
+          <TextBlock Text="{Binding ApplyNote}" FontSize="14" Foreground="{StaticResource TextDim}" TextWrapping="Wrap" Margin="0,8,0,0" />
         </StackPanel>
 
         <Grid DockPanel.Dock="Top" Margin="0,14,10,6" Visibility="{Binding Rows, Converter={StaticResource Vis}}">
@@ -223,8 +223,8 @@
                       <ColumnDefinition Width="150" />
                       <ColumnDefinition Width="72" />
                     </Grid.ColumnDefinitions>
-                    <TextBlock Grid.Column="0" Style="{StaticResource Cell}" Text="{Binding RowText}" FontSize="12.5" Foreground="{StaticResource TextFaint}" />
-                    <TextBlock Grid.Column="1" Text="{Binding Status}" FontSize="12.5" FontWeight="SemiBold" VerticalAlignment="Center">
+                    <TextBlock Grid.Column="0" Style="{StaticResource Cell}" Text="{Binding RowText}" FontSize="14" Foreground="{StaticResource TextFaint}" />
+                    <TextBlock Grid.Column="1" Text="{Binding Status}" FontSize="14" FontWeight="SemiBold" VerticalAlignment="Center">
                       <TextBlock.Style>
                         <Style TargetType="TextBlock">
                           <Setter Property="Foreground" Value="{StaticResource Text}" />
@@ -243,19 +243,19 @@
                     <TextBlock Grid.Column="3" Style="{StaticResource Cell}" Text="{Binding Item}" ToolTip="{Binding Item}" />
                     <TextBlock Grid.Column="4" Style="{StaticResource Cell}" Text="{Binding Variant}" Foreground="{StaticResource TextDim}" />
                     <TextBlock Grid.Column="5" Style="{StaticResource Cell}" Text="{Binding Quantity}" FontWeight="SemiBold" HorizontalAlignment="Right" />
-                    <TextBlock Grid.Column="6" Style="{StaticResource Cell}" Text="{Binding Time}" FontSize="12.5" Foreground="{StaticResource TextDim}" Margin="10,0,10,0" />
-                    <TextBlock Grid.Column="7" Style="{StaticResource Cell}" Text="{Binding PricedText}" FontSize="12.5" Foreground="{StaticResource TextFaint}" />
-                    <TextBlock Grid.Column="2" Grid.ColumnSpan="6" Style="{StaticResource Cell}" Text="{Binding Raw}" FontSize="12.5" Foreground="{StaticResource TextFaint}"
+                    <TextBlock Grid.Column="6" Style="{StaticResource Cell}" Text="{Binding Time}" FontSize="14" Foreground="{StaticResource TextDim}" Margin="10,0,10,0" />
+                    <TextBlock Grid.Column="7" Style="{StaticResource Cell}" Text="{Binding PricedText}" FontSize="14" Foreground="{StaticResource TextFaint}" />
+                    <TextBlock Grid.Column="2" Grid.ColumnSpan="6" Style="{StaticResource Cell}" Text="{Binding Raw}" FontSize="14" Foreground="{StaticResource TextFaint}"
                                ToolTip="{Binding Raw}" Visibility="{Binding Raw, Converter={StaticResource Vis}}" />
                   </Grid>
                   <ItemsControl ItemsSource="{Binding Errors}" Margin="170,4,0,0" Focusable="False" Visibility="{Binding Errors, Converter={StaticResource Vis}}">
                     <ItemsControl.ItemTemplate>
                       <DataTemplate>
-                        <TextBlock Text="{Binding}" FontSize="12.5" Foreground="{StaticResource Warn}" TextWrapping="Wrap" Margin="0,0,0,2" />
+                        <TextBlock Text="{Binding}" FontSize="14" Foreground="{StaticResource Warn}" TextWrapping="Wrap" Margin="0,0,0,2" />
                       </DataTemplate>
                     </ItemsControl.ItemTemplate>
                   </ItemsControl>
-                  <TextBlock Text="{Binding Note}" FontSize="12" Foreground="{StaticResource TextFaint}" TextWrapping="Wrap" Margin="170,3,0,0"
+                  <TextBlock Text="{Binding Note}" FontSize="13.5" Foreground="{StaticResource TextFaint}" TextWrapping="Wrap" Margin="170,3,0,0"
                              Visibility="{Binding Note, Converter={StaticResource Vis}}" />
                 </StackPanel>
               </Border>
@@ -280,11 +280,11 @@
             <TextBlock Style="{StaticResource CardLead}" Foreground="{StaticResource Hint}" Text="{Binding PrivacyText}" />
           </StackPanel>
         </DockPanel>
-        <Border DockPanel.Dock="Top" BorderBrush="{StaticResource Edge}" BorderThickness="1" CornerRadius="8" Padding="12,8" Margin="0,12,0,0"
+        <Border DockPanel.Dock="Top" BorderBrush="{StaticResource Edge}" BorderThickness="1" CornerRadius="2" Padding="12,8" Margin="0,12,0,0"
                 Visibility="{Binding Message, Converter={StaticResource Vis}}">
-          <TextBlock Text="{Binding Message}" TextWrapping="Wrap" FontSize="13" />
+          <TextBlock Text="{Binding Message}" TextWrapping="Wrap" FontSize="14.5" />
         </Border>
-        <TextBlock DockPanel.Dock="Top" FontSize="13" Foreground="{StaticResource TextFaint}" TextWrapping="Wrap" Margin="0,16,0,4"
+        <TextBlock DockPanel.Dock="Top" FontSize="14.5" Foreground="{StaticResource TextFaint}" TextWrapping="Wrap" Margin="0,16,0,4"
                    Visibility="{Binding HasPictures, Converter={StaticResource Vis}, ConverterParameter=invert}"
                    Text="{Binding Summary}" />
         <ItemsControl Style="{StaticResource RowList}" ItemsSource="{Binding Pictures}" Margin="0,12,0,0" AutomationProperties.Name="Stash pictures you collected"
@@ -298,12 +298,12 @@
                     <ColumnDefinition Width="18" />
                     <ColumnDefinition Width="*" />
                   </Grid.ColumnDefinitions>
-                  <Border Background="{StaticResource Well}" BorderBrush="{StaticResource Edge}" BorderThickness="1" CornerRadius="6" Height="146" VerticalAlignment="Top">
+                  <Border Background="{StaticResource Well}" BorderBrush="{StaticResource Edge}" BorderThickness="1" CornerRadius="2" Height="146" VerticalAlignment="Top">
                     <Image Source="{Binding Thumbnail}" Stretch="Uniform" RenderOptions.BitmapScalingMode="HighQuality" Margin="1" />
                   </Border>
                   <StackPanel Grid.Column="2">
-                    <TextBlock Text="{Binding Title}" FontSize="14" FontWeight="SemiBold" />
-                    <TextBlock Text="{Binding Facts}" FontSize="12" Foreground="{StaticResource TextFaint}" TextWrapping="Wrap" Margin="0,3,0,0" />
+                    <TextBlock Text="{Binding Title}" FontSize="15.5" FontWeight="SemiBold" />
+                    <TextBlock Text="{Binding Facts}" FontSize="13.5" Foreground="{StaticResource TextFaint}" TextWrapping="Wrap" Margin="0,3,0,0" />
                     <ItemsControl ItemsSource="{Binding TabChoices}" Focusable="False" Margin="0,10,0,0">
                       <ItemsControl.ItemsPanel>
                         <ItemsPanelTemplate>
@@ -312,7 +312,7 @@
                       </ItemsControl.ItemsPanel>
                       <ItemsControl.ItemTemplate>
                         <DataTemplate DataType="{x:Type vm:TabChoiceViewModel}">
-                          <Button Style="{StaticResource ChoiceButton}" MinHeight="32" Padding="12,0" FontSize="13" Margin="0,0,6,6"
+                          <Button Style="{StaticResource ChoiceButton}" MinHeight="32" Padding="12,0" FontSize="14.5" Margin="0,0,6,6"
                                   Content="{Binding Label}" Command="{Binding ChooseCommand}" AutomationProperties.Name="{Binding SpokenName}"
                                   Tag="{Binding IsChosen, Converter={StaticResource Active}, ConverterParameter=True}" />
                         </DataTemplate>
@@ -330,7 +330,7 @@
                                  ToolTip="The game's own UI scale setting, as the game shows it" />
                       </StackPanel>
                     </WrapPanel>
-                    <TextBlock Text="{Binding UiScaleProblem}" FontSize="12" Foreground="{StaticResource Warn}" Margin="0,0,0,6"
+                    <TextBlock Text="{Binding UiScaleProblem}" FontSize="13.5" Foreground="{StaticResource Warn}" Margin="0,0,0,6"
                                Visibility="{Binding UiScaleProblem, Converter={StaticResource Vis}}" />
                     <DockPanel>
                       <TextBlock Text="Note" Style="{StaticResource FieldLabel}" Margin="0,0,8,0" />
@@ -367,7 +367,7 @@
             <StackPanel Orientation="Horizontal" Margin="0,12,0,0">
               <Button Content="Review and label" Command="{Binding ReviewCommand}" FontWeight="SemiBold" Margin="0,0,14,0"
                       Visibility="{Binding HasPictures, Converter={StaticResource Vis}}" />
-              <Button Style="{StaticResource LinkButton}" Content="Open the pictures folder" Command="{Binding OpenFolderCommand}" VerticalAlignment="Center" FontSize="12.5"
+              <Button Style="{StaticResource LinkButton}" Content="Open the pictures folder" Command="{Binding OpenFolderCommand}" VerticalAlignment="Center" FontSize="14"
                       ToolTip="Opens the folder in Explorer" />
             </StackPanel>
           </StackPanel>
@@ -404,7 +404,7 @@
             <ItemsControl ItemsSource="{Binding FormErrors}" Margin="80,6,0,0" Focusable="False" Visibility="{Binding FormErrors, Converter={StaticResource Vis}}">
               <ItemsControl.ItemTemplate>
                 <DataTemplate>
-                  <TextBlock Text="{Binding}" FontSize="12.5" Foreground="{StaticResource Warn}" TextWrapping="Wrap" Margin="0,0,0,3" />
+                  <TextBlock Text="{Binding}" FontSize="14" Foreground="{StaticResource Warn}" TextWrapping="Wrap" Margin="0,0,0,3" />
                 </DataTemplate>
               </ItemsControl.ItemTemplate>
             </ItemsControl>
@@ -418,14 +418,14 @@
             <TextBlock Style="{StaticResource CardLead}" Text="One row per holding, with the columns league, tab, item_id, variant, quantity and snapshot_time. Every row is checked and shown to you first." />
             <StackPanel Orientation="Horizontal" Margin="0,12,0,0">
               <Button Content="Import CSV…" Command="{Binding ImportCsvCommand}" FontWeight="SemiBold" />
-              <Button Style="{StaticResource LinkButton}" Content="How to write the file" Command="{Binding OpenFormatCommand}" Margin="14,0,0,0" VerticalAlignment="Center" FontSize="12.5"
+              <Button Style="{StaticResource LinkButton}" Content="How to write the file" Command="{Binding OpenFormatCommand}" Margin="14,0,0,0" VerticalAlignment="Center" FontSize="14"
                       ToolTip="Opens the format description (docs/WEALTH-CSV.md) on GitHub in your browser" />
             </StackPanel>
             <StackPanel Visibility="{Binding IsDemo, Converter={StaticResource Vis}}">
               <TextBlock Style="{StaticResource SectionTitle}" Text="PRACTICE FILES (MADE UP)" />
-              <Button Style="{StaticResource LinkButton}" Content="example.csv · eight demo holdings" FontSize="13" Padding="4,3" HorizontalAlignment="Stretch"
+              <Button Style="{StaticResource LinkButton}" Content="example.csv · eight demo holdings" FontSize="14.5" Padding="4,3" HorizontalAlignment="Stretch"
                       Command="{Binding PreviewPracticeCommand}" CommandParameter="example.csv" />
-              <Button Style="{StaticResource LinkButton}" Content="needs-fixing.csv · common mistakes" FontSize="13" Padding="4,3" HorizontalAlignment="Stretch"
+              <Button Style="{StaticResource LinkButton}" Content="needs-fixing.csv · common mistakes" FontSize="14.5" Padding="4,3" HorizontalAlignment="Stretch"
                       Command="{Binding PreviewPracticeCommand}" CommandParameter="needs-fixing.csv" />
             </StackPanel>
           </StackPanel>
@@ -437,7 +437,7 @@
             <ItemsControl ItemsSource="{Binding Later}" Margin="0,8,0,0" Focusable="False" AutomationProperties.Name="Coming later">
               <ItemsControl.ItemTemplate>
                 <DataTemplate>
-                  <TextBlock Text="{Binding StringFormat='•  {0}'}" FontSize="12.5" Foreground="{StaticResource TextDim}" TextWrapping="Wrap" LineHeight="19" Margin="0,0,0,6" />
+                  <TextBlock Text="{Binding StringFormat='•  {0}'}" FontSize="14" Foreground="{StaticResource TextDim}" TextWrapping="Wrap" LineHeight="19" Margin="0,0,0,6" />
                 </DataTemplate>
               </ItemsControl.ItemTemplate>
             </ItemsControl>

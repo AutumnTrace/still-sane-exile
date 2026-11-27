@@ -157,9 +157,9 @@ public class AccessibilityTests
         try
         {
             Flush(window);
-            var count = (TextBlock)view.FindName("CountText");
-            var price = (TextBlock)view.FindName("BigText");
-            var line = (TextBlock)view.FindName("PeekLineText");
+            var count = (Run)view.FindName("CountText");
+            var price = (ValueLabel)view.FindName("BigText");
+            var line = (ValueLabel)view.FindName("PeekLineText");
             var before = (count.Text, price.Text);
             Assert.Equal(1, price.Opacity);
             var dps = Descendants<CheckBox>(window).Single(c => SpokenName(c) == "Physical DPS 355.3");
@@ -385,7 +385,7 @@ public class AccessibilityTests
 
         var stops = Check(window);
 
-        Assert.Equal(new[] { "Back", "Price check", "Crafting later", "My wealth" }, stops[..4]);
+        Assert.Equal(new[] { "Price check", "Crafting later", "My wealth" }, stops[..3]);
         var league = stops.FindIndex(s => s.StartsWith("League: ", StringComparison.Ordinal));
         var currency = stops.FindIndex(s => s.StartsWith("Show prices in: ", StringComparison.Ordinal));
         var settings = stops.IndexOf("Settings");
