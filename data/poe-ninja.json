@@ -1,0 +1,34 @@
+// What SSE asks poe.ninja for on each hourly refresh of a live league: one request per type, one at a
+// time, at least 5 s apart. "exchange" types use poe.ninja's PoE2 exchange overview, "items" types its
+// item overview (uniques). A type that comes back empty or unknown is skipped, so a renamed type costs
+// one wasted request, not a broken refresh. Keep Currency first: its rates value everything else.
+//
+// Checked in a browser on 27 November 2026. These returned no lines then and are left out:
+// AbyssalBones, BreachCatalyst, Catalysts, LiquidEmotions, Omens (omens are under Ritual), and
+// UniqueRelics answered 404.
+{
+  "exchange": [
+    "Currency",
+    "Fragments",
+    "Essences",
+    "Runes",
+    "SoulCores",
+    "Idols",
+    "UncutGems",
+    "LineageSupportGems",
+    "Ritual",
+    "Delirium",
+    "Expedition",
+    "Verisium"
+  ],
+  "items": [
+    "UniqueWeapons",
+    "UniqueArmours",
+    "UniqueAccessories",
+    "UniqueFlasks",
+    "UniqueCharms",
+    "UniqueJewels",
+    "UniqueTablets",
+    "PrecursorTablets"
+  ]
+}

@@ -70,8 +70,17 @@ public sealed record PriceBook(
         Converters = { new JsonStringEnumConverter(JsonNamingPolicy.CamelCase) },
     };
 
+    private static readonly JsonSerializerOptions WriteOptions = new(Options)
+    {
+        PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+        DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
+    };
+
     public static PriceBook FromJson(string json) =>
         JsonSerializer.Deserialize<PriceBook>(json, Options) ?? throw new InvalidDataException("Price book is empty.");
+
+    /// <summary>The same shape <see cref="FromJson"/> reads (camelCase, enums as camelCase text).</summary>
+    public string ToJson() => JsonSerializer.Serialize(this, WriteOptions);
 }
 
 public enum ProfileKind
