@@ -469,6 +469,9 @@
       <DataTemplate DataType="{x:Type vm:InspectViewModel}">
         <v:InspectView />
       </DataTemplate>
+      <DataTemplate DataType="{x:Type vm:WealthViewModel}">
+        <v:WealthView />
+      </DataTemplate>
       <DataTemplate DataType="{x:Type vm:PlaceholderViewModel}">
         <v:PlaceholderView />
       </DataTemplate>

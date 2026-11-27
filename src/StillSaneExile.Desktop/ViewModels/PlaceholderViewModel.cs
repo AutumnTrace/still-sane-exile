@@ -28,18 +28,6 @@ public sealed partial class PlaceholderViewModel(string title, string milestone,
             "After each real step you paste the new item and replan. No button performs a craft in game.",
         ]);
 
-    public static PlaceholderViewModel Wealth() => new(
-        "My wealth",
-        "Milestone 3 · not available yet",
-        "Track what you own from explicit snapshots, tab by tab, and see how much of it was observed and priced.",
-        [
-            "\"Save visible stash\" previews recognized holdings and omissions; you confirm the tab before anything is stored.",
-            "Manual quantities and a documented CSV import (league, tab, item id, variant, quantity, snapshot time).",
-            "History keeps quantities and the price book used: value at the time, or revalue at today's rates.",
-            "Session rate only from comparable holdings at fixed prices; transfers between tracked tabs net to zero.",
-            "Held-key price chips never create history on their own.",
-        ]);
-
     public static PlaceholderViewModel Guide() => new(
         "Campaign guide",
         "Milestone 4 · not available yet",
