@@ -64,13 +64,15 @@ The prices are poe.ninja's own estimates for the whole league. A unique's price 
 
 ## Is it allowed?
 
-Grinding Gear Games' [developer policy](https://www.pathofexile.com/developer/docs) permits apps that run independently from the game, and bans apps that interact with the game or its files. SSE is the permitted kind: it never touches the game's memory, files or logs, and never sends a key, click or chat message to the game. It reads the clipboard once per key press you make, as the policy requires, and tells you what each key reads.
+Grinding Gear Games' [developer policy](https://www.pathofexile.com/developer/docs) permits apps that run independently from the game, and bans apps that interact with the game or its files. SSE is the permitted kind: it never touches the game's memory, files or logs, and never sends a key, click or chat message to the game. It reads the clipboard once per key press you make, as the policy requires, and tells you what each key reads. It reads at most one frame of the game window per press of the stash key, and only while you've switched **Collect stash pictures** on.
 
 GGG doesn't approve or guarantee any third-party tool, and its rules can change, so no tool can promise you won't be banned. SSE is built to follow the rules as written, and we recheck them before features that read more of the screen. Policy quotes and how SSE meets each one: [Sources](docs/SOURCES.md#ggg-third-party-policy-checked-27-november-2026).
 
 ## Also in the app
 
 **My wealth** keeps count of what you hold, tab by tab, from counts you type or a [CSV file](docs/WEALTH-CSV.md). The **Campaign guide** walks the start of Act 1 (a draft route, not yet checked in game) and turns your own build notes into gem steps for the stage you are at; a pasted guide link only ever opens in your browser.
+
+**Help build stash reading.** Path of Exile 2 has no stash API, so SSE will read your stash from a picture of the game window. To build that, switch on **Collect stash pictures** in Settings, open your stash in the game and press `Right Alt` (or your stash key) once per tab: each press saves one picture of the game window, with notes on your screen setup, in your data folder. Label them on My wealth. They are never uploaded; before you share any on [issue #3](https://github.com/AutumnTrace/still-sane-exile/issues/3), crop or blur chat and character names.
 
 ## What's next
 
