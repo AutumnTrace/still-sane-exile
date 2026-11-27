@@ -6,7 +6,9 @@ using StillSaneExile.Domain.Items;
 namespace StillSaneExile.Desktop.ViewModels;
 
 /// <summary>One line of "Searched with": ticked stats show the number searched for, unticked ones their tier.</summary>
-public sealed record PeekRowViewModel(bool On, string Text, string Right, string? Hint)
+/// <param name="IsProperty">A number worked out from the item (physical DPS) or the unique's name: drawn like
+/// the game's properties, not in a stat's blue.</param>
+public sealed record PeekRowViewModel(bool On, string Text, string Right, string? Hint, bool IsProperty = false)
 {
     public bool Off => !On;
     public bool HasHint => Hint is not null;
@@ -37,6 +39,16 @@ public sealed partial class PeekViewModel : ObservableObject
     public string Title { get; init; } = "";
     public ItemRarity Rarity { get; init; } = ItemRarity.Unknown;
     public string? Subtitle { get; init; }
+
+    /// <summary>The header as the game's tooltip has it: the name, then the base of a named item, then the
+    /// rest of <see cref="Subtitle"/> small.</summary>
+    public string? HeaderBase { get; init; }
+
+    public string? HeaderDetail { get; init; }
+
+    public bool HasHeaderBase => !string.IsNullOrEmpty(HeaderBase);
+
+    public bool HasHeaderDetail => !string.IsNullOrEmpty(HeaderDetail);
     public string? Note { get; init; }
     public bool IsDemo { get; init; }
 
@@ -96,7 +108,7 @@ public sealed partial class PeekViewModel : ObservableObject
         var live = new List<object>();
         if (item.IsUnique)
         {
-            var name = new PeekRowViewModel(true, item.UniqueNameRow, "exact", null);
+            var name = new PeekRowViewModel(true, item.UniqueNameRow, "exact", null, IsProperty: true);
             rows.Add(name);
             live.Add(name);
         }
@@ -105,8 +117,8 @@ public sealed partial class PeekViewModel : ObservableObject
         {
             var ordered = item.SearchRows.Where(r => r.IsOn).Concat(item.SearchRows.Where(r => !r.IsOn)).Take(MaxRows).ToList();
             rows.AddRange(ordered.Select(r => r.IsOn
-                ? new PeekRowViewModel(true, r.Text, r.BoundLabel, r.IsAmbiguous ? r.Hint : null)
-                : new PeekRowViewModel(false, r.Text, r.TierOrBlank, r.IsAmbiguous ? r.Hint : null)));
+                ? new PeekRowViewModel(true, r.Text, r.BoundLabel, r.IsAmbiguous ? r.Hint : null, r.IsProperty)
+                : new PeekRowViewModel(false, r.Text, r.TierOrBlank, r.IsAmbiguous ? r.Hint : null, r.IsProperty)));
             live.AddRange(ordered);
         }
 
@@ -115,6 +127,8 @@ public sealed partial class PeekViewModel : ObservableObject
             Title = item.Title,
             Rarity = item.Rarity,
             Subtitle = item.Subtitle,
+            HeaderBase = item.HeaderBase,
+            HeaderDetail = item.HeaderDetail,
             Note = note,
             IsDemo = demo,
             Item = item,

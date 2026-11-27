@@ -11,17 +11,18 @@
         WindowStyle="None" AllowsTransparency="True" Background="Transparent"
         Topmost="True" ShowInTaskbar="False" ShowActivated="False"
         ResizeMode="NoResize" SizeToContent="WidthAndHeight"
-        Foreground="{StaticResource Text}" FontFamily="Segoe UI" FontSize="14"
-        Typography.NumeralAlignment="Tabular"
+        Foreground="{StaticResource Text}" FontFamily="{StaticResource BodyFont}" FontSize="15"
+        Typography.NumeralAlignment="Tabular" Typography.NumeralStyle="Lining"
         UseLayoutRounding="True" TextOptions.TextFormattingMode="Display">
   <Border Padding="10,4,10,14">
     <Border.LayoutTransform>
       <ScaleTransform x:Name="Scale" ScaleX="1" ScaleY="1" />
     </Border.LayoutTransform>
     <Grid>
-      <Border CornerRadius="10" Background="#F715161A">
+      <!-- Only the shadow: the card draws its own panel. -->
+      <Border Background="{StaticResource Panel}" Margin="1">
         <Border.Effect>
-          <DropShadowEffect Color="Black" BlurRadius="22" ShadowDepth="6" Direction="270" Opacity="0.55" />
+          <DropShadowEffect Color="Black" BlurRadius="36" ShadowDepth="14" Direction="270" Opacity="0.55" />
         </Border.Effect>
       </Border>
       <v:PeekCard x:Name="CardView" />

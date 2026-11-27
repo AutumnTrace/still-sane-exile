@@ -9,8 +9,6 @@ namespace StillSaneExile.Desktop.ViewModels;
 
 public sealed partial class ShellViewModel : ObservableObject
 {
-    private readonly Stack<object> _back = new();
-
     public ShellViewModel(AppPaths paths, Store store, Settings settings, IClipboardSource clipboard, UpdateService updates)
     {
         Paths = paths;
@@ -129,7 +127,6 @@ public sealed partial class ShellViewModel : ObservableObject
         {
             if (SetProperty(ref _currentPage, value))
             {
-                OnPropertyChanged(nameof(CanGoBack));
                 OnPropertyChanged(nameof(PageName));
             }
         }
@@ -145,7 +142,6 @@ public sealed partial class ShellViewModel : ObservableObject
         _ => "",
     };
 
-    public bool CanGoBack => _back.Count > 0;
     public bool IsDemo => Session.IsDemo;
     public string League => Session.League;
 
@@ -181,7 +177,6 @@ public sealed partial class ShellViewModel : ObservableObject
             return;
         }
 
-        _back.Push(CurrentPage);
         CurrentPage = page;
         if (page == SettingsPage)
         {
@@ -235,15 +230,6 @@ public sealed partial class ShellViewModel : ObservableObject
 
     [RelayCommand]
     private void OpenLeagueSetting() => Navigate(SettingsPage);
-
-    [RelayCommand]
-    private void Back()
-    {
-        if (_back.Count > 0)
-        {
-            CurrentPage = _back.Pop();
-        }
-    }
 
     [RelayCommand]
     private void ToggleCurrencyMenu() => CurrencyMenuOpen = !CurrencyMenuOpen;

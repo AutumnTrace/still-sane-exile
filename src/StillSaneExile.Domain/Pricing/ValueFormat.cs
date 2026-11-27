@@ -74,6 +74,20 @@ public sealed class PriceText(CurrencyConverter converter, string display, DateT
         return x == y ? $"{x} {Currencies.Short(da)}" : $"{x}–{y} {Currencies.Short(da)}";
     }
 
+    /// <summary>The colour step of a price in the display currency, or null when the price book can't say
+    /// what it is in Divine and Exalted Orbs (the label is then drawn plain rather than guessed).</summary>
+    public ValueTier? Tier(decimal value) => Tier(value, display);
+
+    /// <summary>The colour step of a price in <paramref name="denomination"/>.</summary>
+    public ValueTier? Tier(decimal value, string denomination)
+    {
+        var div = converter.Convert(value, denomination, "divine", now);
+        var ex = converter.Convert(value, denomination, "exalted", now);
+
+        // A rate stored as its inverse turns 120 ex into 0.99999 div: on a step's edge that is the step.
+        return div.Ok && ex.Ok ? ValueTiers.Of(Math.Round(div.Value, 4), Math.Round(ex.Value, 2)) : null;
+    }
+
     /// <summary>"1 div = 120 ex", or null when the price book has no rate.</summary>
     public string? DivineRate()
     {

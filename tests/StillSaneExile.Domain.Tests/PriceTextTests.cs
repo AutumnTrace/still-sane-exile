@@ -37,6 +37,30 @@ public class PriceTextTests
         Assert.Null(empty.DivineRate());
         Assert.Equal("0.5 div", empty.One(0.5m)); // no rate: never invent an Exalted amount
     }
+
+    [Theory]
+    [InlineData(12, ValueTier.S)]
+    [InlineData(10, ValueTier.S)]
+    [InlineData(2.4, ValueTier.A)]
+    [InlineData(1, ValueTier.A)]
+    [InlineData(0.35, ValueTier.B)] // 42 ex
+    [InlineData(0.25, ValueTier.B)] // 30 ex
+    [InlineData(0.075, ValueTier.C)] // 9 ex
+    [InlineData(0.05, ValueTier.C)] // 6 ex
+    [InlineData(0.025, ValueTier.D)] // 3 ex
+    [InlineData(0.001, ValueTier.E)]
+    public void A_price_is_coloured_by_what_it_is_worth_in_Divine_and_Exalted(double divines, ValueTier tier)
+    {
+        Assert.Equal(tier, Text("divine").Tier((decimal)divines));
+        Assert.Equal(tier, Text("exalted").Tier((decimal)divines * 120m)); // the same value shown in Exalted
+    }
+
+    [Fact]
+    public void Without_a_rate_a_price_has_no_colour_step()
+    {
+        var empty = new PriceText(new CurrencyConverter(PriceBook.Empty("Some League"), StalenessPolicy.Hourly), "divine", Fixtures.DemoNow);
+        Assert.Null(empty.Tier(3m));
+    }
 }
 
 public class WorksheetSearchTests

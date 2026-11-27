@@ -186,11 +186,11 @@ public sealed partial class SettingsViewModel : ObservableObject
     public IReadOnlyList<GuideStep> GuideSteps =>
     [
         new(1, "Item name", "Coloured the same as in game: white, blue, yellow or orange."),
-        new(2, "What it’s worth", "What items like yours sell for, and in plain words how sure that is."),
+        new(2, "What it’s worth, coloured like a loot filter", "White and red is a jackpot, red is Divines, orange to tan is Exalted money, dark is cheap. Under it, in plain words, how sure that is."),
         new(3, "How many are for sale", "More for sale means a better price guess."),
         new(4, "The cheapest listings", "What the cheapest items like yours ask, and how long ago they were listed. Only instant buyout asks set the price."),
         new(5, "Stats in the search", "How many of your stats were used to find similar items."),
-        new(6, "Ticked = searched", "Ticked stats show the number searched for. Empty boxes were left out."),
+        new(6, "Ticked = searched", "Ticked stats show the number searched for. Empty boxes were left out. Stats are in the game’s blue."),
         ToggleMode
             ? new(7, "Press again to hide", "The card stays until you press the key again.")
             : new(7, "Move onto it to keep it", "Still holding the key, move the mouse onto the card: it stays open, you can tick or untick stats on it, and Search updates the price and the listings. Let go without moving and it hides."),

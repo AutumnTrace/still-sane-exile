@@ -6,43 +6,80 @@
              ShutdownMode="OnExplicitShutdown">
   <Application.Resources>
     <ResourceDictionary>
-      <!-- Colour rules: the accent is only for the search (tick boxes, numbers you can change, the stat
-           count, the search button). Rarity colours only on item names. Everything else is grey.
-           Contrast (docs/ACCESSIBILITY.md): every text colour, TextFaint included, reads at 4.5:1 or more
-           on every surface up to Surface4; the empty tick box (Unchecked) at 3:1 or more on Surface3. -->
-      <SolidColorBrush x:Key="Surface" Color="#101114" />
-      <SolidColorBrush x:Key="Surface2" Color="#15161A" />
-      <SolidColorBrush x:Key="Surface3" Color="#1B1D22" />
-      <SolidColorBrush x:Key="Surface4" Color="#22242A" />
-      <SolidColorBrush x:Key="Well" Color="#101114" />
-      <SolidColorBrush x:Key="Line" Color="#24262C" />
-      <SolidColorBrush x:Key="RowLine" Color="#202227" />
-      <SolidColorBrush x:Key="Edge" Color="#2C2F36" />
-      <SolidColorBrush x:Key="EdgeStrong" Color="#3A3D45" />
-      <SolidColorBrush x:Key="Unchecked" Color="#666A73" />
-      <SolidColorBrush x:Key="Text" Color="#F1F2F4" />
-      <SolidColorBrush x:Key="TextSoft" Color="#C7CBD2" />
-      <SolidColorBrush x:Key="TextDim" Color="#A6ABB5" />
-      <SolidColorBrush x:Key="TextOff" Color="#959BA5" />
-      <SolidColorBrush x:Key="TextFaint" Color="#868C97" />
-      <SolidColorBrush x:Key="Accent" Color="#3D8BFF" />
-      <SolidColorBrush x:Key="AccentHover" Color="#5C9DFF" />
-      <SolidColorBrush x:Key="OnAccent" Color="#07111F" />
-      <SolidColorBrush x:Key="AccentSoft" Color="#14223A" />
-      <SolidColorBrush x:Key="AccentTint" Color="#1A3D8BFF" />
-      <SolidColorBrush x:Key="Link" Color="#6AA6FF" />
-      <SolidColorBrush x:Key="LinkHover" Color="#9CC4FF" />
-      <SolidColorBrush x:Key="Warn" Color="#E8B4A0" />
+      <!-- The look borrows what players read every second in the game: its dark tooltip panels with thin
+           bronze borders, small caps for headings, item names in their rarity colour, stats in the game's blue,
+           and prices coloured like a loot filter label (ValueLabel, Tier* below). Corners are square.
+           Colour rules: gold (Accent) is only for the search (tick boxes, numbers you can change, the stat
+           count, the search button) and the chosen one of a few. Rarity colours only on item names.
+           Contrast (docs/ACCESSIBILITY.md): every text colour, TextFaint included, reads at 4.5:1 or more on
+           every surface up to Surface4 and on a ticked row; the empty tick box (Unchecked) at 3:1 or more on
+           Surface3. -->
+      <FontFamily x:Key="BodyFont">pack://application:,,,/StillSaneExile;component/Assets/Fonts/#Alegreya Sans</FontFamily>
+      <FontFamily x:Key="CapsFont">pack://application:,,,/StillSaneExile;component/Assets/Fonts/#Alegreya Sans SC</FontFamily>
+
+      <SolidColorBrush x:Key="Surface" Color="#0E0D0B" />
+      <SolidColorBrush x:Key="Surface2" Color="#15130F" />
+      <SolidColorBrush x:Key="Surface3" Color="#1C1914" />
+      <SolidColorBrush x:Key="Surface4" Color="#2A241B" />
+      <SolidColorBrush x:Key="Well" Color="#0A0908" />
+      <SolidColorBrush x:Key="Line" Color="#2E281F" />
+      <SolidColorBrush x:Key="RowLine" Color="#262019" />
+      <SolidColorBrush x:Key="Edge" Color="#3A3226" />
+      <SolidColorBrush x:Key="EdgeStrong" Color="#6B5638" />
+      <SolidColorBrush x:Key="Unchecked" Color="#7A6A50" />
+      <SolidColorBrush x:Key="Text" Color="#EDE6D6" />
+      <SolidColorBrush x:Key="TextSoft" Color="#CFC6B3" />
+      <SolidColorBrush x:Key="TextDim" Color="#ADA392" />
+      <SolidColorBrush x:Key="TextOff" Color="#A39A88" />
+      <SolidColorBrush x:Key="TextFaint" Color="#988D79" />
+      <SolidColorBrush x:Key="Title" Color="#E8D9B5" />
+      <SolidColorBrush x:Key="Accent" Color="#C9A867" />
+      <SolidColorBrush x:Key="AccentHover" Color="#D8BC85" />
+      <SolidColorBrush x:Key="OnAccent" Color="#1E1405" />
+      <SolidColorBrush x:Key="AccentSoft" Color="#2A2116" />
+      <SolidColorBrush x:Key="OnAccentSoft" Color="#F3E6C4" />
+      <SolidColorBrush x:Key="AccentTint" Color="#21C9A867" />
+      <SolidColorBrush x:Key="Link" Color="#D8BC85" />
+      <SolidColorBrush x:Key="LinkHover" Color="#E8D9B5" />
+      <SolidColorBrush x:Key="Warn" Color="#E8B49A" />
       <SolidColorBrush x:Key="Hint" Color="#E8C9A0" />
-      <SolidColorBrush x:Key="DemoFill" Color="#3A2F12" />
-      <SolidColorBrush x:Key="DemoEdge" Color="#6B5A26" />
-      <SolidColorBrush x:Key="Track" Color="#24262C" />
-      <SolidColorBrush x:Key="BarFill" Color="#C7CBD2" />
+      <SolidColorBrush x:Key="DemoFill" Color="Transparent" />
+      <SolidColorBrush x:Key="DemoEdge" Color="#6B5638" />
+      <SolidColorBrush x:Key="Track" Color="#2E281F" />
+      <SolidColorBrush x:Key="BarFill" Color="#CFC6B3" />
+      <!-- Stats in the game's blue: bright and bold when searched, dimmer when not. -->
+      <SolidColorBrush x:Key="StatOn" Color="#A8A8FF" />
+      <SolidColorBrush x:Key="StatOff" Color="#8888C6" />
+      <!-- Over the game: the panel, its bronze double border and its header strip. -->
+      <SolidColorBrush x:Key="Panel" Color="#F80E0D0B" />
+      <SolidColorBrush x:Key="PanelEdge" Color="#6B5638" />
+      <SolidColorBrush x:Key="PanelInner" Color="#2E2619" />
+      <SolidColorBrush x:Key="Strip" Color="#1A150E" />
       <SolidColorBrush x:Key="RarityMagic" Color="#9A9AFF" />
       <SolidColorBrush x:Key="RarityRare" Color="#FFFF77" />
       <SolidColorBrush x:Key="RarityUnique" Color="#D2803F" />
       <SolidColorBrush x:Key="RarityCurrency" Color="#C8BFA6" />
       <SolidColorBrush x:Key="RarityGem" Color="#1BA29B" />
+      <!-- Price labels, loudest first: white and red, red, orange, amber, tan, dark. The orange label takes
+           dark text: white on it reads at 3.7:1 only. -->
+      <SolidColorBrush x:Key="TierSFill" Color="#FFFFFF" />
+      <SolidColorBrush x:Key="TierSInk" Color="#C8102E" />
+      <SolidColorBrush x:Key="TierSEdge" Color="#C8102E" />
+      <SolidColorBrush x:Key="TierAFill" Color="#C8102E" />
+      <SolidColorBrush x:Key="TierAInk" Color="#FFFFFF" />
+      <SolidColorBrush x:Key="TierAEdge" Color="#FFFFFF" />
+      <SolidColorBrush x:Key="TierBFill" Color="#E05A1C" />
+      <SolidColorBrush x:Key="TierBInk" Color="#1E1405" />
+      <SolidColorBrush x:Key="TierBEdge" Color="#2A1206" />
+      <SolidColorBrush x:Key="TierCFill" Color="#F2A93B" />
+      <SolidColorBrush x:Key="TierCInk" Color="#1E1405" />
+      <SolidColorBrush x:Key="TierCEdge" Color="#1E1405" />
+      <SolidColorBrush x:Key="TierDFill" Color="#D9C3A0" />
+      <SolidColorBrush x:Key="TierDInk" Color="#1E1405" />
+      <SolidColorBrush x:Key="TierDEdge" Color="#1E1405" />
+      <SolidColorBrush x:Key="TierEFill" Color="#1B1A18" />
+      <SolidColorBrush x:Key="TierEInk" Color="#D9C3A0" />
+      <SolidColorBrush x:Key="TierEEdge" Color="#6B5E48" />
 
       <v:VisibleWhenConverter x:Key="Vis" />
       <v:ActiveWhenEqualsConverter x:Key="Active" />
@@ -50,18 +87,23 @@
       <v:PillActiveConverter x:Key="PillActive" />
       <v:RarityBrushConverter x:Key="RarityBrush" />
 
-      <!-- Buttons. One template; the styles change colours and the corner radius (v:Ui.Radius). -->
+      <!-- Buttons. One template; the styles change colours and the corner radius (v:Ui.Radius). Focus is a
+           2 px ring in the text colour over the border: a border colour change alone is too faint on gold. -->
       <ControlTemplate x:Key="ButtonTemplate" TargetType="Button">
-        <Border x:Name="b" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}"
-                CornerRadius="{Binding (v:Ui.Radius), RelativeSource={RelativeSource TemplatedParent}}" Padding="{TemplateBinding Padding}" SnapsToDevicePixels="True">
-          <ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}" VerticalAlignment="{TemplateBinding VerticalContentAlignment}" RecognizesAccessKey="True" />
-        </Border>
+        <Grid>
+          <Border x:Name="b" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}"
+                  CornerRadius="{Binding (v:Ui.Radius), RelativeSource={RelativeSource TemplatedParent}}" Padding="{TemplateBinding Padding}" SnapsToDevicePixels="True">
+            <ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}" VerticalAlignment="{TemplateBinding VerticalContentAlignment}" RecognizesAccessKey="True" />
+          </Border>
+          <Border x:Name="ring" BorderBrush="{StaticResource Text}" BorderThickness="2" Visibility="Hidden" SnapsToDevicePixels="True" IsHitTestVisible="False"
+                  CornerRadius="{Binding (v:Ui.Radius), RelativeSource={RelativeSource TemplatedParent}}" />
+        </Grid>
         <ControlTemplate.Triggers>
           <Trigger Property="IsMouseOver" Value="True">
             <Setter TargetName="b" Property="BorderBrush" Value="{StaticResource EdgeStrong}" />
           </Trigger>
           <Trigger Property="IsKeyboardFocused" Value="True">
-            <Setter TargetName="b" Property="BorderBrush" Value="{StaticResource Text}" />
+            <Setter TargetName="ring" Property="Visibility" Value="Visible" />
           </Trigger>
           <Trigger Property="IsEnabled" Value="False">
             <Setter Property="Opacity" Value="0.45" />
@@ -76,12 +118,12 @@
         <Setter Property="BorderThickness" Value="1" />
         <Setter Property="Padding" Value="12,0" />
         <Setter Property="MinHeight" Value="40" />
-        <Setter Property="FontSize" Value="13" />
+        <Setter Property="FontSize" Value="14.5" />
         <Setter Property="HorizontalContentAlignment" Value="Center" />
         <Setter Property="VerticalContentAlignment" Value="Center" />
         <Setter Property="Cursor" Value="Hand" />
         <Setter Property="FocusVisualStyle" Value="{x:Null}" />
-        <Setter Property="v:Ui.Radius" Value="6" />
+        <Setter Property="v:Ui.Radius" Value="2" />
         <Setter Property="Template" Value="{StaticResource ButtonTemplate}" />
         <Style.Triggers>
           <!-- Tag = "active" marks the chosen one of a few (page, currency, card position...). Screen
@@ -94,27 +136,29 @@
       </Style>
       <Style TargetType="Button" BasedOn="{StaticResource BaseButton}" />
 
-      <!-- The one strong button on a screen: the search, or finishing onboarding. -->
+      <!-- The one strong button on a screen: the search, or finishing onboarding. Dark gold in a gold frame,
+           like the game's own buttons. Everything else you can click is outlined. -->
       <Style x:Key="PrimaryButton" TargetType="Button" BasedOn="{StaticResource BaseButton}">
-        <Setter Property="Background" Value="{StaticResource Accent}" />
-        <Setter Property="Foreground" Value="{StaticResource OnAccent}" />
+        <Setter Property="Background" Value="{StaticResource AccentSoft}" />
+        <Setter Property="Foreground" Value="{StaticResource OnAccentSoft}" />
         <Setter Property="BorderBrush" Value="{StaticResource Accent}" />
-        <Setter Property="FontSize" Value="14" />
+        <Setter Property="FontFamily" Value="{StaticResource CapsFont}" />
+        <Setter Property="FontSize" Value="17" />
         <Setter Property="FontWeight" Value="Bold" />
         <Setter Property="MinHeight" Value="44" />
         <Setter Property="Padding" Value="18,0" />
-        <Setter Property="v:Ui.Radius" Value="8" />
         <Style.Triggers>
           <Trigger Property="IsMouseOver" Value="True">
-            <Setter Property="Background" Value="{StaticResource AccentHover}" />
+            <Setter Property="Background" Value="#3A2E1C" />
+            <Setter Property="BorderBrush" Value="{StaticResource AccentHover}" />
           </Trigger>
         </Style.Triggers>
       </Style>
 
       <Style x:Key="GhostButton" TargetType="Button" BasedOn="{StaticResource BaseButton}">
         <Setter Property="Background" Value="Transparent" />
+        <Setter Property="Foreground" Value="{StaticResource TextSoft}" />
         <Setter Property="FontWeight" Value="SemiBold" />
-        <Setter Property="v:Ui.Radius" Value="8" />
       </Style>
 
       <Style x:Key="LinkButton" TargetType="Button" BasedOn="{StaticResource BaseButton}">
@@ -137,7 +181,7 @@
         <Setter Property="Control.Template">
           <Setter.Value>
             <ControlTemplate>
-              <Rectangle Margin="-2,-1" Stroke="{StaticResource Text}" StrokeThickness="1" RadiusX="2" RadiusY="2" SnapsToDevicePixels="True" />
+              <Rectangle Margin="-2,-1" Stroke="{StaticResource Text}" StrokeThickness="1" SnapsToDevicePixels="True" />
             </ControlTemplate>
           </Setter.Value>
         </Setter>
@@ -155,10 +199,10 @@
         </Style.Triggers>
       </Style>
 
-      <!-- Quiet text action, e.g. "Reset to my item". -->
+      <!-- Quiet text action, e.g. "reset". -->
       <Style x:Key="TextButton" TargetType="Button" BasedOn="{StaticResource LinkButton}">
         <Setter Property="Foreground" Value="{StaticResource TextDim}" />
-        <Setter Property="FontSize" Value="12.5" />
+        <Setter Property="FontSize" Value="13.5" />
         <Setter Property="Padding" Value="0,8" />
         <Style.Triggers>
           <Trigger Property="IsMouseOver" Value="True">
@@ -172,7 +216,7 @@
         <Setter Property="Background" Value="Transparent" />
         <Setter Property="BorderBrush" Value="Transparent" />
         <Setter Property="Foreground" Value="{StaticResource TextDim}" />
-        <Setter Property="FontSize" Value="14" />
+        <Setter Property="FontSize" Value="15.5" />
         <Setter Property="Padding" Value="14,0" />
         <Style.Triggers>
           <Trigger Property="IsMouseOver" Value="True">
@@ -186,13 +230,13 @@
         </Style.Triggers>
       </Style>
 
-      <!-- A choice among a few (profile, display currency). Tag = "active" marks the chosen one. -->
+      <!-- A choice among a few (profile, display currency). Tag = "active" marks the chosen one: dark gold in
+           a gold frame. -->
       <Style x:Key="ChoiceButton" TargetType="Button" BasedOn="{StaticResource BaseButton}">
         <Setter Property="Foreground" Value="{StaticResource TextSoft}" />
-        <Setter Property="FontSize" Value="14" />
+        <Setter Property="FontSize" Value="15.5" />
         <Setter Property="MinHeight" Value="44" />
         <Setter Property="Padding" Value="18,0" />
-        <Setter Property="v:Ui.Radius" Value="8" />
         <Style.Triggers>
           <DataTrigger Binding="{Binding Tag, RelativeSource={RelativeSource Self}}" Value="active">
             <Setter Property="Foreground" Value="{StaticResource Text}" />
@@ -204,39 +248,41 @@
         </Style.Triggers>
       </Style>
 
-      <!-- Segmented control ("Start numbers at"). -->
+      <!-- One of a row of small choices ("start at", "prices in"): outlined, the chosen one dark gold. -->
       <Style x:Key="SegmentButton" TargetType="Button" BasedOn="{StaticResource BaseButton}">
         <Setter Property="Background" Value="Transparent" />
-        <Setter Property="BorderBrush" Value="Transparent" />
-        <Setter Property="Foreground" Value="{StaticResource TextSoft}" />
-        <Setter Property="FontSize" Value="12.5" />
-        <Setter Property="FontWeight" Value="SemiBold" />
+        <Setter Property="BorderBrush" Value="{StaticResource Edge}" />
+        <Setter Property="Foreground" Value="{StaticResource TextDim}" />
+        <Setter Property="FontFamily" Value="{StaticResource CapsFont}" />
+        <Setter Property="FontSize" Value="14" />
+        <Setter Property="FontWeight" Value="Bold" />
         <Setter Property="MinHeight" Value="30" />
-        <Setter Property="Padding" Value="12,0" />
+        <Setter Property="Padding" Value="9,0" />
         <Style.Triggers>
           <DataTrigger Binding="{Binding Tag, RelativeSource={RelativeSource Self}}" Value="active">
-            <Setter Property="Background" Value="{StaticResource Accent}" />
-            <Setter Property="Foreground" Value="{StaticResource OnAccent}" />
+            <Setter Property="Background" Value="{StaticResource AccentSoft}" />
+            <Setter Property="BorderBrush" Value="{StaticResource Accent}" />
+            <Setter Property="Foreground" Value="{StaticResource OnAccentSoft}" />
           </DataTrigger>
         </Style.Triggers>
       </Style>
 
       <Style x:Key="StepButton" TargetType="Button" BasedOn="{StaticResource BaseButton}">
-        <Setter Property="Width" Value="32" />
-        <Setter Property="Height" Value="32" />
+        <Setter Property="Width" Value="30" />
+        <Setter Property="Height" Value="30" />
         <Setter Property="MinHeight" Value="0" />
         <Setter Property="Padding" Value="0" />
         <Setter Property="FontSize" Value="16" />
+        <Setter Property="Background" Value="#15120D" />
       </Style>
 
       <Style x:Key="IconButton" TargetType="Button" BasedOn="{StaticResource BaseButton}">
-        <Setter Property="Width" Value="36" />
-        <Setter Property="Height" Value="36" />
+        <Setter Property="Width" Value="34" />
+        <Setter Property="Height" Value="34" />
         <Setter Property="MinHeight" Value="0" />
         <Setter Property="Padding" Value="0" />
         <Setter Property="Background" Value="Transparent" />
         <Setter Property="Foreground" Value="{StaticResource TextDim}" />
-        <Setter Property="v:Ui.Radius" Value="8" />
       </Style>
 
       <Style TargetType="TextBox">
@@ -248,20 +294,26 @@
         <Setter Property="SelectionBrush" Value="{StaticResource Accent}" />
         <Setter Property="Padding" Value="8,0" />
         <Setter Property="MinHeight" Value="36" />
+        <Setter Property="FontSize" Value="15" />
         <Setter Property="VerticalContentAlignment" Value="Center" />
-        <Setter Property="v:Ui.Radius" Value="6" />
-        <!-- The border while typing. A box whose border is already the accent switches it to Text. -->
+        <Setter Property="v:Ui.Radius" Value="2" />
+        <!-- The ring while typing, 2 px over the border. A box whose border is already the accent switches
+             it to Text. -->
         <Setter Property="v:Ui.FocusBrush" Value="{StaticResource Accent}" />
         <Setter Property="Template">
           <Setter.Value>
             <ControlTemplate TargetType="TextBox">
-              <Border x:Name="b" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}"
-                      CornerRadius="{Binding (v:Ui.Radius), RelativeSource={RelativeSource TemplatedParent}}" SnapsToDevicePixels="True">
-                <ScrollViewer x:Name="PART_ContentHost" Margin="{TemplateBinding Padding}" VerticalAlignment="{TemplateBinding VerticalContentAlignment}" />
-              </Border>
+              <Grid>
+                <Border x:Name="b" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}"
+                        CornerRadius="{Binding (v:Ui.Radius), RelativeSource={RelativeSource TemplatedParent}}" SnapsToDevicePixels="True">
+                  <ScrollViewer x:Name="PART_ContentHost" Margin="{TemplateBinding Padding}" VerticalAlignment="{TemplateBinding VerticalContentAlignment}" />
+                </Border>
+                <Border x:Name="ring" BorderBrush="{Binding (v:Ui.FocusBrush), RelativeSource={RelativeSource TemplatedParent}}" BorderThickness="2" Visibility="Hidden"
+                        CornerRadius="{Binding (v:Ui.Radius), RelativeSource={RelativeSource TemplatedParent}}" SnapsToDevicePixels="True" IsHitTestVisible="False" />
+              </Grid>
               <ControlTemplate.Triggers>
                 <Trigger Property="IsKeyboardFocused" Value="True">
-                  <Setter TargetName="b" Property="BorderBrush" Value="{Binding (v:Ui.FocusBrush), RelativeSource={RelativeSource TemplatedParent}}" />
+                  <Setter TargetName="ring" Property="Visibility" Value="Visible" />
                 </Trigger>
               </ControlTemplate.Triggers>
             </ControlTemplate>
@@ -269,10 +321,11 @@
         </Setter>
       </Style>
 
-      <!-- Tick box: accent when ticked, an empty grey box when not. -->
+      <!-- Tick box: a gold square when ticked, an empty bronze-grey one when not. Focus draws a ring around
+           the box. -->
       <Style TargetType="CheckBox">
         <Setter Property="Foreground" Value="{StaticResource Text}" />
-        <Setter Property="FontSize" Value="13" />
+        <Setter Property="FontSize" Value="15" />
         <Setter Property="Cursor" Value="Hand" />
         <Setter Property="FocusVisualStyle" Value="{x:Null}" />
         <Setter Property="Template">
@@ -283,8 +336,9 @@
                   <ColumnDefinition Width="Auto" />
                   <ColumnDefinition Width="*" />
                 </Grid.ColumnDefinitions>
-                <Border x:Name="box" Width="18" Height="18" CornerRadius="4" BorderThickness="1.5" BorderBrush="{StaticResource Unchecked}" Background="Transparent" VerticalAlignment="Center" SnapsToDevicePixels="True">
-                  <Path x:Name="tick" Data="M 4,9.2 L 7.6,12.6 L 14,5.6" Stroke="{StaticResource OnAccent}" StrokeThickness="2.2" StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round"
+                <Border x:Name="ring" Width="23" Height="23" Margin="-3" BorderThickness="2" BorderBrush="{StaticResource Text}" VerticalAlignment="Center" Visibility="Hidden" SnapsToDevicePixels="True" />
+                <Border x:Name="box" Width="17" Height="17" BorderThickness="1.5" BorderBrush="{StaticResource Unchecked}" Background="Transparent" VerticalAlignment="Center" SnapsToDevicePixels="True">
+                  <Path x:Name="tick" Data="M 3.4,8.2 L 6.4,11.2 L 12.4,4.8" Stroke="{StaticResource OnAccent}" StrokeThickness="2.2"
                         Margin="-1.5" Visibility="Collapsed" />
                 </Border>
                 <ContentPresenter Grid.Column="1" Margin="10,0,0,0" VerticalAlignment="Center" RecognizesAccessKey="True" />
@@ -296,7 +350,7 @@
                   <Setter TargetName="tick" Property="Visibility" Value="Visible" />
                 </Trigger>
                 <Trigger Property="IsKeyboardFocused" Value="True">
-                  <Setter TargetName="box" Property="BorderBrush" Value="{StaticResource Text}" />
+                  <Setter TargetName="ring" Property="Visibility" Value="Visible" />
                 </Trigger>
                 <Trigger Property="IsEnabled" Value="False">
                   <Setter Property="Opacity" Value="0.45" />
@@ -312,13 +366,13 @@
         <Setter Property="Template">
           <Setter.Value>
             <ControlTemplate TargetType="Thumb">
-              <Border x:Name="t" Background="{StaticResource Edge}" CornerRadius="4" Margin="2" />
+              <Border x:Name="t" Background="{StaticResource Edge}" Margin="2" />
               <ControlTemplate.Triggers>
                 <Trigger Property="IsMouseOver" Value="True">
-                  <Setter TargetName="t" Property="Background" Value="{StaticResource Unchecked}" />
+                  <Setter TargetName="t" Property="Background" Value="{StaticResource EdgeStrong}" />
                 </Trigger>
                 <Trigger Property="IsDragging" Value="True">
-                  <Setter TargetName="t" Property="Background" Value="{StaticResource Unchecked}" />
+                  <Setter TargetName="t" Property="Background" Value="{StaticResource EdgeStrong}" />
                 </Trigger>
               </ControlTemplate.Triggers>
             </ControlTemplate>
@@ -422,14 +476,14 @@
         <Setter Property="Focusable" Value="False" />
       </Style>
 
-      <!-- Slider (the quick price card's size): a grey track that fills up to a light thumb, in the
+      <!-- Slider (the quick price card's size): a dark track that fills up to a light thumb, in the
            roll bars' colours, with the buttons' focus outline. Background colours the track part. -->
       <Style x:Key="SliderPart" TargetType="RepeatButton" BasedOn="{StaticResource TrackPart}">
         <Setter Property="Template">
           <Setter.Value>
             <ControlTemplate TargetType="RepeatButton">
               <Grid Background="Transparent">
-                <Border Height="4" VerticalAlignment="Center" CornerRadius="2" Background="{TemplateBinding Background}" />
+                <Border Height="4" VerticalAlignment="Center" Background="{TemplateBinding Background}" />
               </Grid>
             </ControlTemplate>
           </Setter.Value>
@@ -460,7 +514,7 @@
         <Setter Property="Template">
           <Setter.Value>
             <ControlTemplate TargetType="Slider">
-              <Border x:Name="b" Background="Transparent" BorderBrush="Transparent" BorderThickness="1" CornerRadius="6" Padding="8,0" SnapsToDevicePixels="True">
+              <Border x:Name="b" Background="Transparent" BorderBrush="Transparent" BorderThickness="1" CornerRadius="2" Padding="8,0" SnapsToDevicePixels="True">
                 <Track x:Name="PART_Track" VerticalAlignment="Center">
                   <Track.DecreaseRepeatButton>
                     <RepeatButton Style="{StaticResource SliderPart}" Background="{StaticResource BarFill}" Command="{x:Static Slider.DecreaseLarge}" AutomationProperties.Name="Decrease" />
@@ -489,8 +543,9 @@
       <Style TargetType="ToolTip">
         <Setter Property="Foreground" Value="{StaticResource Text}" />
         <Setter Property="Background" Value="{StaticResource Surface3}" />
-        <Setter Property="BorderBrush" Value="{StaticResource Edge}" />
-        <Setter Property="FontSize" Value="12" />
+        <Setter Property="BorderBrush" Value="{StaticResource EdgeStrong}" />
+        <Setter Property="FontFamily" Value="{StaticResource BodyFont}" />
+        <Setter Property="FontSize" Value="13.5" />
         <Setter Property="Padding" Value="8,6" />
         <Setter Property="MaxWidth" Value="420" />
         <Setter Property="ContentTemplate">
@@ -502,24 +557,29 @@
         </Setter>
       </Style>
 
-      <!-- Small caps label above a list ("CHECKED THIS SESSION"). -->
+      <!-- Small label above a list ("CHECKED THIS SESSION"). -->
       <Style x:Key="SectionTitle" TargetType="TextBlock">
-        <Setter Property="FontSize" Value="11" />
+        <Setter Property="FontSize" Value="12.5" />
         <Setter Property="FontWeight" Value="SemiBold" />
         <Setter Property="Foreground" Value="{StaticResource TextFaint}" />
         <Setter Property="Margin" Value="4,14,0,6" />
       </Style>
 
-      <Style x:Key="CardTitle" TargetType="TextBlock">
-        <Setter Property="FontSize" Value="16" />
+      <!-- Headings and labels in small caps, like the game's own panels. -->
+      <Style x:Key="Heading" TargetType="TextBlock">
+        <Setter Property="FontFamily" Value="{StaticResource CapsFont}" />
         <Setter Property="FontWeight" Value="Bold" />
       </Style>
 
+      <Style x:Key="CardTitle" TargetType="TextBlock" BasedOn="{StaticResource Heading}">
+        <Setter Property="FontSize" Value="17" />
+      </Style>
+
       <Style x:Key="CardLead" TargetType="TextBlock">
-        <Setter Property="FontSize" Value="12.5" />
+        <Setter Property="FontSize" Value="14" />
         <Setter Property="Foreground" Value="{StaticResource TextDim}" />
         <Setter Property="TextWrapping" Value="Wrap" />
-        <Setter Property="LineHeight" Value="19" />
+        <Setter Property="LineHeight" Value="20" />
         <Setter Property="Margin" Value="0,4,0,0" />
       </Style>
 
@@ -527,37 +587,58 @@
         <Setter Property="Background" Value="{StaticResource Surface2}" />
         <Setter Property="BorderBrush" Value="{StaticResource Line}" />
         <Setter Property="BorderThickness" Value="1" />
-        <Setter Property="CornerRadius" Value="12" />
+        <Setter Property="CornerRadius" Value="2" />
         <Setter Property="Padding" Value="20,18" />
         <Setter Property="Margin" Value="0,0,0,20" />
       </Style>
 
+      <!-- "demo" in small gold caps in a thin bronze frame: there, but never louder than a price. -->
       <Style x:Key="DemoBadge" TargetType="Border">
         <Setter Property="Background" Value="{StaticResource DemoFill}" />
         <Setter Property="BorderBrush" Value="{StaticResource DemoEdge}" />
         <Setter Property="BorderThickness" Value="1" />
-        <Setter Property="CornerRadius" Value="4" />
-        <Setter Property="Padding" Value="7,3" />
+        <Setter Property="Padding" Value="6,0,6,1" />
         <Setter Property="VerticalAlignment" Value="Center" />
+        <Setter Property="TextElement.Foreground" Value="{StaticResource Accent}" />
+        <Setter Property="TextElement.FontFamily" Value="{StaticResource CapsFont}" />
         <Setter Property="ToolTip" Value="Every price, range and listing in the demo is made up for practice." />
       </Style>
 
       <Style x:Key="KeyCap" TargetType="Border">
-        <Setter Property="BorderBrush" Value="{StaticResource EdgeStrong}" />
+        <Setter Property="BorderBrush" Value="#4A3E2C" />
         <Setter Property="BorderThickness" Value="1,1,1,3" />
-        <Setter Property="CornerRadius" Value="6" />
-        <Setter Property="Padding" Value="9,3" />
+        <Setter Property="CornerRadius" Value="2" />
+        <Setter Property="Padding" Value="8,2" />
         <Setter Property="VerticalAlignment" Value="Center" />
       </Style>
 
-      <!-- Counts in a pill: "3 of 7 stats in search". -->
+      <!-- A count that belongs to the search ("3 / 7 stats"): gold small caps, no pill. -->
       <Style x:Key="AccentPill" TargetType="Border">
-        <Setter Property="Background" Value="{StaticResource Accent}" />
-        <Setter Property="CornerRadius" Value="12" />
-        <Setter Property="Padding" Value="11,4" />
         <Setter Property="VerticalAlignment" Value="Center" />
-        <Setter Property="TextElement.Foreground" Value="{StaticResource OnAccent}" />
-        <Setter Property="TextElement.FontWeight" Value="Bold" />
+        <Setter Property="TextElement.Foreground" Value="{StaticResource Accent}" />
+        <Setter Property="TextElement.FontFamily" Value="{StaticResource CapsFont}" />
+        <Setter Property="TextElement.FontWeight" Value="ExtraBold" />
+      </Style>
+
+      <!-- Over the game: a dark see-through panel in a thin bronze double border, like the game's tooltips.
+           Square corners, no glow. -->
+      <Style x:Key="GamePanel" TargetType="Border">
+        <Setter Property="Background" Value="{StaticResource Panel}" />
+        <Setter Property="BorderBrush" Value="{StaticResource PanelEdge}" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="SnapsToDevicePixels" Value="True" />
+      </Style>
+      <!-- Just inside GamePanel's edge: the darker inner line of the double border. -->
+      <Style x:Key="GamePanelInner" TargetType="Border">
+        <Setter Property="BorderBrush" Value="{StaticResource PanelInner}" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="SnapsToDevicePixels" Value="True" />
+      </Style>
+      <!-- The panel's header strip, with the item name centred under it. -->
+      <Style x:Key="GameStrip" TargetType="Border">
+        <Setter Property="Background" Value="{StaticResource Strip}" />
+        <Setter Property="BorderBrush" Value="{StaticResource PanelEdge}" />
+        <Setter Property="BorderThickness" Value="0,0,0,1" />
       </Style>
 
       <!-- Numbered step marker (onboarding) and guide pin. -->
@@ -568,7 +649,7 @@
         <Setter Property="Background" Value="{StaticResource Accent}" />
         <Setter Property="TextElement.Foreground" Value="{StaticResource OnAccent}" />
         <Setter Property="TextElement.FontWeight" Value="Bold" />
-        <Setter Property="TextElement.FontSize" Value="14" />
+        <Setter Property="TextElement.FontSize" Value="15.5" />
       </Style>
       <Style x:Key="GuidePin" TargetType="Border">
         <Setter Property="Width" Value="22" />
@@ -577,7 +658,7 @@
         <Setter Property="Background" Value="{StaticResource Text}" />
         <Setter Property="TextElement.Foreground" Value="{StaticResource Surface}" />
         <Setter Property="TextElement.FontWeight" Value="Bold" />
-        <Setter Property="TextElement.FontSize" Value="12" />
+        <Setter Property="TextElement.FontSize" Value="13.5" />
       </Style>
 
       <Style TargetType="ListBox">
@@ -593,7 +674,7 @@
               <Setter Property="Template">
                 <Setter.Value>
                   <ControlTemplate TargetType="ListBoxItem">
-                    <Border x:Name="b" Padding="10,9" CornerRadius="6" Background="Transparent" BorderThickness="1" BorderBrush="Transparent" Margin="0,0,0,2">
+                    <Border x:Name="b" Padding="10,9" CornerRadius="2" Background="Transparent" BorderThickness="1" BorderBrush="Transparent" Margin="0,0,0,2">
                       <ContentPresenter />
                     </Border>
                     <ControlTemplate.Triggers>

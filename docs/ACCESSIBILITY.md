@@ -5,7 +5,7 @@ What SSE does for keyboard use, screen readers, contrast and text size, and what
 ## Keyboard
 
 - `Tab` and `Shift+Tab` move through every control in reading order: the header left to right, then the page. Lists of text, scroll areas and panels are never stops of their own.
-- Every control shows when it has keyboard focus. Buttons, tick boxes, list rows and the slider get an outline in the text colour, text boxes a coloured border, and links in release notes a ring. The number boxes of an unticked stat are dimmed, but come up to full strength while one of them has focus.
+- Every control shows when it has keyboard focus. Buttons, tick boxes, list rows and the slider get a ring in the text colour, text boxes a gold ring, and links in release notes a ring. The number boxes of an unticked stat are dimmed, but come up to full strength while one of them has focus.
 - `Enter` or `Space` presses a button, `Space` ticks a box, and the arrow keys move through a list or change the slider.
 - **Show prices in** in the header opens its menu with `Enter` or `Space`. Focus lands on the current currency: the arrow keys or `Tab` move, `Enter` picks one, `Esc` closes the menu and returns to the button.
 - `Esc` closes the price check over the game (`F3`). The quick price card never takes the keyboard from the game: while you hold the key it is click-through, and kept open it takes clicks only, so its close button, its stats with their − and + buttons, **Search** and **All filters** (in that order, if a window does give it focus) are used with the mouse. `F3` opens the same search in the price check, which works from the keyboard, **Search** included.
@@ -20,21 +20,27 @@ This is checked with WPF's UI Automation peers and a UI Automation client, not y
 
 ## Contrast
 
-Text meets WCAG AA (4.5:1) on every surface it appears on, including the selected rows, the header's current page, the ticked search rows and the quick price card and the guide's pinned lines over a bright game scene. The empty tick box meets the 3:1 minimum for controls. TextFaint and the tick box's grey were raised to reach these, and TextOff, the grey above TextFaint, with them, so the steps between the greys stay even:
+Text meets WCAG AA (4.5:1) on every surface it appears on, including the selected rows, the header's current page, the ticked search rows and the quick price card over a bright game scene. The empty tick box meets the 3:1 minimum for controls. The look follows the game (dark bronze panels, gold for the search, stats in the game's blue, prices coloured like a loot filter); where the design's own colours fell short, they were raised until they passed:
 
-| Colour | Before | After | On Surface (#101114) | Surface2 (#15161A) | Surface3 (#1B1D22) | Surface4 (#22242A) | Ticked row | Card over a white scene |
+| Colour | Design | In the app | Surface (#0E0D0B) | Surface2 (#15130F) | Surface3 (#1C1914) | Surface4 (#2A241B) | Ticked row | Card over a white scene |
 |---|---|---|---|---|---|---|---|---|
-| TextOff (unticked stats) | `#8C929C` | `#959BA5` | 6.03 → 6.75 | 5.77 → 6.47 | 5.38 → 6.03 | 4.95 → 5.55 | 5.10 → 5.71 | 5.36 → 6.00 |
-| TextFaint (hints, labels) | `#7E848F` | `#868C97` | 5.02 → 5.58 | 4.81 → 5.35 | **4.48** → 4.99 | **4.12** → 4.59 | **4.25** → 4.73 | **4.46** → 4.96 |
-| Unchecked (empty tick box) | `#4A4E57` | `#666A73` | **2.26** → 3.48 | **2.17** → 3.34 | **2.02** → 3.11 | 1.86 → 2.86 | | **2.01** → 3.10 |
+| Text |  | same | 15.62 | 14.92 | 14.09 | 12.36 | 12.07 | 14.81 |
+| TextSoft |  | same | 11.45 | 10.94 | 10.33 | 9.06 | 8.85 | 10.85 |
+| TextDim |  | same | 7.80 | 7.45 | 7.03 | 6.17 | 6.03 | 7.39 |
+| TextOff (unticked properties) |  |  | 6.97 | 6.66 | 6.29 | 5.51 | 5.39 | 6.61 |
+| TextFaint (hints, labels) |  (**4.05** on Surface4, **3.96** on a ticked row) |  | 5.94 | 5.67 | 5.36 | 4.70 | 4.59 | 5.63 |
+| Stat, searched |  | same | 8.98 | 8.58 | 8.10 | 7.11 | 6.94 | 8.51 |
+| Stat, not searched |  (**3.97** on Surface4) |  | 5.91 | 5.64 | 5.33 | 4.67 | 4.56 | 5.60 |
+| Gold (accent) as text |  | same | 8.58 | 8.20 | 7.74 | 6.79 | 6.63 | 8.14 |
+| Unchecked (empty tick box) |  (**2.23** on Surface2) |  | 3.70 | 3.54 | 3.34 | 2.93 | 2.86 | 3.51 |
 
-Bold values were below the minimum. A ticked row is the accent at 10 % over Surface2 (`#192231`); the card over a white scene is the card's 97 % Surface2 over white (`#1C1D21`). No tick box sits on Surface4.
+Bold values were below the minimum. A ticked row is the gold at 13 % over Surface2 (); the card over a white scene is the card's 97 % Surface over white. No empty tick box sits on Surface4 or a ticked row. Links (, 8.2:1 or more), warnings and hints (8.2:1 or more), the rarity colours on item names (4.9:1 or more on Surface4), the gold on the chosen button (12.7:1) and the dark tick on gold (8.0:1) pass everywhere.
 
-The numbers of an unticked stat were drawn at 45 % opacity, which left them at 4.0 to 4.2:1 although they can still be changed; they are now at 55 % (5.4 to 5.7:1). Every other colour already passed and is unchanged: Text, TextSoft and TextDim (6.7:1 or more anywhere), the accent as text (4.7:1 on Surface4), links, warnings, hints, the rarity colours (4.9:1 or more on Surface4), the DEMO and DRAFT badges (11.8:1) and the dark text on the accent (5.7:1).
+Price labels are solid tags in loot-filter colours. Their text reads at: white and red 5.9:1 (10 Divine or more), red 5.9:1 (1 to 10 Divine), orange 4.9:1, amber 9.1:1, tan 10.6:1 and dark 10.2:1 (under 1 Exalted). The design's orange label had white text at 3.7:1; it takes dark text instead.
 
-A price and listings whose search you have changed since are faded to 65 % until you press **Search**, and the line under the price says *Search to update* at full strength (6.8:1). Faded, the price stays at 7.0:1 and the listings' prices and numbers at 5.3:1 or more; the faint parts of that old result (the count, the listings' ages and heading) drop to about 3:1.
+The numbers of an unticked stat are drawn at 55 % opacity, about 5.2:1, because they can still be changed; they come up to full strength while one of them has focus. A price and listings whose search you have changed since are faded to 65 % until you press **Search**, and the line under the price says *Search to update* at full strength. Disabled controls are dimmed to 45 % and are exempt from the contrast minimum, as WCAG allows. The borders of buttons and boxes are quiet (1.4 to 2.7:1); their labels and the darker fill of the boxes identify them.
 
-Disabled controls are dimmed to 45 % and are exempt from the contrast minimum, as WCAG allows: a disabled button reads at 4.0:1, the disabled **Apply** on My wealth at 2.1:1. The borders of buttons and boxes are quiet (1.3 to 1.4:1); their labels and the darker fill of the boxes identify them.
+Keyboard focus is a 2 px ring in the text colour over a button's or a box's border, and around a tick box: a change of border colour alone was too faint on gold.
 
 ## Text size
 

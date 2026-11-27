@@ -10,13 +10,13 @@
         Title="Still Sane, Exile? price check"
         WindowStyle="None" AllowsTransparency="True" Background="Transparent"
         Topmost="True" ShowInTaskbar="False" ResizeMode="NoResize" SizeToContent="WidthAndHeight"
-        Foreground="{StaticResource Text}" FontFamily="Segoe UI" FontSize="14"
-        Typography.NumeralAlignment="Tabular"
+        Foreground="{StaticResource Text}" FontFamily="{StaticResource BodyFont}" FontSize="15"
+        Typography.NumeralAlignment="Tabular" Typography.NumeralStyle="Lining"
         UseLayoutRounding="True" TextOptions.TextFormattingMode="Display"
         PreviewKeyDown="OnPreviewKeyDown" Deactivated="OnDeactivated">
   <!-- Over the game after a peek (F3): change the search; results update as you go. Esc closes it. -->
   <Grid x:Name="Root" Margin="16,8,16,28">
-    <Border CornerRadius="12" Background="{StaticResource Surface2}">
+    <Border Background="{StaticResource Panel}" Margin="1">
       <Border.Effect>
         <DropShadowEffect Color="Black" BlurRadius="44" ShadowDepth="18" Direction="270" Opacity="0.6" />
       </Border.Effect>

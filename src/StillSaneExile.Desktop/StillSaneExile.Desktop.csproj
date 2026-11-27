@@ -33,6 +33,11 @@
     <Content Include="..\..\fixtures\**\*" Exclude="..\..\fixtures\poeninja\**;..\..\fixtures\trade\**" LinkBase="fixtures" CopyToOutputDirectory="PreserveNewest" />
     <Content Include="..\..\data\**\*" LinkBase="data" CopyToOutputDirectory="PreserveNewest" />
     <Resource Include="Assets\sse.ico" />
+    <!-- Alegreya Sans and its small caps cut (SIL Open Font License, Assets\Fonts\OFL.txt, shipped with the
+         app), and the game's own pictures of Divine, Exalted and Chaos Orbs (docs/SOURCES.md). -->
+    <Resource Include="Assets\Fonts\*.ttf" />
+    <Resource Include="Assets\Currency\*.png" />
+    <Content Include="Assets\Fonts\OFL.txt" Link="licenses\AlegreyaSans-OFL.txt" CopyToOutputDirectory="PreserveNewest" />
     <!-- "What's new" shows this build's own changelog sections, so it works offline and covers skipped versions. -->
     <EmbeddedResource Include="..\..\CHANGELOG.md" Link="CHANGELOG.md" LogicalName="CHANGELOG.md" />
   </ItemGroup>

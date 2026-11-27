@@ -15,6 +15,10 @@ namespace StillSaneExile.Desktop.ViewModels;
 /// <param name="PeekNote">The shorter note the peek card shows under the price.</param>
 public sealed record PriceAnswer(string Lead, string Big, string? Line, string Note, bool NoteIsWarning, int? Count, string PeekNote)
 {
+    /// <summary>The colour step of the price label (loot-filter colours); null draws <see cref="Big"/> as plain
+    /// text, for a status such as "No matches" or a price with no rate to place it.</summary>
+    public ValueTier? Tier { get; init; }
+
     public bool HasCount => Count is not null;
     public bool HasLine => !string.IsNullOrEmpty(Line);
 
@@ -30,7 +34,7 @@ public sealed record PriceAnswer(string Lead, string Big, string? Line, string N
         var some = $"{p} instant buyout price{(p == 1 ? "" : "s")} among the cheapest {seen}";
         var lead = unique ? "This unique sells for about" : "Items like yours sell for about";
         var cheapest = r.Cheapest is { } c ? price.One(c.Value) : "";
-        return r.Confidence switch
+        PriceAnswer answer = r.Confidence switch
         {
             SearchConfidence.NoMatches => new("Items like yours", "No matches", "Your search is too strict",
                 "Untick a stat or lower a number, then search again.", true, 0, "No matches · loosen the search"),
@@ -49,6 +53,12 @@ public sealed record PriceAnswer(string Lead, string Big, string? Line, string N
             _ => new(lead, price.Range(r.Low!.Value, r.High!.Value), Join($"Cheapest {cheapest}", price.DivineRate()),
                 $"Good price guess — {n} for sale.", false, n, $"Good price guess · cheapest {cheapest}"),
         };
+        return (r.Confidence, r.Low, r.Cheapest) switch
+        {
+            (SearchConfidence.TooFew, _, { } one) => answer with { Tier = price.Tier(one.Value) },
+            (SearchConfidence.Rough or SearchConfidence.Good, { } low, _) => answer with { Tier = price.Tier(low) },
+            _ => answer,
+        };
     }
 
     /// <summary>A live item with a search and no result yet: nothing is asked of the trade site until the
@@ -63,7 +73,7 @@ public sealed record PriceAnswer(string Lead, string Big, string? Line, string N
     {
         const string lead = "From prices you wrote down";
         var n = e.IndependentSellers;
-        return e.Level switch
+        PriceAnswer? answer = e.Level switch
         {
             EvidenceLevel.OneAsk => new(lead, price.One(e.Low!.Value), null,
                 "Only 1 for sale — too few to trust.", true, 1, "Only 1 price written down"),
@@ -73,6 +83,7 @@ public sealed record PriceAnswer(string Lead, string Big, string? Line, string N
                 $"Good price guess — {n} sellers.", false, n, $"Good price guess · {n} sellers"),
             _ => null,
         };
+        return answer is not null && e.Low is { } low ? answer with { Tier = price.Tier(low) } : answer;
     }
 
     /// <param name="noMarketData">The profile has no prices at all (a live league before its first poe.ninja
@@ -134,17 +145,20 @@ public sealed record PriceAnswer(string Lead, string Big, string? Line, string N
         var checkedAgo = $"checked {ValueFormat.Age(now - book.CreatedAt)}";
         var note = Join(price.DivineRate(), checkedAgo) + (line.Freshness is Freshness.Fresh or null ? "" : " · may be out of date");
         return new(stack > 1 ? "This stack is worth" : "This is worth", big, stack > 1 && !isMoney ? $"{price.One(unit.Value)} each" : null,
-            note, line.Freshness is not (Freshness.Fresh or null), null, note);
+            note, line.Freshness is not (Freshness.Fresh or null), null, note) { Tier = price.Tier(total) };
     }
 
     /// <summary>A price book baseline (e.g. a unique) when there are no listings to search. The card says
     /// how old the figure is, and when it may be out of date.</summary>
-    public static PriceAnswer Baseline(PriceLine line, DateTimeOffset? now = null)
+    public static PriceAnswer Baseline(PriceLine line, DateTimeOffset? now = null, PriceText? price = null)
     {
         var age = line.ObservedTo is { } at && now is { } n ? $" · {ValueFormat.Age(n - at)}" : "";
         var stale = line.Freshness is Freshness.Stale or Freshness.RankingSuppressed ? " · may be out of date" : "";
         return new("This usually sells for about", line.Headline, null, line.Detail ?? "Rolls can change the price.", true, null,
-            $"Typical price · rolls can change it{age}{stale}");
+            $"Typical price · rolls can change it{age}{stale}")
+        {
+            Tier = price is not null && line.Amount is { } amount && line.Denomination is { } d ? price.Tier(amount, d) : null,
+        };
     }
 
     private static string Join(params string?[] parts) => string.Join(" · ", parts.Where(p => !string.IsNullOrEmpty(p)));

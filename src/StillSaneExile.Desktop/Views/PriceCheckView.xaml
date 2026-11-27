@@ -10,10 +10,11 @@
              x:Name="Self"
              Foreground="{StaticResource Text}">
   <UserControl.Resources>
-    <Style x:Key="ColumnHead" TargetType="TextBlock">
-      <Setter Property="FontSize" Value="11" />
-      <Setter Property="FontWeight" Value="SemiBold" />
-      <Setter Property="Foreground" Value="{StaticResource TextFaint}" />
+    <Style x:Key="Label" TargetType="TextBlock" BasedOn="{StaticResource Heading}">
+      <Setter Property="FontSize" Value="14" />
+      <Setter Property="FontWeight" Value="Medium" />
+      <Setter Property="Foreground" Value="{StaticResource TextDim}" />
+      <Setter Property="VerticalAlignment" Value="Center" />
     </Style>
 
     <!-- The price and listings of a search the player has changed since (or while a new one runs). -->
@@ -26,82 +27,63 @@
     </Style>
   </UserControl.Resources>
 
-  <!-- Price check: the answer first, then the search that produced it, which you can change. -->
-  <Border Background="{StaticResource Surface2}" BorderBrush="{StaticResource Edge}" BorderThickness="1" CornerRadius="12">
-    <StackPanel>
-      <!-- Item -->
-      <Border BorderBrush="{StaticResource Line}" BorderThickness="0,0,0,1" Padding="16,14,16,12">
-        <Grid>
-          <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="*" />
-            <ColumnDefinition Width="Auto" />
-            <ColumnDefinition Width="Auto" />
-          </Grid.ColumnDefinitions>
-          <StackPanel>
-            <TextBlock Text="{Binding Title}" FontSize="18" FontWeight="Bold" TextWrapping="Wrap" Foreground="{Binding Rarity, Converter={StaticResource RarityBrush}}" />
-            <TextBlock Text="{Binding Subtitle}" FontSize="13" Foreground="{StaticResource TextDim}" TextWrapping="Wrap" Margin="0,2,0,0" />
-          </StackPanel>
-          <Border Grid.Column="1" Style="{StaticResource DemoBadge}" VerticalAlignment="Top" Margin="12,2,0,0" Visibility="{Binding IsDemo, Converter={StaticResource Vis}}">
-            <TextBlock Text="DEMO PRICES" FontSize="10.5" FontWeight="Bold" />
-          </Border>
-          <Button Grid.Column="2" Style="{StaticResource IconButton}" Margin="12,0,0,0" VerticalAlignment="Top" ToolTip="Close (Esc)" AutomationProperties.Name="Close the price check"
-                  Command="{Binding CloseCommand, ElementName=Self}" Visibility="{Binding CloseCommand, ElementName=Self, Converter={StaticResource Vis}}">
-            <Path Data="M 1,1 L 11,11 M 11,1 L 1,11" Width="12" Height="12" Stroke="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}" StrokeThickness="2" StrokeStartLineCap="Round" StrokeEndLineCap="Round" />
-          </Button>
-        </Grid>
-      </Border>
+  <!-- Price check: the answer first, then the search that produced it, which you can change. Drawn as the
+       game draws a tooltip: a dark panel in a bronze double border with the item's name in a header strip. -->
+  <Border Style="{StaticResource GamePanel}">
+    <Border Style="{StaticResource GamePanelInner}">
+      <StackPanel>
+        <!-- Item -->
+        <Border Style="{StaticResource GameStrip}" Padding="0,11,0,10">
+          <Grid>
+            <StackPanel Margin="60,0">
+              <TextBlock Text="{Binding Title}" Style="{StaticResource Heading}" FontSize="22" TextAlignment="Center" TextWrapping="Wrap" LineHeight="25"
+                         Foreground="{Binding Rarity, Converter={StaticResource RarityBrush}}" />
+              <TextBlock Text="{Binding HeaderBase}" Style="{StaticResource Heading}" FontWeight="Medium" FontSize="17" TextAlignment="Center" TextWrapping="Wrap"
+                         Foreground="{Binding Rarity, Converter={StaticResource RarityBrush}}" Visibility="{Binding HasHeaderBase, Converter={StaticResource Vis}}" />
+              <TextBlock Text="{Binding HeaderDetail}" FontSize="13.5" Foreground="{StaticResource TextDim}" TextAlignment="Center" TextWrapping="Wrap" Margin="0,2,0,0"
+                         Visibility="{Binding HasHeaderDetail, Converter={StaticResource Vis}}" />
+            </StackPanel>
+            <Border Style="{StaticResource DemoBadge}" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="10,0,0,0" Visibility="{Binding IsDemo, Converter={StaticResource Vis}}">
+              <TextBlock Text="demo prices" FontSize="12" FontWeight="Bold" />
+            </Border>
+            <Button Style="{StaticResource IconButton}" BorderBrush="{StaticResource Edge}" Margin="0,-2,8,0" HorizontalAlignment="Right" VerticalAlignment="Top" ToolTip="Close (Esc)" AutomationProperties.Name="Close the price check"
+                    Command="{Binding CloseCommand, ElementName=Self}" Visibility="{Binding CloseCommand, ElementName=Self, Converter={StaticResource Vis}}">
+              <Path Data="M 1,1 L 11,11 M 11,1 L 1,11" Width="12" Height="12" Stroke="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}" StrokeThickness="2.2" StrokeStartLineCap="Round" StrokeEndLineCap="Round" />
+            </Button>
+          </Grid>
+        </Border>
 
-      <!-- The answer -->
-      <Border Background="{StaticResource Surface3}" Padding="16,14">
-        <Grid>
-          <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="*" />
-            <ColumnDefinition Width="Auto" />
-          </Grid.ColumnDefinitions>
+        <!-- The answer, centred: the lead, the price as a loot-filter label, how sure it is, the rate. -->
+        <StackPanel Margin="18,16,18,14">
           <StackPanel Style="{StaticResource Dimmable}">
-            <TextBlock Text="{Binding Answer.Lead}" FontSize="12.5" Foreground="{StaticResource TextDim}" TextWrapping="Wrap" />
-            <TextBlock Text="{Binding Answer.Big}" FontSize="30" FontWeight="ExtraBold" TextWrapping="Wrap" Margin="0,2,0,2" />
-            <TextBlock Text="{Binding Answer.Line}" FontSize="13" Foreground="{StaticResource TextSoft}" TextWrapping="Wrap" Visibility="{Binding Answer.HasLine, Converter={StaticResource Vis}}" />
+            <TextBlock Text="{Binding Answer.Lead}" FontFamily="{StaticResource CapsFont}" FontSize="14.5" Foreground="{StaticResource TextDim}" TextAlignment="Center" TextWrapping="Wrap" />
+            <v:ValueLabel Text="{Binding Answer.Big}" Tier="{Binding Answer.Tier}" Size="Large" HorizontalAlignment="Center" Margin="0,7,0,8" />
           </StackPanel>
-          <StackPanel Grid.Column="1" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="16,0,0,0" Visibility="{Binding Answer.HasCount, Converter={StaticResource Vis}}" Style="{StaticResource Dimmable}">
-            <TextBlock Text="{Binding Answer.Count, StringFormat='{}{0:#,0}'}" FontSize="28" FontWeight="ExtraBold" Foreground="{StaticResource Accent}" HorizontalAlignment="Right" />
-            <TextBlock Text="for sale" FontSize="12" Foreground="{StaticResource TextDim}" HorizontalAlignment="Right" />
-          </StackPanel>
-        </Grid>
-      </Border>
-      <Border Background="{StaticResource Surface3}" BorderBrush="{StaticResource Line}" BorderThickness="0,1,0,0" Padding="16,8">
-        <TextBlock Text="{Binding NoteLine}" FontSize="12.5" TextWrapping="Wrap">
-          <TextBlock.Style>
-            <Style TargetType="TextBlock">
-              <Setter Property="Foreground" Value="{StaticResource TextSoft}" />
-              <Style.Triggers>
-                <DataTrigger Binding="{Binding IsStale}" Value="True">
-                  <Setter Property="Foreground" Value="{StaticResource Link}" />
-                </DataTrigger>
-                <DataTrigger Binding="{Binding NoteLineIsWarning}" Value="True">
-                  <Setter Property="Foreground" Value="{StaticResource Warn}" />
-                </DataTrigger>
-              </Style.Triggers>
-            </Style>
-          </TextBlock.Style>
-        </TextBlock>
-      </Border>
+          <TextBlock Text="{Binding NoteLine}" FontSize="15.5" TextAlignment="Center" TextWrapping="Wrap">
+            <TextBlock.Style>
+              <Style TargetType="TextBlock">
+                <Setter Property="Foreground" Value="{StaticResource TextSoft}" />
+                <Style.Triggers>
+                  <DataTrigger Binding="{Binding IsStale}" Value="True">
+                    <Setter Property="Foreground" Value="{StaticResource Link}" />
+                  </DataTrigger>
+                  <DataTrigger Binding="{Binding NoteLineIsWarning}" Value="True">
+                    <Setter Property="Foreground" Value="{StaticResource Warn}" />
+                  </DataTrigger>
+                </Style.Triggers>
+              </Style>
+            </TextBlock.Style>
+          </TextBlock>
+          <v:ValueLabel Text="{Binding Answer.Line}" Size="Text" HorizontalAlignment="Center" Margin="0,5,0,0" TextElement.FontSize="14" TextElement.Foreground="{StaticResource TextFaint}"
+                        Visibility="{Binding Answer.HasLine, Converter={StaticResource Vis}}" Style="{StaticResource Dimmable}" />
+        </StackPanel>
 
-      <!-- The search -->
-      <StackPanel Visibility="{Binding ShowsWorksheet, Converter={StaticResource Vis}}">
-        <DockPanel Margin="16,14,16,6" LastChildFill="False">
-          <Border DockPanel.Dock="Left" Style="{StaticResource AccentPill}">
-            <TextBlock FontSize="13"><Run Text="{Binding OnCount, Mode=OneWay}" /><Run Text=" of " /><Run Text="{Binding TotalCount, Mode=OneWay}" /><Run Text=" stats in search" /></TextBlock>
-          </Border>
-          <TextBlock DockPanel.Dock="Left" Text="Fewer stats → more results" FontSize="12.5" Foreground="{StaticResource TextFaint}" VerticalAlignment="Center" Margin="10,0,0,0" />
-          <Button DockPanel.Dock="Right" Style="{StaticResource TextButton}" Command="{Binding ResetCommand}">
-            <TextBlock Text="Reset to my item" TextDecorations="Underline" />
-          </Button>
-        </DockPanel>
+        <!-- The search -->
+        <StackPanel Visibility="{Binding ShowsWorksheet, Converter={StaticResource Vis}}">
+          <Border Height="1" Background="{StaticResource Edge}" Margin="18,0" />
 
-        <StackPanel Orientation="Horizontal" Margin="16,4,16,10">
-          <TextBlock Text="Start numbers at" FontSize="12.5" Foreground="{StaticResource TextDim}" VerticalAlignment="Center" Margin="0,0,10,0" />
-          <Border Background="{StaticResource Well}" BorderBrush="{StaticResource Edge}" BorderThickness="1" CornerRadius="8" Padding="2">
+          <StackPanel Orientation="Horizontal" Margin="18,12,18,6">
+            <TextBlock Text="start at" Style="{StaticResource Label}" Margin="0,0,8,0" />
             <ItemsControl ItemsSource="{x:Static vm:ItemViewModel.StrictnessChoices}" AutomationProperties.Name="Start numbers at">
               <ItemsControl.ItemsPanel>
                 <ItemsPanelTemplate>
@@ -110,7 +92,7 @@
               </ItemsControl.ItemsPanel>
               <ItemsControl.ItemTemplate>
                 <DataTemplate DataType="{x:Type vm:StrictnessChoice}">
-                  <Button Style="{StaticResource SegmentButton}" Content="{Binding Label}"
+                  <Button Style="{StaticResource SegmentButton}" Content="{Binding Label}" Margin="0,0,2,0"
                           Command="{Binding DataContext.SetStrictnessCommand, ElementName=Self}" CommandParameter="{Binding Key}">
                     <Button.Tag>
                       <MultiBinding Converter="{StaticResource PillActive}">
@@ -122,132 +104,135 @@
                 </DataTemplate>
               </ItemsControl.ItemTemplate>
             </ItemsControl>
+          </StackPanel>
+
+          <DockPanel Margin="18,6,18,4" LastChildFill="False">
+            <TextBlock DockPanel.Dock="Left" Text="Search with" Style="{StaticResource Heading}" FontSize="16" VerticalAlignment="Center" />
+            <Border DockPanel.Dock="Left" Style="{StaticResource AccentPill}" Margin="10,0,0,0">
+              <TextBlock FontSize="16"><Run Text="{Binding OnCount, Mode=OneWay}" /><Run Text=" / " /><Run Text="{Binding TotalCount, Mode=OneWay}" /><Run Text=" stats" /></TextBlock>
+            </Border>
+            <TextBlock DockPanel.Dock="Left" Text="fewer stats, more results" FontSize="13.5" Foreground="{StaticResource TextFaint}" VerticalAlignment="Center" Margin="12,0,0,0" />
+            <Button DockPanel.Dock="Right" Style="{StaticResource TextButton}" Command="{Binding ResetCommand}">
+              <TextBlock Text="Reset to my item" TextDecorations="Underline" />
+            </Button>
+          </DockPanel>
+
+          <!-- A unique is always searched by name. -->
+          <Border Background="{StaticResource AccentTint}" Padding="8,4" Margin="10,0" Visibility="{Binding IsUnique, Converter={StaticResource Vis}}">
+            <Grid MinHeight="34">
+              <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="124" />
+                <ColumnDefinition Width="62" />
+              </Grid.ColumnDefinitions>
+              <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                <Border Width="17" Height="17" Background="{StaticResource Accent}">
+                  <Path Data="M 3.4,8.2 L 6.4,11.2 L 12.4,4.8" Stroke="{StaticResource OnAccent}" StrokeThickness="2.2" Margin="-1.5" />
+                </Border>
+                <TextBlock Text="{Binding UniqueNameRow}" FontSize="16" FontWeight="Bold" Margin="10,0,0,0" VerticalAlignment="Center" />
+              </StackPanel>
+              <TextBlock Grid.Column="1" Text="exact name" FontFamily="{StaticResource CapsFont}" FontSize="14" FontWeight="ExtraBold" Foreground="{StaticResource Accent}" HorizontalAlignment="Center" VerticalAlignment="Center" />
+            </Grid>
           </Border>
-        </StackPanel>
 
-        <Border BorderBrush="{StaticResource Line}" BorderThickness="0,1,0,0" Padding="16,6">
-          <Grid>
-            <Grid.ColumnDefinitions>
-              <ColumnDefinition Width="*" />
-              <ColumnDefinition Width="128" />
-              <ColumnDefinition Width="56" />
-            </Grid.ColumnDefinitions>
-            <TextBlock Text="STAT ON YOUR ITEM" Style="{StaticResource ColumnHead}" />
-            <TextBlock Grid.Column="1" Text="SEARCH FOR AT LEAST" Style="{StaticResource ColumnHead}" HorizontalAlignment="Center" Margin="10,0,0,0" />
-            <TextBlock Grid.Column="2" Text="TIER" Style="{StaticResource ColumnHead}" HorizontalAlignment="Center" />
-          </Grid>
-        </Border>
-
-        <!-- A unique is always searched by name. -->
-        <Border BorderBrush="{StaticResource RowLine}" BorderThickness="0,1,0,0" Background="{StaticResource AccentTint}" Padding="16,6" Visibility="{Binding IsUnique, Converter={StaticResource Vis}}">
-          <Grid MinHeight="36">
-            <Grid.ColumnDefinitions>
-              <ColumnDefinition Width="*" />
-              <ColumnDefinition Width="128" />
-              <ColumnDefinition Width="56" />
-            </Grid.ColumnDefinitions>
-            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-              <Border Width="18" Height="18" CornerRadius="4" Background="{StaticResource Accent}">
-                <Path Data="M 4,9.2 L 7.6,12.6 L 14,5.6" Stroke="{StaticResource OnAccent}" StrokeThickness="2.2" StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round" Margin="-1.5" />
-              </Border>
-              <TextBlock Text="{Binding UniqueNameRow}" FontSize="13.5" FontWeight="SemiBold" Margin="10,0,0,0" VerticalAlignment="Center" />
-            </StackPanel>
-            <TextBlock Grid.Column="1" Text="exact name" FontSize="13" FontWeight="Bold" Foreground="{StaticResource Accent}" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="10,0,0,0" />
-          </Grid>
-        </Border>
-
-        <ItemsControl ItemsSource="{Binding SearchRows}" Focusable="False" AutomationProperties.Name="Stats in the search">
-          <ItemsControl.ItemTemplate>
-            <DataTemplate DataType="{x:Type vm:SearchRowViewModel}">
-              <Border BorderBrush="{StaticResource RowLine}" BorderThickness="0,1,0,0" Padding="16,6">
-                <Border.Style>
-                  <Style TargetType="Border">
-                    <Setter Property="Background" Value="Transparent" />
-                    <Style.Triggers>
-                      <DataTrigger Binding="{Binding IsOn}" Value="True">
-                        <Setter Property="Background" Value="{StaticResource AccentTint}" />
-                      </DataTrigger>
-                    </Style.Triggers>
-                  </Style>
-                </Border.Style>
-                <Grid>
-                  <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*" />
-                    <ColumnDefinition Width="128" />
-                    <ColumnDefinition Width="56" />
-                  </Grid.ColumnDefinitions>
-                  <CheckBox IsChecked="{Binding IsOn}" MinHeight="36" VerticalContentAlignment="Center" AutomationProperties.Name="{Binding Text}">
-                    <StackPanel Margin="0,2">
-                      <TextBlock Text="{Binding Text}" FontSize="13.5" TextWrapping="Wrap">
-                        <TextBlock.Style>
-                          <Style TargetType="TextBlock">
-                            <Setter Property="Foreground" Value="{StaticResource TextOff}" />
+          <ItemsControl ItemsSource="{Binding SearchRows}" Margin="10,0" Focusable="False" AutomationProperties.Name="Stats in the search">
+            <ItemsControl.ItemTemplate>
+              <DataTemplate DataType="{x:Type vm:SearchRowViewModel}">
+                <Border Padding="8,4">
+                  <Border.Style>
+                    <Style TargetType="Border">
+                      <Setter Property="Background" Value="Transparent" />
+                      <Style.Triggers>
+                        <DataTrigger Binding="{Binding IsOn}" Value="True">
+                          <Setter Property="Background" Value="{StaticResource AccentTint}" />
+                        </DataTrigger>
+                      </Style.Triggers>
+                    </Style>
+                  </Border.Style>
+                  <Grid>
+                    <Grid.ColumnDefinitions>
+                      <ColumnDefinition Width="*" />
+                      <ColumnDefinition Width="124" />
+                      <ColumnDefinition Width="62" />
+                    </Grid.ColumnDefinitions>
+                    <CheckBox IsChecked="{Binding IsOn}" MinHeight="34" VerticalContentAlignment="Center" AutomationProperties.Name="{Binding Text}">
+                      <StackPanel Margin="0,2">
+                        <TextBlock Text="{Binding Text}" FontSize="16" TextWrapping="Wrap" LineHeight="20">
+                          <TextBlock.Style>
+                            <Style TargetType="TextBlock">
+                              <Setter Property="Foreground" Value="{StaticResource StatOff}" />
+                              <Style.Triggers>
+                                <DataTrigger Binding="{Binding IsOn}" Value="True">
+                                  <Setter Property="Foreground" Value="{StaticResource StatOn}" />
+                                  <Setter Property="FontWeight" Value="Bold" />
+                                </DataTrigger>
+                                <DataTrigger Binding="{Binding IsProperty}" Value="True">
+                                  <Setter Property="Foreground" Value="{StaticResource TextOff}" />
+                                </DataTrigger>
+                                <MultiDataTrigger>
+                                  <MultiDataTrigger.Conditions>
+                                    <Condition Binding="{Binding IsProperty}" Value="True" />
+                                    <Condition Binding="{Binding IsOn}" Value="True" />
+                                  </MultiDataTrigger.Conditions>
+                                  <Setter Property="Foreground" Value="{StaticResource Text}" />
+                                </MultiDataTrigger>
+                              </Style.Triggers>
+                            </Style>
+                          </TextBlock.Style>
+                        </TextBlock>
+                        <TextBlock Text="{Binding Hint}" FontSize="13" Foreground="{StaticResource TextFaint}" TextWrapping="Wrap" Margin="0,1,0,0" Visibility="{Binding HasHint, Converter={StaticResource Vis}}" />
+                      </StackPanel>
+                    </CheckBox>
+                    <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
+                      <!-- Dimmed while the stat is unticked, but still in use (changing a number ticks it),
+                           so the dimmed numbers keep 4.5:1, and full strength while one has keyboard focus. -->
+                      <StackPanel.Style>
+                        <Style TargetType="StackPanel">
+                          <Setter Property="Opacity" Value="0.55" />
+                          <Style.Triggers>
+                            <DataTrigger Binding="{Binding IsOn}" Value="True">
+                              <Setter Property="Opacity" Value="1" />
+                            </DataTrigger>
+                            <Trigger Property="IsKeyboardFocusWithin" Value="True">
+                              <Setter Property="Opacity" Value="1" />
+                            </Trigger>
+                          </Style.Triggers>
+                        </Style>
+                      </StackPanel.Style>
+                      <Button Style="{StaticResource StepButton}" Content="−" Command="{Binding DecreaseCommand}" ToolTip="Lower" AutomationProperties.Name="{Binding LowerName}" />
+                      <TextBox Text="{Binding Bound, UpdateSourceTrigger=PropertyChanged}" Width="54" Height="30" MinHeight="0" Margin="3,0" Padding="2,0"
+                               HorizontalContentAlignment="Center" FontSize="16" FontWeight="Bold" AutomationProperties.Name="{Binding BoundName}">
+                        <TextBox.Style>
+                          <Style TargetType="TextBox" BasedOn="{StaticResource {x:Type TextBox}}">
                             <Style.Triggers>
                               <DataTrigger Binding="{Binding IsOn}" Value="True">
-                                <Setter Property="Foreground" Value="{StaticResource Text}" />
-                                <Setter Property="FontWeight" Value="SemiBold" />
+                                <Setter Property="BorderBrush" Value="{StaticResource Accent}" />
+                                <Setter Property="v:Ui.FocusBrush" Value="{StaticResource Text}" />
                               </DataTrigger>
                             </Style.Triggers>
                           </Style>
-                        </TextBlock.Style>
-                      </TextBlock>
-                      <TextBlock Text="{Binding Hint}" FontSize="11.5" Foreground="{StaticResource TextFaint}" TextWrapping="Wrap" Margin="0,1,0,0" Visibility="{Binding HasHint, Converter={StaticResource Vis}}" />
+                        </TextBox.Style>
+                      </TextBox>
+                      <Button Style="{StaticResource StepButton}" Content="+" Command="{Binding IncreaseCommand}" ToolTip="Raise" AutomationProperties.Name="{Binding RaiseName}" />
                     </StackPanel>
-                  </CheckBox>
-                  <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="10,0,0,0">
-                    <!-- Dimmed while the stat is unticked, but still in use (changing a number ticks it),
-                         so the dimmed numbers keep 4.5:1, and full strength while one has keyboard focus. -->
-                    <StackPanel.Style>
-                      <Style TargetType="StackPanel">
-                        <Setter Property="Opacity" Value="0.55" />
-                        <Style.Triggers>
-                          <DataTrigger Binding="{Binding IsOn}" Value="True">
-                            <Setter Property="Opacity" Value="1" />
-                          </DataTrigger>
-                          <Trigger Property="IsKeyboardFocusWithin" Value="True">
-                            <Setter Property="Opacity" Value="1" />
-                          </Trigger>
-                        </Style.Triggers>
-                      </Style>
-                    </StackPanel.Style>
-                    <Button Style="{StaticResource StepButton}" Content="−" Command="{Binding DecreaseCommand}" ToolTip="Lower" AutomationProperties.Name="{Binding LowerName}" />
-                    <TextBox Text="{Binding Bound, UpdateSourceTrigger=PropertyChanged}" Width="52" Height="32" MinHeight="0" Margin="4,0" Padding="2,0"
-                             HorizontalContentAlignment="Center" FontSize="14" FontWeight="Bold" AutomationProperties.Name="{Binding BoundName}">
-                      <TextBox.Style>
-                        <Style TargetType="TextBox" BasedOn="{StaticResource {x:Type TextBox}}">
-                          <Style.Triggers>
-                            <DataTrigger Binding="{Binding IsOn}" Value="True">
-                              <Setter Property="BorderBrush" Value="{StaticResource Accent}" />
-                              <Setter Property="BorderThickness" Value="1.5" />
-                              <Setter Property="v:Ui.FocusBrush" Value="{StaticResource Text}" />
-                            </DataTrigger>
-                          </Style.Triggers>
-                        </Style>
-                      </TextBox.Style>
-                    </TextBox>
-                    <Button Style="{StaticResource StepButton}" Content="+" Command="{Binding IncreaseCommand}" ToolTip="Raise" AutomationProperties.Name="{Binding RaiseName}" />
-                  </StackPanel>
-                  <TextBlock Grid.Column="2" Text="{Binding Tier}" FontSize="11.5" FontWeight="Bold" Foreground="{StaticResource TextSoft}" HorizontalAlignment="Center" VerticalAlignment="Center" />
-                </Grid>
-              </Border>
-            </DataTemplate>
-          </ItemsControl.ItemTemplate>
-        </ItemsControl>
+                    <TextBlock Grid.Column="2" Text="{Binding Tier}" FontFamily="{StaticResource CapsFont}" FontSize="14" FontWeight="Bold" Foreground="{StaticResource TextFaint}" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                  </Grid>
+                </Border>
+              </DataTemplate>
+            </ItemsControl.ItemTemplate>
+          </ItemsControl>
 
-        <Border BorderBrush="{StaticResource Line}" BorderThickness="0,1,0,0" Padding="16,10">
-          <WrapPanel>
-            <CheckBox IsChecked="{Binding BuyNowOnly}" Content="Buy-now listings only" MinHeight="32" Margin="0,0,18,0" />
+          <WrapPanel Margin="18,8,18,8">
+            <CheckBox IsChecked="{Binding BuyNowOnly}" Content="Buy-now listings only" MinHeight="32" Margin="0,0,20,0" />
             <CheckBox IsChecked="{Binding UseItemLevel}" Content="{Binding ItemLevelLabel}" MinHeight="32" Visibility="{Binding HasItemLevel, Converter={StaticResource Vis}}" />
           </WrapPanel>
-        </Border>
 
-        <!-- Search: changing the search above never searches by itself. -->
-        <Border BorderBrush="{StaticResource Line}" BorderThickness="0,1,0,0" Padding="16,10,16,6" Visibility="{Binding CanSearch, Converter={StaticResource Vis}}">
-          <DockPanel>
-            <Button DockPanel.Dock="Left" Style="{StaticResource PrimaryButton}" Content="Search" MinWidth="110" Command="{Binding SearchCommand}"
+          <!-- Search: changing the search above never searches by itself. -->
+          <DockPanel Margin="18,2,18,8" Visibility="{Binding CanSearch, Converter={StaticResource Vis}}">
+            <Button DockPanel.Dock="Left" Style="{StaticResource PrimaryButton}" Content="Search" MinWidth="120" Command="{Binding SearchCommand}"
                     AutomationProperties.HelpText="Runs the search as ticked: the price and the listings follow"
                     ToolTip="Runs the search as ticked. In a live league SSE asks the official trade site, only when you click." />
-            <TextBlock Text="{Binding SearchLine}" FontSize="12.5" TextWrapping="Wrap" VerticalAlignment="Center" Margin="12,0,0,0"
+            <TextBlock Text="{Binding SearchLine}" FontSize="14" TextWrapping="Wrap" VerticalAlignment="Center" Margin="12,0,0,0"
                        Visibility="{Binding HasSearchLine, Converter={StaticResource Vis}}">
               <TextBlock.Style>
                 <Style TargetType="TextBlock">
@@ -261,64 +246,71 @@
               </TextBlock.Style>
             </TextBlock>
           </DockPanel>
-        </Border>
 
-        <!-- The cheapest listings of the last search: price, the listed item's numbers, instant buyout or
-             not, and when it was listed. Never who listed it. -->
-        <StackPanel Visibility="{Binding HasMatches, Converter={StaticResource Vis}}" Style="{StaticResource Dimmable}">
-          <Border Padding="16,6,16,2">
-            <TextBlock Style="{StaticResource ColumnHead}"><Run Text="LISTINGS · " /><Run Text="{Binding ListingsHead, Mode=OneWay}" /></TextBlock>
-          </Border>
-          <ItemsControl ItemsSource="{Binding Matches}" Margin="16,0" Focusable="False" AutomationProperties.Name="Cheapest listings">
-            <ItemsControl.ItemTemplate>
-              <DataTemplate DataType="{x:Type vm:MatchViewModel}">
-                <Border BorderBrush="{StaticResource RowLine}" BorderThickness="0,0,0,1" Padding="0,5">
-                  <Grid>
-                    <Grid.ColumnDefinitions>
-                      <ColumnDefinition Width="72" />
-                      <ColumnDefinition Width="*" />
-                      <ColumnDefinition Width="Auto" />
-                    </Grid.ColumnDefinitions>
-                    <TextBlock Text="{Binding Price}" FontSize="14" FontWeight="Bold" VerticalAlignment="Center" />
-                    <TextBlock Grid.Column="1" Text="{Binding Stats}" FontSize="12.5" Foreground="{StaticResource TextSoft}" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" Margin="10,0" ToolTip="{Binding Stats}" />
-                    <TextBlock Grid.Column="2" FontSize="11.5" VerticalAlignment="Center">
-                      <TextBlock.Style>
-                        <Style TargetType="TextBlock">
-                          <Setter Property="Foreground" Value="{StaticResource TextDim}" />
-                          <Style.Triggers>
-                            <DataTrigger Binding="{Binding InPerson}" Value="True">
-                              <Setter Property="Foreground" Value="{StaticResource Warn}" />
-                            </DataTrigger>
-                          </Style.Triggers>
-                        </Style>
-                      </TextBlock.Style>
-                      <Run Text="{Binding How, Mode=OneWay}" /><Run Text=" · " /><Run Text="{Binding Age, Mode=OneWay}" />
-                    </TextBlock>
-                  </Grid>
-                </Border>
-              </DataTemplate>
-            </ItemsControl.ItemTemplate>
-          </ItemsControl>
+          <!-- The cheapest listings of the last search: price, the listed item's numbers, instant buyout or
+               not, and when it was listed. Never who listed it. -->
+          <StackPanel Visibility="{Binding HasMatches, Converter={StaticResource Vis}}" Style="{StaticResource Dimmable}">
+            <Border Height="1" Background="{StaticResource Edge}" Margin="18,6,18,0" />
+            <TextBlock Text="{Binding ListingsTitle}" Style="{StaticResource Heading}" FontSize="16" Margin="18,10,18,2" />
+            <ItemsControl ItemsSource="{Binding Matches}" Margin="18,0" Focusable="False" AutomationProperties.Name="Cheapest listings">
+              <ItemsControl.ItemTemplate>
+                <DataTemplate DataType="{x:Type vm:MatchViewModel}">
+                  <Border BorderBrush="#221D16" BorderThickness="0,0,0,1" Padding="0,5">
+                    <Grid>
+                      <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="100" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                      </Grid.ColumnDefinitions>
+                      <v:ValueLabel Text="{Binding Price}" Tier="{Binding Tier}" Size="Medium" VerticalAlignment="Center" />
+                      <TextBlock Grid.Column="1" Text="{Binding Stats}" FontSize="14.5" Foreground="{StaticResource StatOn}" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" Margin="10,0" ToolTip="{Binding Stats}" />
+                      <TextBlock Grid.Column="2" FontSize="13.5" VerticalAlignment="Center">
+                        <TextBlock.Style>
+                          <Style TargetType="TextBlock">
+                            <Setter Property="Foreground" Value="{StaticResource TextDim}" />
+                            <Style.Triggers>
+                              <DataTrigger Binding="{Binding InPerson}" Value="True">
+                                <Setter Property="Foreground" Value="{StaticResource Warn}" />
+                              </DataTrigger>
+                            </Style.Triggers>
+                          </Style>
+                        </TextBlock.Style>
+                        <Run Text="{Binding How, Mode=OneWay}" /><Run Text=" · " /><Run Text="{Binding Age, Mode=OneWay}" />
+                      </TextBlock>
+                    </Grid>
+                  </Border>
+                </DataTemplate>
+              </ItemsControl.ItemTemplate>
+            </ItemsControl>
+          </StackPanel>
+          <TextBlock Text="Nothing for sale matches. Untick a stat or lower a number, then search again." FontSize="15" Foreground="{StaticResource Warn}" Margin="18,8,18,0" TextWrapping="Wrap"
+                     Visibility="{Binding NoMatches, Converter={StaticResource Vis}}" />
+
+          <Grid Margin="18,14,18,0">
+            <Grid.ColumnDefinitions>
+              <ColumnDefinition Width="*" />
+              <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <Button Style="{StaticResource GhostButton}" Content="Open this search on the trade site" Command="{Binding OpenTradeCommand}" FontFamily="{StaticResource CapsFont}" FontWeight="Bold" FontSize="16" MinHeight="42"
+                    ToolTip="{Binding TradeTooltip}" />
+            <Button Grid.Column="1" Style="{StaticResource GhostButton}" Content="Copy search" Command="{Binding CopySearchCommand}" FontFamily="{StaticResource CapsFont}" FontWeight="Bold" FontSize="16" MinHeight="42" Padding="16,0" Margin="8,0,0,0"
+                    ToolTip="Copies the trade site link and the same filters as text." />
+          </Grid>
+          <!-- What the link can't carry: the player sets these on the trade site. -->
+          <TextBlock Text="{Binding ByHand}" FontSize="14" Foreground="{StaticResource TextSoft}" Margin="18,8,18,0" TextWrapping="Wrap" Visibility="{Binding HasByHand, Converter={StaticResource Vis}}" />
+          <TextBlock Text="{Binding SearchStatus}" FontSize="14" Foreground="{StaticResource TextDim}" Margin="18,8,18,0" TextWrapping="Wrap" Visibility="{Binding SearchStatus, Converter={StaticResource Vis}}" />
         </StackPanel>
-        <TextBlock Text="Nothing for sale matches. Untick a stat or lower a number, then search again." FontSize="13" Foreground="{StaticResource TextDim}" Margin="16,8,16,0" TextWrapping="Wrap"
-                   Visibility="{Binding NoMatches, Converter={StaticResource Vis}}" />
 
-        <Grid Margin="16,14,16,0">
-          <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="*" />
-            <ColumnDefinition Width="Auto" />
-          </Grid.ColumnDefinitions>
-          <Button Style="{StaticResource GhostButton}" Content="Open this search on the trade site" Command="{Binding OpenTradeCommand}" FontSize="14" MinHeight="44"
-                  ToolTip="{Binding TradeTooltip}" />
-          <Button Grid.Column="1" Style="{StaticResource GhostButton}" Content="Copy search" Command="{Binding CopySearchCommand}" FontSize="14" MinHeight="44" Padding="14,0" Margin="8,0,0,0"
-                  ToolTip="Copies the trade site link and the same filters as text." />
-        </Grid>
-        <!-- What the link can't carry: the player sets these on the trade site. -->
-        <TextBlock Text="{Binding ByHand}" FontSize="12.5" Foreground="{StaticResource TextSoft}" Margin="16,8,16,0" TextWrapping="Wrap" Visibility="{Binding HasByHand, Converter={StaticResource Vis}}" />
-        <TextBlock Text="{Binding SearchStatus}" FontSize="12" Foreground="{StaticResource TextDim}" Margin="16,8,16,0" TextWrapping="Wrap" Visibility="{Binding SearchStatus, Converter={StaticResource Vis}}" />
+        <DockPanel Margin="18,12,18,14">
+          <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Top" Margin="12,0,0,0" Visibility="{Binding CloseCommand, ElementName=Self, Converter={StaticResource Vis}}">
+            <Border Style="{StaticResource KeyCap}" BorderThickness="1,1,1,2" Padding="5,0">
+              <TextBlock Text="Esc" FontSize="13" Foreground="{StaticResource TextSoft}" />
+            </Border>
+            <TextBlock Text="close" FontSize="13" Foreground="{StaticResource TextFaint}" VerticalAlignment="Center" Margin="6,0,0,0" />
+          </StackPanel>
+          <TextBlock Text="Asking prices, not sales: what sellers ask right now. Only instant buyout asks set the price." FontSize="13" Foreground="{StaticResource TextFaint}" TextWrapping="Wrap" />
+        </DockPanel>
       </StackPanel>
-
-      <TextBlock Text="Prices are what sellers are asking right now, not what items sold for. Only instant buyout asks set the price." FontSize="11.5" Foreground="{StaticResource TextFaint}" Margin="16,12,16,14" TextWrapping="Wrap" />
-    </StackPanel>
+    </Border>
   </Border>
 </UserControl>
