@@ -29,9 +29,7 @@
             <TextBlock><Run Text="Crafting" /><Run Text=" later" FontSize="11" Foreground="{StaticResource TextFaint}" FontWeight="Normal" /></TextBlock>
           </Button>
           <Button Style="{StaticResource TabButton}" Content="My wealth" Command="{Binding GoWealthCommand}" Tag="{Binding PageName, Converter={StaticResource Active}, ConverterParameter='My wealth'}" Margin="0,0,2,0" />
-          <Button Style="{StaticResource TabButton}" Command="{Binding GoGuideCommand}" Tag="{Binding PageName, Converter={StaticResource Active}, ConverterParameter='Campaign guide'}">
-            <TextBlock><Run Text="Campaign guide" /><Run Text=" later" FontSize="11" Foreground="{StaticResource TextFaint}" FontWeight="Normal" /></TextBlock>
-          </Button>
+          <Button Style="{StaticResource TabButton}" Content="Campaign guide" Command="{Binding GoGuideCommand}" Tag="{Binding PageName, Converter={StaticResource Active}, ConverterParameter='Campaign guide'}" />
         </StackPanel>
 
         <Button DockPanel.Dock="Right" Content="Settings" Command="{Binding GoSettingsCommand}" Tag="{Binding PageName, Converter={StaticResource Active}, ConverterParameter=Settings}" Margin="8,0,0,0" />

@@ -97,6 +97,20 @@ public sealed class Settings(Store store)
         set => store.Set("app.lastRunVersion", value ?? "");
     }
 
+    /// <summary>The pinned guide lines over the game. Off until the player switches them on.</summary>
+    public bool GuideHud
+    {
+        get => store.Get("guide.hud") == "1";
+        set => store.Set("guide.hud", value ? "1" : "0");
+    }
+
+    /// <summary>The character the guide page opened last, so a restart resumes where the player was.</summary>
+    public string? GuideCharacter
+    {
+        get => NullIfEmpty(store.Get("guide.character"));
+        set => store.Set("guide.character", value ?? "");
+    }
+
     public int ComparableExpiryDays
     {
         get => int.TryParse(store.Get("comparables.expiryDays"), out var d) ? Math.Clamp(d, 1, 60) : 3;

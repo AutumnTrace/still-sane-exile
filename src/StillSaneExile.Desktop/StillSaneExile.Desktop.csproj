@@ -26,6 +26,7 @@
 
   <ItemGroup>
     <Content Include="..\..\fixtures\**\*" LinkBase="fixtures" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="..\..\data\**\*" LinkBase="data" CopyToOutputDirectory="PreserveNewest" />
     <Resource Include="Assets\sse.ico" />
     <!-- "What's new" shows this build's own changelog sections, so it works offline and covers skipped versions. -->
     <EmbeddedResource Include="..\..\CHANGELOG.md" Link="CHANGELOG.md" LogicalName="CHANGELOG.md" />

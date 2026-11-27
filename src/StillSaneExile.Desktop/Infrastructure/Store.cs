@@ -1,5 +1,6 @@
 using System.Globalization;
 using Microsoft.Data.Sqlite;
+using StillSaneExile.Domain.Guide;
 using StillSaneExile.Domain.Pricing;
 using StillSaneExile.Domain.Wealth;
 
@@ -8,9 +9,9 @@ namespace StillSaneExile.Desktop.Infrastructure;
 /// <summary>What one wealth write did. <see cref="Conflict"/> is set when nothing was saved.</summary>
 public sealed record WealthWrite(int Added, int AlreadyStored, string? Conflict);
 
-/// <summary>Local SQLite store: settings, the player's private comparison sets and the wealth ledger.
-/// Nothing here is sent anywhere. Clipboard text is never stored; an item's text is stored only with a
-/// comparison set the player created by adding a comparable.</summary>
+/// <summary>Local SQLite store: settings, the player's private comparison sets, the wealth ledger and their
+/// campaign characters. Nothing here is sent anywhere. Clipboard text is never stored; an item's text is
+/// stored only with a comparison set the player created by adding a comparable.</summary>
 public sealed class Store
 {
     /// <summary>Snapshot times are stored as fixed-width UTC text, so the same instant always has the same
@@ -40,6 +41,14 @@ public sealed class Store
                 snapshot_at TEXT NOT NULL, quantity INTEGER NOT NULL CHECK (quantity >= 0),
                 origin TEXT NOT NULL, source TEXT NULL, batch_id TEXT NOT NULL, recorded_at TEXT NOT NULL,
                 PRIMARY KEY (profile, league, tab, item_id, variant, snapshot_at));
+            CREATE TABLE IF NOT EXISTS guide_characters (
+                name TEXT NOT NULL COLLATE NOCASE PRIMARY KEY, pack_id TEXT NOT NULL,
+                leg INTEGER NOT NULL, zone TEXT NULL, act INTEGER NOT NULL,
+                created_at TEXT NOT NULL, updated_at TEXT NOT NULL);
+            CREATE TABLE IF NOT EXISTS guide_marks (
+                character TEXT NOT NULL COLLATE NOCASE, seq INTEGER NOT NULL,
+                step_id TEXT NOT NULL, state TEXT NOT NULL, at TEXT NOT NULL,
+                PRIMARY KEY (character, seq));
             """);
     }
 
@@ -255,6 +264,132 @@ public sealed class Store
     }
 
     private static string Utc(DateTimeOffset t) => t.UtcDateTime.ToString(UtcFormat, CultureInfo.InvariantCulture);
+
+    /// <summary>Campaign characters, by name. Guide progress is not tied to the price profile: the same
+    /// character is there in the demo and in a live league.</summary>
+    public IReadOnlyList<string> GuideCharacters()
+    {
+        using var c = Open();
+        using var cmd = c.CreateCommand();
+        cmd.CommandText = "SELECT name FROM guide_characters ORDER BY created_at";
+        using var r = cmd.ExecuteReader();
+        var list = new List<string>();
+        while (r.Read())
+        {
+            list.Add(r.GetString(0));
+        }
+
+        return list;
+    }
+
+    /// <summary>Adds a character. Returns false when one with that name (any case) already exists.</summary>
+    public bool AddGuideCharacter(string name, string packId, CampaignPosition start, DateTimeOffset now)
+    {
+        using var c = Open();
+        using var cmd = c.CreateCommand();
+        cmd.CommandText = """
+            INSERT OR IGNORE INTO guide_characters(name, pack_id, leg, zone, act, created_at, updated_at)
+            VALUES($n, $p, $l, $z, $a, $t, $t)
+            """;
+        AddPosition(cmd, name, packId, start, now);
+        return cmd.ExecuteNonQuery() == 1;
+    }
+
+    public CampaignPosition? GuidePosition(string name, string packId)
+    {
+        using var c = Open();
+        using var cmd = c.CreateCommand();
+        cmd.CommandText = "SELECT leg, zone, act FROM guide_characters WHERE name = $n AND pack_id = $p";
+        cmd.Parameters.AddWithValue("$n", name);
+        cmd.Parameters.AddWithValue("$p", packId);
+        using var r = cmd.ExecuteReader();
+        return r.Read() ? new CampaignPosition(r.GetInt32(0), r.IsDBNull(1) ? null : r.GetString(1), r.GetInt32(2)) : null;
+    }
+
+    public void SaveGuidePosition(string name, string packId, CampaignPosition position, DateTimeOffset now)
+    {
+        using var c = Open();
+        using var cmd = c.CreateCommand();
+        cmd.CommandText = "UPDATE guide_characters SET pack_id = $p, leg = $l, zone = $z, act = $a, updated_at = $t WHERE name = $n";
+        AddPosition(cmd, name, packId, position, now);
+        cmd.ExecuteNonQuery();
+    }
+
+    public IReadOnlyList<StepMark> GuideMarks(string name)
+    {
+        using var c = Open();
+        using var cmd = c.CreateCommand();
+        cmd.CommandText = "SELECT seq, step_id, state, at FROM guide_marks WHERE character = $n ORDER BY seq";
+        cmd.Parameters.AddWithValue("$n", name);
+        using var r = cmd.ExecuteReader();
+        var list = new List<StepMark>();
+        while (r.Read())
+        {
+            if (Enum.TryParse<StepState>(r.GetString(2), out var state))
+            {
+                list.Add(new StepMark(r.GetInt64(0), r.GetString(1), state, DateTimeOffset.Parse(r.GetString(3), CultureInfo.InvariantCulture)));
+            }
+        }
+
+        return list;
+    }
+
+    public void AddGuideMark(string name, StepMark mark)
+    {
+        using var c = Open();
+        using var cmd = c.CreateCommand();
+        cmd.CommandText = "INSERT INTO guide_marks(character, seq, step_id, state, at) VALUES($n, $s, $id, $st, $at)";
+        cmd.Parameters.AddWithValue("$n", name);
+        cmd.Parameters.AddWithValue("$s", mark.Seq);
+        cmd.Parameters.AddWithValue("$id", mark.StepId);
+        cmd.Parameters.AddWithValue("$st", mark.State.ToString());
+        cmd.Parameters.AddWithValue("$at", mark.At.ToString("O", CultureInfo.InvariantCulture));
+        cmd.ExecuteNonQuery();
+    }
+
+    public void RemoveGuideMark(string name, long seq)
+    {
+        using var c = Open();
+        using var cmd = c.CreateCommand();
+        cmd.CommandText = "DELETE FROM guide_marks WHERE character = $n AND seq = $s";
+        cmd.Parameters.AddWithValue("$n", name);
+        cmd.Parameters.AddWithValue("$s", seq);
+        cmd.ExecuteNonQuery();
+    }
+
+    /// <summary>Removes the character and everything saved for them. One transaction.</summary>
+    public void RemoveGuideCharacter(string name)
+    {
+        using var c = Open();
+        using var tx = c.BeginTransaction();
+        foreach (var table in GuideTables)
+        {
+            using var cmd = c.CreateCommand();
+            cmd.Transaction = tx;
+            cmd.CommandText = $"DELETE FROM {table.Name} WHERE {table.Key} = $n";
+            cmd.Parameters.AddWithValue("$n", name);
+            cmd.ExecuteNonQuery();
+        }
+
+        tx.Commit();
+    }
+
+    /// <summary>Every table that holds something about a guide character, and its name column.</summary>
+    private static readonly (string Name, string Key)[] GuideTables =
+    [
+        ("guide_marks", "character"),
+        ("guide_characters", "name"),
+    ];
+
+    private static void AddPosition(SqliteCommand cmd, string name, string packId, CampaignPosition position, DateTimeOffset now)
+    {
+        cmd.Parameters.AddWithValue("$n", name);
+        cmd.Parameters.AddWithValue("$p", packId);
+        cmd.Parameters.AddWithValue("$l", position.Leg);
+        cmd.Parameters.AddWithValue("$z", (object?)position.Zone ?? DBNull.Value);
+        cmd.Parameters.AddWithValue("$a", position.Act);
+        cmd.Parameters.AddWithValue("$t", now.ToString("O", CultureInfo.InvariantCulture));
+    }
 
     private SqliteConnection Open()
     {

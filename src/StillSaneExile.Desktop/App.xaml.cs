@@ -13,6 +13,7 @@ public partial class App : Application
     private HudController? _hud;
     private PeekWindow? _peek;
     private PriceCheckWindow? _priceCheck;
+    private GuideHud? _guideHud;
     private AppPaths? _paths;
     private UpdateService? _updates;
     private bool _renderingSnapshots;
@@ -58,12 +59,15 @@ public partial class App : Application
         shell.WhatsNew.CheckOnStart();
         main.Show();
         _hud.Start();
+        _guideHud = new GuideHud(shell.Guide, _peek, main);
+        _guideHud.Start();
         _updates.Start(settings.AutoUpdate);
     }
 
     protected override void OnExit(ExitEventArgs e)
     {
         _hud?.Dispose();
+        _guideHud?.Dispose();
         _peek?.Close();
         _priceCheck?.Close();
         _updates?.ApplyOnExit();

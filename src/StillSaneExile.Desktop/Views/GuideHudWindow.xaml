@@ -1,0 +1,26 @@
+<Window x:Class="StillSaneExile.Desktop.Views.GuideHudWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:vm="clr-namespace:StillSaneExile.Desktop.ViewModels"
+        xmlns:v="clr-namespace:StillSaneExile.Desktop.Views"
+        mc:Ignorable="d"
+        d:DataContext="{d:DesignInstance Type=vm:GuideViewModel}"
+        Title="Still Sane, Exile? guide lines"
+        WindowStyle="None" AllowsTransparency="True" Background="Transparent"
+        Topmost="True" ShowInTaskbar="False" ShowActivated="False" Focusable="False"
+        ResizeMode="NoResize" SizeToContent="WidthAndHeight"
+        Foreground="{StaticResource Text}" FontFamily="Segoe UI" FontSize="14"
+        UseLayoutRounding="True" TextOptions.TextFormattingMode="Display">
+  <Border Padding="10,6,10,14">
+    <Grid>
+      <Border CornerRadius="10" Background="#F715161A">
+        <Border.Effect>
+          <DropShadowEffect Color="Black" BlurRadius="20" ShadowDepth="6" Direction="270" Opacity="0.5" />
+        </Border.Effect>
+      </Border>
+      <v:GuideHudCard />
+    </Grid>
+  </Border>
+</Window>
