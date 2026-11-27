@@ -2,13 +2,13 @@
 
 Milestone 0 asks for a source matrix, real-versus-fixture coverage, and proof that one input causes at most one read. This file tracks the first two. The third is covered by `CaptureGateTests` and the live counters in the status bar.
 
-The source ledger below comes from the project handoff spec (reviewed 27 November 2026). **It has not been re-verified in this repository.** Recheck each source before a release and whenever a pack or provider changes.
+The source ledger below comes from the project handoff spec (reviewed 27 November 2026). **Apart from row 1, it has not been re-verified in this repository.** Row 1 was checked against GGG's live policy page on 27 November 2026: see [GGG's third-party policy](#ggg-third-party-policy-checked-27-november-2026). Recheck each source before a release and whenever a pack or provider changes.
 
 ## Providers and references
 
 | # | Source | What it allows / says (per spec) | How SSE uses it | Status |
 |---|---|---|---|---|
-| 1 | GGG developer policy, resources, rate limits | Independent executables allowed. Users must know what is read. Screen/clipboard reads limited to once per manual keypress. Extra restrictions on game-affecting macros. New app registrations currently closed. | Physical input only, one read per press, zero game inputs, explicit "what each key reads" in onboarding. Market requests keep headroom in every rate-limit window, stop on 429, 401/403 and repeated errors, and never rotate proxies or accounts: see [Provider etiquette](PROVIDER-ETIQUETTE.md) | Followed by design. The rate-limit client is built and tested but not used yet (#11) |
+| 1 | GGG developer policy, resources, rate limits | Executables that run independently from the game are permitted (not encouraged); apps that interact with the game or its files mean account termination. Screen, clipboard and log reads only once per manual key press, with the user aware. Simulated input follows the macro rules. A visible "not affiliated" statement is required. New app registrations currently closed. Checked 27 Nov 2026 (quotes below). | Physical input only, one read per press, zero game inputs, explicit "what each key reads" in onboarding. Market requests keep headroom in every rate-limit window, stop on 429, 401/403 and repeated errors, and never rotate proxies or accounts: see [Provider etiquette](PROVIDER-ETIQUETTE.md) | Followed by design. The rate-limit client is built and tested but not used yet (#11) |
 | 2 | GGG Terms of Use | Governs the account and client | No automation of game input; no client modification | Followed by design |
 | 3 | GGG API reference | PoE2 has a historical currency-exchange digest (`https://web.poecdn.com/api/currency-exchange/poe2/<hour>`). Account, guild and public stash APIs are PoE1-only. No general rare-listing search API. | Exchange digest as an independent check/fallback; wealth from explicit snapshots; rares through a manual trade-site workflow | Digest math implemented (`ExchangeDigestMath`); fetching is Milestone 2 |
 | 4 | poe.ninja economy API | Documented PoE2 league, exchange and item overviews; caching and backend-proxy expectations | First production pricing integration, through a shared backend cache | Milestone 2 |
@@ -24,6 +24,20 @@ The source ledger below comes from the project handoff spec (reviewed 27 Novembe
 | 14 | PoE2Scout | Swagger API | Optional adapter after usage terms are checked; no production dependency | Not planned |
 | 15 | GGG full-release announcement | Full release on 11 December 2026 | 0.5.5 guides become a historical test pack until re-reviewed | Noted |
 | 16 | Regal Orb (PoE2) | Upgrades magic to rare and adds one modifier | Craft model | Milestone 5 |
+
+## GGG third-party policy (checked 27 November 2026)
+
+Source: [pathofexile.com/developer/docs](https://www.pathofexile.com/developer/docs), section "API Policies and Third-Party Requirements". The page carries no version or effective date, so it can change without notice; recheck it after the 11 December 2026 full release (#2). Its quotes below are verbatim. The Terms of Use sections it cites (7b, 7c, 7i) were not re-read.
+
+| What the policy says | What SSE does |
+|---|---|
+| "Executable apps that run independently from the game": "While not encouraged, these are permitted." | SSE is a separate process. It never loads anything into the game. |
+| "Executable apps that interact with the game or game files": "Creation or use of these type of applications will result in immediate account termination." | SSE never reads or changes the game's memory or files, and never modifies the client. |
+| "Apps that use information sourced from the screen, the clipboard, or the game's logs must follow our overlay rules:" "You may only read this information as long as the user is aware of what you are doing with that data." "Reading from the screen or clipboard may only be performed once per manual key press." | One clipboard read per physical press: auto-repeat and synthetic input are ignored (`CaptureGate`, `CaptureGateTests`). Settings and onboarding say exactly what each key reads. The game's logs (`Client.txt`) are not read: the policy does not say whether they count as "game files", so the guide takes the zone from the player instead. The planned stash and Aldur labels must keep to one frame per press (#4). |
+| "Automation of key-strokes (or other inputs) that affect the game in any way must follow our macro rules": macros "must be invoked manually by the user", each with "one set function", and the result "may only perform one action that interacts with the game". | SSE sends no input to the game at all; the status bar shows "Keys sent to the game: 0". The player presses `Ctrl+C` and the game copies. Moving focus back to the game when the `F3` window closes is a focus change, not input. |
+| "Every public or widely available application should include some form of the following statement in a visible location: This product isn't affiliated with or endorsed by Grinding Gear Games in any way." "You may not present your project or tool in a way that could be construed as it being developed or officially authorised by Grinding Gear Games." | The statement is in Settings → Data and privacy and at the end of the README. |
+| "We don't encourage players to download or run "tools" on their machine..." "Introducing features against these guidelines or our Terms of Use can result in account termination for you as well as your users." | GGG approves no tool in advance, so following the rules lowers the risk but cannot remove it. Every new feature is checked against this table before it ships. |
+| Not addressed: drawing over the game (the page refers to "overlay rules" but has no separate overlay section), screen capture as such, and low-level keyboard or mouse hooks. | The HUD windows are click-through and never take focus. The hooks only observe and always pass every event on. |
 
 ## Real captures versus fixtures
 
