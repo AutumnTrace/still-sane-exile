@@ -36,6 +36,28 @@ public class PriceAnswerTests
     }
 
     [Fact]
+    public void Under_1_div_a_unique_shows_in_Exalted_like_every_other_price() => Sta.Run(() =>
+    {
+        using var app = new TestApp();
+        var session = app.Shell.Session; // the demo: 1 div = 120 ex, prices in Divine
+        var cheap = new PriceLine(PriceKind.UniqueBaseline, "0.5 div", "1 h ago · 12 listed", Freshness.Fresh, true, Amount: 0.5m, Denomination: "divine");
+
+        Assert.Equal("60 ex", PriceAnswer.Baseline(cheap, null, session.PriceText()).Big);
+        Assert.Equal("1.4 div", PriceAnswer.Baseline(cheap with { Amount = 1.4m, Headline = "1.4 div" }, null, session.PriceText()).Big);
+        Assert.Equal("0.5 div", PriceAnswer.Baseline(cheap).Big); // no rates to hand: the line as it came
+    });
+
+    [Fact]
+    public void A_stack_of_Exalted_Orbs_shown_in_Divine_says_its_own_amount_once() => Sta.Run(() =>
+    {
+        using var app = new TestApp();
+
+        var stack = app.Shell.Inspect.AddFromText(app.ItemText("currency-exalted.txt"), "test")!; // 7 Exalted Orbs
+
+        Assert.Equal("7 ex", stack.Answer.Big); // not "7 ex ≈ 0.06 div"
+    });
+
+    [Fact]
     public void A_corrupted_copy_priced_as_a_clean_one_says_so()
     {
         var answer = PriceAnswer.Baseline(Mageblood(Freshness.Fresh, standIn: true));

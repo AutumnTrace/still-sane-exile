@@ -139,8 +139,12 @@ public sealed record PriceAnswer(string Lead, string Big, string? Line, string N
         var stack = item.StackSize ?? 1;
         var total = unit.Value * stack;
         var isMoney = Currencies.Display.Contains(identity.Id, StringComparer.OrdinalIgnoreCase);
-        var big = isMoney && !identity.Id.Equals(display, StringComparison.OrdinalIgnoreCase)
-            ? $"{ValueFormat.Amount(stack)} {Currencies.Short(identity.Id)} ≈ {ValueFormat.Money(total, display)}"
+
+        // Money shows what it comes to in the display currency, or in Exalted under 1 div: a stack that
+        // comes to itself (7 ex in Divine is still 7 ex) shows once.
+        var shownIn = price.Unit(total).Denomination;
+        var big = isMoney && !identity.Id.Equals(shownIn, StringComparison.OrdinalIgnoreCase)
+            ? $"{ValueFormat.Amount(stack)} {Currencies.Short(identity.Id)} ≈ {price.One(total)}"
             : price.One(total);
         var checkedAgo = $"checked {ValueFormat.Age(now - book.CreatedAt)}";
         var note = Join(price.DivineRate(), checkedAgo) + (line.Freshness is Freshness.Fresh or null ? "" : " · may be out of date");
@@ -158,7 +162,11 @@ public sealed record PriceAnswer(string Lead, string Big, string? Line, string N
         var (note, peek) = line.UncorruptedStandIn
             ? ("Price of an uncorrupted one: corruption can change it.", "Uncorrupted price")
             : ("Your rolls can change it.", "Your rolls can change it");
-        return new("Usually sells for about", line.Headline, line.Detail, note, line.UncorruptedStandIn || stale is not null, null, Join(peek, age, stale))
+        // Under 1 div in Divine, the price shows in Exalted, as every other price does.
+        var big = price is not null && line.Amount is { } value && string.Equals(line.Denomination, price.Display, StringComparison.OrdinalIgnoreCase)
+            ? price.One(value)
+            : line.Headline;
+        return new("Usually sells for about", big, line.Detail, note, line.UncorruptedStandIn || stale is not null, null, Join(peek, age, stale))
         {
             Tier = price is not null && line.Amount is { } amount && line.Denomination is { } d ? price.Tier(amount, d) : null,
         };
