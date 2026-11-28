@@ -45,7 +45,7 @@ My wealth is switched off for now while it is rethought (its page says so; holdi
 ## 4 · Guide
 
 - [x] Versioned zone graph, original route pack and HUD lines (#20): the route covers the start of Act 1 as an unverified draft ([GUIDE.md](GUIDE.md))
-- [ ] Build plans from a saved Mobalytics link and player-written steps; stage-aware gem actions (#21): built; the manual run against the 0.5.5 Varashta guide is still to do
+- [ ] Build plans from a pasted Path of Building code (its notes and skill sets); stage-aware gem actions (#21): built on a synthetic build; not yet tried with a real Path of Building or guide-site code, and the manual run against the 0.5.5 Varashta guide is still to do
 
 ## 5 · Craft
 

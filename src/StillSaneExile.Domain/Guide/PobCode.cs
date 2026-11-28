@@ -59,6 +59,20 @@ public static partial class PobCode
         return TryParse(xml!, out build, out error);
     }
 
+    /// <summary>Makes a code from build XML the way Path of Building's Generate button does: zlib at the
+    /// best compression, base64, <c>-</c> and <c>_</c>. For the snapshots' practice builds.</summary>
+    public static string Encode(string xml)
+    {
+        using var output = new MemoryStream();
+        using (var pack = new ZLibStream(output, CompressionLevel.SmallestSize))
+        {
+            var bytes = System.Text.Encoding.UTF8.GetBytes(xml);
+            pack.Write(bytes, 0, bytes.Length);
+        }
+
+        return Convert.ToBase64String(output.ToArray()).Replace('+', '-').Replace('/', '_');
+    }
+
     /// <summary>A pasted link gets told what to paste instead. Nothing is opened.</summary>
     private static string? LinkProblem(string s)
     {

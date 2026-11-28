@@ -59,6 +59,9 @@ public sealed class Store
             CREATE TABLE IF NOT EXISTS guide_plan_done (
                 character TEXT NOT NULL COLLATE NOCASE, step_key TEXT NOT NULL, done_at TEXT NOT NULL,
                 PRIMARY KEY (character, step_key));
+            CREATE TABLE IF NOT EXISTS guide_plan_codes (
+                character TEXT NOT NULL COLLATE NOCASE, revision INTEGER NOT NULL, code TEXT NOT NULL,
+                PRIMARY KEY (character, revision));
             """);
     }
 
@@ -384,7 +387,7 @@ public sealed class Store
         tx.Commit();
     }
 
-    /// <summary>The character's saved guide link and how many ascendancies they have done.</summary>
+    /// <summary>How many ascendancies the character has done, and a guide link saved by SSE 0.6 or earlier.</summary>
     public GuideBuildRow GuideBuild(string name)
     {
         using var c = Open();
@@ -410,31 +413,45 @@ public sealed class Store
         cmd.ExecuteNonQuery();
     }
 
-    /// <summary>The plan revisions still in play: the active one and a pending one, if any. Retired
+    /// <summary>The plan revisions still in play: the active one and a pending one, if any, each with the
+    /// build code it was read from (null for steps written before builds could be pasted). Retired
     /// revisions stay in the table but are not returned.</summary>
     public IReadOnlyList<GuidePlanRow> GuidePlans(string name)
     {
         using var c = Open();
         using var cmd = c.CreateCommand();
-        cmd.CommandText = "SELECT revision, status, notes, milestones, created_at FROM guide_plans WHERE character = $n AND status <> 'retired' ORDER BY revision";
+        cmd.CommandText = """
+            SELECT p.revision, p.status, p.notes, p.milestones, p.created_at, k.code
+            FROM guide_plans p LEFT JOIN guide_plan_codes k ON k.character = p.character AND k.revision = p.revision
+            WHERE p.character = $n AND p.status <> 'retired' ORDER BY p.revision
+            """;
         cmd.Parameters.AddWithValue("$n", name);
         using var r = cmd.ExecuteReader();
         var list = new List<GuidePlanRow>();
         while (r.Read())
         {
-            list.Add(new GuidePlanRow(r.GetInt32(0), r.GetString(1), r.GetString(2), r.GetString(3), DateTimeOffset.Parse(r.GetString(4), CultureInfo.InvariantCulture)));
+            list.Add(new GuidePlanRow(r.GetInt32(0), r.GetString(1), r.GetString(2), r.GetString(3), DateTimeOffset.Parse(r.GetString(4), CultureInfo.InvariantCulture), r.IsDBNull(5) ? null : r.GetString(5)));
         }
 
         return list;
     }
 
-    /// <summary>Saves a new revision. As "active" it retires the one in use; as "pending" it replaces
-    /// any earlier pending revision and leaves the active one alone. Returns the revision number.</summary>
-    public int SaveGuidePlan(string name, string status, string notes, string milestones, DateTimeOffset now)
+    /// <summary>Saves a new revision, with the Path of Building code it was read from when there is one.
+    /// As "active" it retires the one in use; as "pending" it replaces any earlier pending revision and
+    /// leaves the active one alone. Returns the revision number.</summary>
+    public int SaveGuidePlan(string name, string status, string notes, string milestones, DateTimeOffset now, string? code = null)
     {
         using var c = Open();
         using var tx = c.BeginTransaction();
-        Exec(c, tx, name, status == GuidePlanRow.Active ? "UPDATE guide_plans SET status = 'retired' WHERE character = $n AND status IN ('active', 'pending')" : "DELETE FROM guide_plans WHERE character = $n AND status = 'pending'");
+        if (status == GuidePlanRow.Active)
+        {
+            Exec(c, tx, name, "UPDATE guide_plans SET status = 'retired' WHERE character = $n AND status IN ('active', 'pending')");
+        }
+        else
+        {
+            Exec(c, tx, name, "DELETE FROM guide_plan_codes WHERE character = $n AND revision IN (SELECT revision FROM guide_plans WHERE character = $n AND status = 'pending')");
+            Exec(c, tx, name, "DELETE FROM guide_plans WHERE character = $n AND status = 'pending'");
+        }
         using var next = c.CreateCommand();
         next.Transaction = tx;
         next.CommandText = "SELECT COALESCE(MAX(revision), 0) + 1 FROM guide_plans WHERE character = $n";
@@ -451,6 +468,18 @@ public sealed class Store
         cmd.Parameters.AddWithValue("$m", milestones);
         cmd.Parameters.AddWithValue("$t", now.ToString("O", CultureInfo.InvariantCulture));
         cmd.ExecuteNonQuery();
+
+        if (code is not null)
+        {
+            using var keep = c.CreateCommand();
+            keep.Transaction = tx;
+            keep.CommandText = "INSERT OR REPLACE INTO guide_plan_codes(character, revision, code) VALUES($n, $r, $c)";
+            keep.Parameters.AddWithValue("$n", name);
+            keep.Parameters.AddWithValue("$r", revision);
+            keep.Parameters.AddWithValue("$c", code);
+            keep.ExecuteNonQuery();
+        }
+
         tx.Commit();
         return revision;
     }
@@ -468,11 +497,10 @@ public sealed class Store
     public void DiscardGuidePlan(string name, int revision)
     {
         using var c = Open();
-        using var cmd = c.CreateCommand();
-        cmd.CommandText = "DELETE FROM guide_plans WHERE character = $n AND revision = $r AND status = 'pending'";
-        cmd.Parameters.AddWithValue("$n", name);
-        cmd.Parameters.AddWithValue("$r", revision);
-        cmd.ExecuteNonQuery();
+        using var tx = c.BeginTransaction();
+        Exec(c, tx, name, "DELETE FROM guide_plan_codes WHERE character = $n AND revision = $r AND revision IN (SELECT revision FROM guide_plans WHERE character = $n AND status = 'pending')", revision);
+        Exec(c, tx, name, "DELETE FROM guide_plans WHERE character = $n AND revision = $r AND status = 'pending'", revision);
+        tx.Commit();
     }
 
     /// <summary>Ticked plan steps, by key. Keys survive revisions, so ticks carry over.</summary>
@@ -512,6 +540,7 @@ public sealed class Store
         ("guide_builds", "character"),
         ("guide_plans", "character"),
         ("guide_plan_done", "character"),
+        ("guide_plan_codes", "character"),
         ("guide_characters", "name"),
     ];
 
@@ -550,12 +579,14 @@ public sealed class Store
     }
 }
 
-/// <summary>A guide character's saved build link and the ascendancies they have done.</summary>
+/// <summary>A guide character's ascendancies done, and a guide link saved by SSE 0.6 or earlier (no
+/// longer shown: the guide now reads a pasted Path of Building code instead).</summary>
 public sealed record GuideBuildRow(string? Link, int Ascendancies);
 
-/// <summary>One saved revision of a character's build plan: the notes as typed and the steps as they
-/// were read when saved, so a later parser can never change a saved plan.</summary>
-public sealed record GuidePlanRow(int Revision, string Status, string Notes, string Milestones, DateTimeOffset CreatedAt)
+/// <summary>One saved revision of a character's build plan: the text the steps were read from (the
+/// build's notes, or notes the player typed before builds could be pasted), the steps as they were read
+/// when saved, so a later parser can never change a saved plan, and the pasted build code.</summary>
+public sealed record GuidePlanRow(int Revision, string Status, string Notes, string Milestones, DateTimeOffset CreatedAt, string? Code = null)
 {
     public const string Active = "active";
     public const string Pending = "pending";

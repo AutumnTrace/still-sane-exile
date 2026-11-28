@@ -57,8 +57,9 @@ public sealed record PlanDraft(IReadOnlyList<NoteLine> Lines, BuildPlan Plan)
     public IReadOnlyList<NoteLine> Problems => Lines.Where(l => l.Problem is not null).ToList();
 }
 
-/// <summary>Turns the player's own notes into a checklist. It only reads what the player typed or
-/// pasted into SSE; it never fetches a guide. Recognised lines, case-insensitive:
+/// <summary>Turns notes into a checklist: a pasted build's notes (<see cref="PobPlanner"/>), or notes the
+/// player typed in SSE 0.6 and earlier. It only reads text given to SSE; it never fetches a guide.
+/// Recognised lines, case-insensitive:
 /// <c>cut Entangle</c>, <c>cut support Zenith I</c>, <c>upgrade Entangle to level 5</c>,
 /// <c>socket Zenith I into Entangle</c>, <c>move Zenith I: Entangle → Essence Drain</c> (or
 /// <c>move … from … to …</c>), <c>reserve …</c>, <c>respec …</c>. A stage label (<c>Act 2:</c>,

@@ -8,6 +8,7 @@ using StillSaneExile.Desktop.Infrastructure;
 using StillSaneExile.Desktop.ViewModels;
 using StillSaneExile.Desktop.Views;
 using StillSaneExile.Domain.Capture;
+using StillSaneExile.Domain.Guide;
 
 namespace StillSaneExile.Desktop.Services;
 
@@ -54,10 +55,12 @@ public static class SnapshotRenderer
 
         shell.Inspect.Selected = shell.Inspect.Recent.First(r => r.Item.CaptureId.Length > 0 && r.Title == "Doom Thirst");
         RenderCraft(shell, main, dir);
-        SeedGuide(shell.Guide);
+        SeedGuide(shell.Guide, shell.Paths);
         shell.GoGuideCommand.Execute(null);
         Save(main, Path.Combine(dir, "guide.png"));
-        SeedPlanChange(shell.Guide.Plan);
+        Find<FrameworkElement>(main, "BuildItemsCard")?.BringIntoView();
+        Save(main, Path.Combine(dir, "guide-build.png"));
+        SeedPlanChange(shell.Guide.Plan, shell.Paths);
         Save(main, Path.Combine(dir, "guide-plan-change.png"));
 
         // My wealth is switched off for now: its page says so.
@@ -345,25 +348,10 @@ public static class SnapshotRenderer
         return null;
     }
 
-    /// <summary>Example build notes, written for the snapshots in a player's own words.</summary>
-    private const string ExampleNotes = """
-        Act 1
-        cut Entangle
-        upgrade Entangle at Mud Burrow
-        cut Contagion (level 3 uncut)
-        cut support Zenith I (priority: high)
-        socket Zenith I into Entangle
-        Act 2
-        cut Essence Drain
-        move Zenith I: Entangle → Essence Drain
-        After ascendancy
-        respec the passive tree
-        """;
-
     /// <summary>A practice character partway into the route, the way a player gets there: the first
-    /// boss ticked, the optional one skipped, now in the Mud Burrow, with a saved guide link and their
-    /// own notes saved as a plan and the first cut ticked.</summary>
-    private static void SeedGuide(GuideViewModel guide)
+    /// boss ticked, the optional one skipped, now in the Mud Burrow, with the synthetic practice build's
+    /// Path of Building code pasted and its first gem step ticked.</summary>
+    private static void SeedGuide(GuideViewModel guide, AppPaths paths)
     {
         guide.NewCharacterName = "Practice exile";
         guide.AddCharacterCommand.Execute(null);
@@ -379,22 +367,20 @@ public static class SnapshotRenderer
         guide.NextCommand.Execute(null);
 
         var plan = guide.Plan;
-        plan.LinkDraft = "https://mobalytics.gg/poe-2/builds";
-        plan.SaveLinkCommand.Execute(null);
-        plan.NotesDraft = ExampleNotes;
-        plan.SavePlanCommand.Execute(null);
+        plan.CodeDraft = File.ReadAllText(Path.Combine(paths.Fixtures, "builds", "practice-witch.pob.txt"));
+        plan.ReadCodeCommand.Execute(null);
         plan.ToggleStepCommand.Execute(plan.Checklist.FirstOrDefault());
         plan.Message = null;
     }
 
-    /// <summary>The same notes edited into a second revision that waits for the player's say-so.</summary>
-    private static void SeedPlanChange(BuildPlanViewModel plan)
+    /// <summary>A newer code for the same build, whose endgame set is now named for a stage, so it adds
+    /// steps and waits for the player's say-so.</summary>
+    private static void SeedPlanChange(BuildPlanViewModel plan, AppPaths paths)
     {
-        plan.EditNotesCommand.Execute(null);
-        plan.NotesDraft = ExampleNotes
-            .Replace("(level 3 uncut)", "(level 5 uncut)", StringComparison.Ordinal)
-            .Replace("respec the passive tree", "upgrade Essence Drain", StringComparison.Ordinal);
-        plan.SavePlanCommand.Execute(null);
+        var xml = File.ReadAllText(Path.Combine(paths.Fixtures, "builds", "practice-witch.xml"))
+            .Replace("title=\"Endgame\"", "title=\"After ascendancy\"", StringComparison.Ordinal);
+        plan.CodeDraft = PobCode.Encode(xml);
+        plan.ReadCodeCommand.Execute(null);
     }
 
     private static void Shot(ShellViewModel shell, MainWindow main, string dir, string file, string name)

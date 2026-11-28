@@ -32,9 +32,10 @@ public sealed record MissedRewardViewModel(string Reward, string Where)
     public override string ToString() => $"{Reward}, {Where}";
 }
 
-/// <summary>The campaign guide page: characters, where the player says they are, the steps there, and
-/// the two HUD lines. Works offline from the shipped route pack. Nothing moves or gets ticked unless
-/// the player does it here: there is no zone detection, and changing zone never ticks a step.</summary>
+/// <summary>The campaign guide page: characters, where the player says they are, the steps there, the
+/// gem steps from their pasted build, and the two HUD lines. Works offline from the shipped route pack.
+/// Nothing moves or gets ticked unless the player does it here: there is no zone detection, and
+/// changing zone never ticks a step.</summary>
 public sealed partial class GuideViewModel : ObservableObject
 {
     private const int MaxNameLength = 40;
@@ -56,7 +57,7 @@ public sealed partial class GuideViewModel : ObservableObject
         LoadCharacters(shell.Settings.GuideCharacter);
     }
 
-    /// <summary>The character's build plan: saved guide link, their own steps, and the next gem step.</summary>
+    /// <summary>The character's build: the Path of Building code they pasted, its gem steps and the next one.</summary>
     public BuildPlanViewModel Plan { get; }
 
     /// <summary>Raised when the player asks to see the HUD lines over this window for a moment.</summary>

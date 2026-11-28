@@ -77,7 +77,7 @@
       </ListBox>
     </DockPanel>
 
-    <!-- Middle: where you are, what to do there, and what was missed -->
+    <!-- Middle: where you are and what to do there, the build's gem steps, then what else the build carries -->
     <ScrollViewer Grid.Row="1" Grid.Column="2" VerticalScrollBarVisibility="Auto" Focusable="False">
       <StackPanel>
         <Border Style="{StaticResource Card}" Visibility="{Binding HasPack, Converter={StaticResource Vis}, ConverterParameter=invert}">
@@ -91,7 +91,7 @@
           <StackPanel>
             <TextBlock Text="Add your character" Style="{StaticResource CardTitle}" FontSize="18" />
             <TextBlock Style="{StaticResource CardLead}" FontSize="15.5" LineHeight="21" Margin="0,8,0,0"
-                       Text="Type your character's name on the left and press Add. Then tell SSE where you are with the zone list or Next and Back: it never reads the game, so it only knows what you tell it. Progress is saved per character on this PC and picks up where you left off." />
+                       Text="Type your character's name on the left and press Add, then paste your build's Path of Building code. Tell SSE where you are with the zone list or Next and Back: it never reads the game, so it only knows what you tell it. Progress is saved per character on this PC and picks up where you left off." />
           </StackPanel>
         </Border>
 
@@ -187,7 +187,7 @@
           </StackPanel>
         </Border>
 
-        <!-- The build plan's gem steps for the stage the player is at. Later stages stay hidden. -->
+        <!-- The build's gem steps for the stage the player is at. Later stages stay hidden. -->
         <Border Style="{StaticResource Card}" Visibility="{Binding HasCharacter, Converter={StaticResource Vis}}">
           <StackPanel DataContext="{Binding Plan}">
             <DockPanel>
@@ -199,16 +199,17 @@
                 <Button Style="{StaticResource StepButton}" Content="+" Command="{Binding AscendancyUpCommand}" AutomationProperties.Name="One more ascendancy" />
               </StackPanel>
               <StackPanel>
-                <TextBlock Text="Your gem steps" Style="{StaticResource CardTitle}" />
+                <TextBlock Text="Gem steps" Style="{StaticResource CardTitle}" />
                 <TextBlock Text="{Binding StageLine}" Style="{StaticResource CardLead}" />
               </StackPanel>
             </DockPanel>
             <TextBlock Style="{StaticResource CardLead}" Margin="0,12,0,0" Visibility="{Binding HasPlan, Converter={StaticResource Vis}, ConverterParameter=invert}"
-                       Text="No plan yet. Write your steps in Your build notes and save them. They show up here one stage at a time, and the next one goes on the HUD." />
+                       Text="{Binding EmptyStepsText}" />
+            <TextBlock Text="{Binding StepsSource}" FontSize="14" Foreground="{StaticResource TextDim}" TextWrapping="Wrap" Margin="0,10,0,0" Visibility="{Binding HasPlan, Converter={StaticResource Vis}}" />
             <Border Background="{StaticResource Surface3}" CornerRadius="2" Padding="14,10" Margin="0,14,0,6" Visibility="{Binding NextGem, Converter={StaticResource Vis}}">
               <TextBlock TextWrapping="Wrap"><Run Text="Next gem   " FontSize="14" Foreground="{StaticResource TextFaint}" /><Run Text="{Binding NextGem, Mode=OneWay}" FontSize="16" FontWeight="Bold" /></TextBlock>
             </Border>
-            <ItemsControl ItemsSource="{Binding Checklist}" Focusable="False" Margin="0,4,0,0" AutomationProperties.Name="Your gem steps">
+            <ItemsControl ItemsSource="{Binding Checklist}" Focusable="False" Margin="0,4,0,0" AutomationProperties.Name="Gem steps">
               <ItemsControl.ItemTemplate>
                 <DataTemplate DataType="{x:Type vm:PlanStepViewModel}">
                   <Border BorderBrush="{StaticResource RowLine}" BorderThickness="0,1,0,0" Padding="0,9" Background="Transparent">
@@ -239,6 +240,75 @@
               </ItemsControl.ItemTemplate>
             </ItemsControl>
             <TextBlock Text="{Binding HiddenText}" FontSize="14" Foreground="{StaticResource TextFaint}" TextWrapping="Wrap" Margin="0,8,0,0" Visibility="{Binding HasHidden, Converter={StaticResource Vis}}" />
+            <TextBlock Text="{Binding UnstagedText}" FontSize="14" Foreground="{StaticResource Hint}" TextWrapping="Wrap" Margin="0,8,0,0" Visibility="{Binding HasUnstaged, Converter={StaticResource Vis}}" />
+          </StackPanel>
+        </Border>
+
+        <!-- The build's skills, one skill set at a time: what to cut and what goes with it. -->
+        <Border Style="{StaticResource Card}" Visibility="{Binding Plan.HasSkills, Converter={StaticResource Vis}}">
+          <StackPanel DataContext="{Binding Plan}">
+            <TextBlock Text="Skills and supports" Style="{StaticResource CardTitle}" />
+            <TextBlock Style="{StaticResource CardLead}" Text="As the build has them. Supports go into the skill on their row." />
+            <ItemsControl ItemsSource="{Binding SkillSets}" Focusable="False" Margin="0,12,0,0" AutomationProperties.Name="Skill sets"
+                          Visibility="{Binding HasSkillSetChoice, Converter={StaticResource Vis}}">
+              <ItemsControl.ItemsPanel>
+                <ItemsPanelTemplate>
+                  <WrapPanel />
+                </ItemsPanelTemplate>
+              </ItemsControl.ItemsPanel>
+              <ItemsControl.ItemTemplate>
+                <DataTemplate DataType="{x:Type vm:SkillSetChoice}">
+                  <Button Style="{StaticResource SegmentButton}" Content="{Binding Title}" Tag="{Binding Tag}" Margin="0,0,4,4"
+                          AutomationProperties.Name="{Binding Title, StringFormat='Show skill set {0}'}"
+                          Command="{Binding DataContext.Plan.ShowSkillSetCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{Binding}" />
+                </DataTemplate>
+              </ItemsControl.ItemTemplate>
+            </ItemsControl>
+            <TextBlock Text="{Binding ShownSetStage}" FontSize="14" Foreground="{StaticResource TextDim}" TextWrapping="Wrap" Margin="0,6,0,0" Visibility="{Binding ShownSetStage, Converter={StaticResource Vis}}" />
+            <ItemsControl ItemsSource="{Binding Skills}" Focusable="False" Margin="0,8,0,0" AutomationProperties.Name="Skills and supports">
+              <ItemsControl.ItemTemplate>
+                <DataTemplate DataType="{x:Type vm:SkillGroupViewModel}">
+                  <Border BorderBrush="{StaticResource RowLine}" BorderThickness="0,1,0,0" Padding="0,9">
+                    <StackPanel>
+                      <TextBlock Text="{Binding Skill}" FontSize="15.5" FontWeight="SemiBold" Foreground="{StaticResource RarityGem}" TextWrapping="Wrap" />
+                      <TextBlock FontSize="14.5" TextWrapping="Wrap" Margin="0,2,0,0" Visibility="{Binding HasSupports, Converter={StaticResource Vis}}"><Run Text="Supports  " Foreground="{StaticResource TextFaint}" /><Run Text="{Binding Supports, Mode=OneWay}" Foreground="{StaticResource TextSoft}" /></TextBlock>
+                      <TextBlock Text="{Binding Detail}" FontSize="13.5" Foreground="{StaticResource TextFaint}" TextWrapping="Wrap" Margin="0,2,0,0" Visibility="{Binding HasDetail, Converter={StaticResource Vis}}" />
+                      <TextBlock Text="{Binding Notes}" FontSize="14" Foreground="{StaticResource TextSoft}" TextWrapping="Wrap" Margin="0,4,0,0" FontStyle="Italic" Visibility="{Binding HasNotes, Converter={StaticResource Vis}}" />
+                    </StackPanel>
+                  </Border>
+                </DataTemplate>
+              </ItemsControl.ItemTemplate>
+            </ItemsControl>
+          </StackPanel>
+        </Border>
+
+        <Border Style="{StaticResource Card}" Visibility="{Binding Plan.HasNotes, Converter={StaticResource Vis}}">
+          <StackPanel DataContext="{Binding Plan}">
+            <TextBlock Text="The build's notes" Style="{StaticResource CardTitle}" />
+            <TextBlock Style="{StaticResource CardLead}" Text="As the author wrote them. Lines SSE reads as gem steps are on the list above." />
+            <TextBlock Text="{Binding NotesText}" FontSize="15" LineHeight="21" Foreground="{StaticResource TextSoft}" TextWrapping="Wrap" Margin="0,12,0,0" />
+          </StackPanel>
+        </Border>
+
+        <Border x:Name="BuildItemsCard" Style="{StaticResource Card}" Visibility="{Binding Plan.HasItems, Converter={StaticResource Vis}}">
+          <StackPanel DataContext="{Binding Plan}">
+            <TextBlock Style="{StaticResource CardTitle}"><Run Text="Items: " /><Run Text="{Binding ItemSetTitle, Mode=OneWay}" /></TextBlock>
+            <TextBlock Style="{StaticResource CardLead}" Text="The item set the author had open: names and base types only." />
+            <ItemsControl ItemsSource="{Binding Items}" Focusable="False" Margin="0,8,0,0" AutomationProperties.Name="Items">
+              <ItemsControl.ItemTemplate>
+                <DataTemplate DataType="{x:Type vm:BuildItemViewModel}">
+                  <Border BorderBrush="{StaticResource RowLine}" BorderThickness="0,1,0,0" Padding="0,8">
+                    <DockPanel>
+                      <TextBlock DockPanel.Dock="Left" Text="{Binding Slot}" Width="120" FontSize="14" Foreground="{StaticResource TextFaint}" VerticalAlignment="Top" Margin="0,1,0,0" />
+                      <StackPanel>
+                        <TextBlock Text="{Binding Name}" FontSize="15" FontWeight="SemiBold" Foreground="{Binding Rarity, Converter={StaticResource RarityBrush}}" TextWrapping="Wrap" />
+                        <TextBlock Text="{Binding Detail}" FontSize="13.5" Foreground="{StaticResource TextDim}" TextWrapping="Wrap" Visibility="{Binding HasDetail, Converter={StaticResource Vis}}" />
+                      </StackPanel>
+                    </DockPanel>
+                  </Border>
+                </DataTemplate>
+              </ItemsControl.ItemTemplate>
+            </ItemsControl>
           </StackPanel>
         </Border>
 
@@ -285,53 +355,32 @@
       </StackPanel>
     </ScrollViewer>
 
-    <!-- Right: the HUD lines, then what the route is and how far to trust it -->
+    <!-- Right: the build code, a waiting revision, the HUD lines, then what the route is and how far to trust it -->
     <ScrollViewer Grid.Row="1" Grid.Column="4" VerticalScrollBarVisibility="Auto" Focusable="False">
       <StackPanel>
-        <Border Style="{StaticResource Card}">
-          <StackPanel>
-            <TextBlock Text="On the game screen" Style="{StaticResource CardTitle}" />
-            <TextBlock Style="{StaticResource CardLead}"
-                       Text="Two short lines pinned over the game: where you are, and what comes next. They never take focus or catch clicks, step aside while an item price is showing, and update quietly when you change zone here." />
-            <v:GuideHudCard HorizontalAlignment="Left" Margin="0,14,0,0" Visibility="{Binding HasHudLines, Converter={StaticResource Vis}}" />
-            <TextBlock Text="Add a character to see the lines." FontSize="14" Foreground="{StaticResource TextFaint}" Margin="0,12,0,0"
-                       Visibility="{Binding HasHudLines, Converter={StaticResource Vis}, ConverterParameter=invert}" />
-            <CheckBox IsChecked="{Binding HudEnabled}" Content="Show these lines while the game is in front" Margin="0,16,0,0" />
-            <Button Style="{StaticResource TextButton}" Content="Preview them over this window for a few seconds" Command="{Binding PreviewHudCommand}" HorizontalAlignment="Left" Margin="0,4,0,0"
-                    IsEnabled="{Binding HasHudLines}" />
-          </StackPanel>
-        </Border>
-
-        <!-- The guide the player follows: a saved link only. Opened in the browser on a click; never fetched or shown here. -->
+        <!-- The one input of the page: a Path of Building code, read on this PC. Build sites are never opened. -->
         <Border Style="{StaticResource Card}" Visibility="{Binding HasCharacter, Converter={StaticResource Vis}}">
           <StackPanel DataContext="{Binding Plan}">
-            <TextBlock Text="Your build guide" Style="{StaticResource CardTitle}" />
-            <TextBlock Style="{StaticResource CardLead}"
-                       Text="Paste the link to the guide you follow, from Mobalytics or any other site. SSE keeps the link and opens it in your browser when you ask. It never downloads, copies or shows the page itself." />
-            <Border Background="{StaticResource Surface3}" CornerRadius="2" Padding="12,10" Margin="0,12,0,0" Visibility="{Binding HasLink, Converter={StaticResource Vis}}">
-              <DockPanel>
-                <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center">
-                  <Button Content="Open in browser" Command="{Binding OpenLinkCommand}" MinHeight="34" ToolTip="{Binding SavedLink}" />
-                  <Button Style="{StaticResource TextButton}" Content="Forget" AutomationProperties.Name="Forget the build guide link" Command="{Binding ForgetLinkCommand}" Padding="0" Margin="12,0,0,0" />
-                </StackPanel>
-                <StackPanel VerticalAlignment="Center">
-                  <TextBlock Text="{Binding LinkKind}" FontSize="15" FontWeight="SemiBold" />
-                  <TextBlock Text="{Binding LinkHost}" FontSize="13.5" Foreground="{StaticResource TextFaint}" TextTrimming="CharacterEllipsis" ToolTip="{Binding SavedLink}" />
-                </StackPanel>
-              </DockPanel>
+            <TextBlock Text="Your build" Style="{StaticResource CardTitle}" />
+            <Border Background="{StaticResource Surface3}" CornerRadius="2" Padding="12,10" Margin="0,10,0,4" Visibility="{Binding HasBuild, Converter={StaticResource Vis}}">
+              <StackPanel>
+                <TextBlock Text="{Binding BuildTitle}" FontSize="17" FontWeight="Bold" TextWrapping="Wrap" />
+                <TextBlock Text="{Binding BuildFacts}" FontSize="13.5" Foreground="{StaticResource TextDim}" TextWrapping="Wrap" Margin="0,2,0,0" />
+                <TextBlock FontSize="13.5" TextWrapping="Wrap" Margin="0,4,0,0" Visibility="{Binding HasStats, Converter={StaticResource Vis}}"
+                           ToolTip="What Path of Building worked out for the build when the code was made."><Run Text="{Binding StatsLine, Mode=OneWay}" Foreground="{StaticResource TextSoft}" /><Run Text="  in Path of Building" Foreground="{StaticResource TextFaint}" /></TextBlock>
+              </StackPanel>
             </Border>
-            <Grid Margin="0,12,0,0" Visibility="{Binding HasLink, Converter={StaticResource Vis}, ConverterParameter=invert}">
-              <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="*" />
-                <ColumnDefinition Width="Auto" />
-              </Grid.ColumnDefinitions>
-              <TextBox Text="{Binding LinkDraft, UpdateSourceTrigger=PropertyChanged}" AutomationProperties.Name="Build guide link" ToolTip="The guide's address, starting with https://" />
-              <Button Grid.Column="1" Content="Save link" AutomationProperties.Name="Save the build guide link" Command="{Binding SaveLinkCommand}" MinHeight="36" Margin="6,0,0,0" />
-            </Grid>
+            <TextBlock Style="{StaticResource CardLead}" Margin="0,10,0,0"
+                       Text="Copy the code from Path of Building (Import/Export Build, Generate) or from your guide's Path of Building export. SSE reads it on this PC: it never opens the guide site or sends the code anywhere." />
+            <TextBlock Text="{Binding PasteLabel}" FontSize="14" Foreground="{StaticResource TextDim}" TextWrapping="Wrap" Margin="0,12,0,6" />
+            <TextBox Text="{Binding CodeDraft, UpdateSourceTrigger=PropertyChanged}" TextWrapping="Wrap" AcceptsReturn="False" Height="76" Padding="8,6"
+                     VerticalContentAlignment="Top" VerticalScrollBarVisibility="Auto" FontSize="13" AutomationProperties.Name="Path of Building code"
+                     ToolTip="One long line of letters and digits. A link to a build site will not do: SSE does not open them." />
+            <Button Content="Read build" AutomationProperties.Name="Read the build code" Command="{Binding ReadCodeCommand}" FontWeight="SemiBold" HorizontalAlignment="Left" MinHeight="36" Margin="0,8,0,0" />
           </StackPanel>
         </Border>
 
-        <!-- A changed plan waits here until the player accepts it; the old one stays in use. -->
+        <!-- A newer code that changes the steps waits here until the player accepts it; the old one stays in use. -->
         <Border Style="{StaticResource Card}" BorderBrush="{StaticResource EdgeStrong}" Visibility="{Binding Plan.HasPending, Converter={StaticResource Vis}}">
           <StackPanel DataContext="{Binding Plan}">
             <TextBlock Text="{Binding PendingTitle}" Style="{StaticResource CardTitle}" />
@@ -358,54 +407,17 @@
           </StackPanel>
         </Border>
 
-        <!-- The player's own notes, read into steps with a preview they can correct before saving. -->
-        <Border Style="{StaticResource Card}" Visibility="{Binding HasCharacter, Converter={StaticResource Vis}}">
-          <StackPanel DataContext="{Binding Plan}">
-            <TextBlock Text="Your build notes" Style="{StaticResource CardTitle}" />
+        <Border Style="{StaticResource Card}">
+          <StackPanel>
+            <TextBlock Text="On the game screen" Style="{StaticResource CardTitle}" />
             <TextBlock Style="{StaticResource CardLead}"
-                       Text="Your gem steps in your own words, one per line, typed or pasted from your own notes. SSE turns them into the checklist; nothing is imported from a guide site." />
-            <DockPanel Margin="0,12,0,0" Visibility="{Binding EditingNotes, Converter={StaticResource Vis}, ConverterParameter=invert}">
-              <Button DockPanel.Dock="Right" Content="Edit notes" AutomationProperties.Name="Edit your build notes" Command="{Binding EditNotesCommand}" MinHeight="34" Margin="10,0,0,0" />
-              <TextBlock Text="{Binding PlanSummary}" FontSize="14" Foreground="{StaticResource TextDim}" VerticalAlignment="Center" TextWrapping="Wrap" />
-            </DockPanel>
-            <StackPanel Margin="0,12,0,0" Visibility="{Binding EditingNotes, Converter={StaticResource Vis}}">
-              <TextBox Text="{Binding NotesDraft, UpdateSourceTrigger=PropertyChanged}" AcceptsReturn="True" AcceptsTab="False" TextWrapping="Wrap" Height="190" Padding="8,6"
-                       VerticalContentAlignment="Top" VerticalScrollBarVisibility="Auto" FontSize="14.5" AutomationProperties.Name="Your build notes" />
-              <TextBlock FontSize="13.5" Foreground="{StaticResource TextFaint}" TextWrapping="Wrap" LineHeight="18" Margin="0,8,0,0"
-                         Text="SSE reads lines like cut Entangle, cut support Zenith I, upgrade Entangle to level 5, socket Zenith I into Entangle, move Zenith I: Entangle → Essence Drain, reserve …, respec …. Label stages with Act 2: or after ascendancy:. Optional extras: at Mud Burrow, (level 3 uncut), (needs Essence Drain), (priority: high)." />
-              <TextBlock Text="PREVIEW" Style="{StaticResource SectionTitle}" Margin="0,14,0,2" />
-              <TextBlock Text="{Binding PreviewSummary}" FontSize="14" Foreground="{StaticResource TextDim}" />
-              <ItemsControl ItemsSource="{Binding Preview}" Margin="0,6,0,0" Focusable="False" AutomationProperties.Name="How SSE reads your notes">
-                <ItemsControl.ItemTemplate>
-                  <DataTemplate DataType="{x:Type vm:NoteLineViewModel}">
-                    <Border BorderBrush="{StaticResource RowLine}" BorderThickness="0,1,0,0" Padding="0,6">
-                      <DockPanel>
-                        <TextBlock DockPanel.Dock="Left" Text="{Binding Number}" Width="26" FontSize="13" Foreground="{StaticResource TextFaint}" />
-                        <StackPanel>
-                          <TextBlock Text="{Binding Text}" FontSize="14.5" TextWrapping="Wrap" />
-                          <TextBlock Text="{Binding Reading}" FontSize="13.5" TextWrapping="Wrap" Visibility="{Binding HasReading, Converter={StaticResource Vis}}">
-                            <TextBlock.Style>
-                              <Style TargetType="TextBlock">
-                                <Setter Property="Foreground" Value="{StaticResource TextFaint}" />
-                                <Style.Triggers>
-                                  <DataTrigger Binding="{Binding IsProblem}" Value="True">
-                                    <Setter Property="Foreground" Value="{StaticResource Hint}" />
-                                  </DataTrigger>
-                                </Style.Triggers>
-                              </Style>
-                            </TextBlock.Style>
-                          </TextBlock>
-                        </StackPanel>
-                      </DockPanel>
-                    </Border>
-                  </DataTemplate>
-                </ItemsControl.ItemTemplate>
-              </ItemsControl>
-              <StackPanel Orientation="Horizontal" Margin="0,12,0,0">
-                <Button Content="{Binding SaveLabel}" Command="{Binding SavePlanCommand}" FontWeight="SemiBold" />
-                <Button Style="{StaticResource TextButton}" Content="Cancel" AutomationProperties.Name="Cancel editing the build notes" Command="{Binding CancelEditCommand}" Margin="14,0,0,0" Visibility="{Binding HasPlan, Converter={StaticResource Vis}}" />
-              </StackPanel>
-            </StackPanel>
+                       Text="Two short lines pinned over the game: where you are and what to do there, then your build's next gem step or the route's next stop. They never take focus or catch clicks, step aside while an item price is showing, and update quietly when you change zone here." />
+            <v:GuideHudCard HorizontalAlignment="Left" Margin="0,14,0,0" Visibility="{Binding HasHudLines, Converter={StaticResource Vis}}" />
+            <TextBlock Text="Add a character to see the lines." FontSize="14" Foreground="{StaticResource TextFaint}" Margin="0,12,0,0"
+                       Visibility="{Binding HasHudLines, Converter={StaticResource Vis}, ConverterParameter=invert}" />
+            <CheckBox IsChecked="{Binding HudEnabled}" Content="Show these lines while the game is in front" Margin="0,16,0,0" />
+            <Button Style="{StaticResource TextButton}" Content="Preview them over this window for a few seconds" Command="{Binding PreviewHudCommand}" HorizontalAlignment="Left" Margin="0,4,0,0"
+                    IsEnabled="{Binding HasHudLines}" />
           </StackPanel>
         </Border>
 
