@@ -22,6 +22,7 @@ public partial class App : Application
     private LivePrices? _prices;
     private LiveListings? _listings;
     private TextScale? _textScale;
+    private Tray? _tray;
     private bool _renderingSnapshots;
 
     protected override void OnStartup(StartupEventArgs e)
@@ -75,9 +76,14 @@ public partial class App : Application
         main.Closed += (_, _) => Shutdown();
         MainWindow = main;
 
+        // The icon in the notification area: double-click brings the main window back, and Quit closes it
+        // as its × does, so the app exits the usual way. Never created for --render-snapshots (returned above).
+        _tray = new Tray(new TrayIcon(), main, main.Close);
+
         // After an update: the notes wait in the main window, never on the HUD.
         shell.WhatsNew.CheckOnStart();
         main.Show();
+        _tray.Start();
         _hud.Start();
         _stash.Start();
         _guideHud = new GuideHud(shell.Guide, _peek, main);
@@ -97,6 +103,7 @@ public partial class App : Application
 
     protected override void OnExit(ExitEventArgs e)
     {
+        _tray?.Dispose();
         _stash?.Dispose();
         _frames?.Dispose();
         _stashToast?.Close();

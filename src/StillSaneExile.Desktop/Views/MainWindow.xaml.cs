@@ -58,14 +58,16 @@ public partial class MainWindow : Window, IShellWindow
     public static bool IsTextInput(IInputElement? element) =>
         element is TextBoxBase or PasswordBox or ComboBox { IsEditable: true };
 
+    /// <summary>Shows the window if hidden, restores it if minimized and activates it. Restoring is the
+    /// taskbar button's restore, so a window minimized from maximized comes back maximized.</summary>
     public void BringToFront()
     {
+        Show();
         if (WindowState == WindowState.Minimized)
         {
-            WindowState = WindowState.Normal;
+            SystemCommands.RestoreWindow(this);
         }
 
-        Show();
         Activate();
     }
 

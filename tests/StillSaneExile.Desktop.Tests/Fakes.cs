@@ -285,6 +285,31 @@ internal sealed class FakeShellWindow : IShellWindow
     public void BringToFront() => BroughtToFront++;
 }
 
+/// <summary>Stands in for the notification-area icon: <see cref="DoubleClick"/> and <see cref="ChooseQuit"/>
+/// raise what the real one raises for the player's double-click and "Quit" in its menu.</summary>
+internal sealed class FakeTrayIcon : ITrayIcon
+{
+    public event Action? OpenRequested;
+
+    public event Action? QuitRequested;
+
+    public bool IsShown { get; private set; }
+
+    public int Disposals { get; private set; }
+
+    public void Show() => IsShown = true;
+
+    public void Dispose()
+    {
+        Disposals++;
+        IsShown = false;
+    }
+
+    public void DoubleClick() => OpenRequested?.Invoke();
+
+    public void ChooseQuit() => QuitRequested?.Invoke();
+}
+
 /// <summary>A started <see cref="HudController"/> wired to fakes, on the current STA thread.</summary>
 internal sealed class HudRig : IDisposable
 {

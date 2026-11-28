@@ -14,6 +14,7 @@ What SSE does for keyboard use, screen readers, contrast and text size, and what
 - Settings is a rail of sections (League and prices, Keys, Price card, Price colours, Crafting, Live prices and trade, Stash pictures, Updates and privacy) and one section at a time. In Price colours each colour is a row read in order: where it starts, then Divine or Exalted (the chosen one reports "Selected"); **Apply**, **Undo changes** and **Default steps** are only stops once there is something for them to do. The fine print under a setting is folded into **Details** links: `Space` or `Enter` opens and closes them, and screen readers hear them expand and collapse.
 - Scroll bars page up or down when you click above or below the thumb.
 - In Crafting, an orb picked up with `Enter` or `Space` stays in hand; `Tab` reaches the item, which is a button only while an orb is in hand ("Use Chaos Orb on the item"), and `Esc` puts the orb back. Orbs that can't be used now stay reachable and say why. Essence stats (#B8DAF2), fractured stats (#C2B07A) and "Corrupted" (#E05050) are at 5:1 or more on the item's panel.
+- SSE's icon in the notification area is reached with `Win+B` and the arrow keys. `Enter` on it brings the main window back; `Shift+F10` or the menu key opens its menu, where `O` opens the window and `Q` quits. The menu is Windows' own, so screen readers read it as they read any menu there.
 
 ## Screen readers
 
