@@ -4,7 +4,8 @@ using StillSaneExile.Domain.Items;
 
 namespace StillSaneExile.Domain.Tests;
 
-/// <summary>The craft simulator's rules on the synthetic pack's crossbow, with seeded randomness.</summary>
+/// <summary>The craft simulator's rules on the practice pack's Siege Crossbow (the game's 0.5.5 stats, made-up
+/// weights), with seeded randomness.</summary>
 public class CraftEngineTests
 {
     private static readonly CraftSetup At82 = CraftSetup.Of(82);
@@ -22,7 +23,7 @@ public class CraftEngineTests
         return outcome.Item!;
     }
 
-    /// <summary>A Rare with the given stats, built by hand: family id â†’ tier.</summary>
+    /// <summary>A Rare with the given stats, built by hand: family id → tier.</summary>
     private static CraftItem Rare(CraftEngine e, params (string Family, int Tier)[] stats) =>
         new(CraftRarity.Rare, "Test Item", false, stats.Select((s, i) =>
         {
@@ -35,9 +36,9 @@ public class CraftEngineTests
     {
         var e = Engine();
 
-        Assert.Equal("Expert Bombard Crossbow", e.Base.Name);
-        Assert.Contains(e.Families, f => f.Id == "syn.phys_pct");
-        Assert.DoesNotContain(e.Families, f => f.Id == "syn.movement_speed"); // boots only
+        Assert.Equal("Siege Crossbow", e.Base.Name);
+        Assert.Contains(e.Families, f => f.Id == "crossbow.phys_pct");
+        Assert.DoesNotContain(e.Families, f => f.Id == "boots.movement_speed"); // boots only
         Assert.Equal(["transmute", "aug", "regal", "alch", "essence-of-abrasion", "essence-of-haste", "exalted", "chaos", "annul", "divine", "fracturing-orb", "vaal"],
             e.Currencies.Select(c => c.Id));
         Assert.All(e.Families.SelectMany(f => f.Tiers), t => Assert.True(t.Weight > 0));
@@ -119,7 +120,7 @@ public class CraftEngineTests
     {
         var e = Engine();
         var magic = Use(e, CraftItem.Normal, "transmute", CraftSetup.Of(82));
-        while (magic.Mods.Any(m => e.Family(m.Family).Id == "syn.flat_phys"))
+        while (magic.Mods.Any(m => e.Family(m.Family).Id == "crossbow.flat_phys"))
         {
             magic = Use(e, CraftItem.Normal, "transmute");
         }
@@ -128,8 +129,8 @@ public class CraftEngineTests
 
         Assert.Equal(CraftRarity.Rare, rare.Rarity);
         var essence = Assert.Single(rare.Mods, m => m.Essence);
-        Assert.Equal("syn.flat_phys", essence.Family);
-        Assert.Equal(3, essence.Tier);
+        Assert.Equal("crossbow.flat_phys", essence.Family);
+        Assert.Equal(5, essence.Tier); // "Gleaming", as Essence of Abrasion gives it on a crossbow
         Assert.Equal("Essences work on a Magic (blue) item and make it Rare.", e.Check("essence-of-abrasion", rare, At82));
     }
 
@@ -137,7 +138,7 @@ public class CraftEngineTests
     public void Omens_steer_the_next_orb_and_are_used_up_by_it()
     {
         var e = Engine();
-        var item = Rare(e, ("syn.phys_pct", 3), ("syn.attack_speed", 3));
+        var item = Rare(e, ("crossbow.phys_pct", 3), ("crossbow.attack_speed", 3));
 
         var prefix = e.Use("exalted", item, CraftSetup.Of(82, OrbGrade.Regular, Omen.SinistralExaltation));
         Assert.True(prefix.Ok);
@@ -155,7 +156,7 @@ public class CraftEngineTests
     public void Whittling_makes_Chaos_remove_the_lowest_level_stat()
     {
         var e = Engine();
-        var item = Rare(e, ("syn.phys_pct", 1), ("syn.attack_speed", 5), ("syn.crit_chance", 2)); // attack speed T5 is level 1
+        var item = Rare(e, ("crossbow.phys_pct", 1), ("crossbow.attack_speed", 5), ("crossbow.crit_chance", 2)); // attack speed T5 is level 1
 
         for (var i = 0; i < 10; i++)
         {
@@ -171,7 +172,7 @@ public class CraftEngineTests
     public void A_fractured_stat_is_locked_and_a_corrupted_item_changes_no_more()
     {
         var e = Engine();
-        var item = Rare(e, ("syn.phys_pct", 1), ("syn.attack_speed", 2), ("syn.crit_chance", 2), ("syn.accuracy", 3));
+        var item = Rare(e, ("crossbow.phys_pct", 1), ("crossbow.attack_speed", 2), ("crossbow.crit_chance", 2), ("crossbow.accuracy", 3));
         Assert.Equal("Fracturing needs at least 4 stats on the item.", e.Check("fracturing-orb", item with { Mods = item.Mods.Take(3).ToList() }, At82));
 
         item = Use(e, item, "fracturing-orb");
@@ -197,13 +198,13 @@ public class CraftEngineTests
     public void A_family_the_minimum_would_shut_out_still_rolls_its_tiers()
     {
         var e = Engine();
-        var leech = e.Family("syn.leech"); // its best tier is level 68
+        var leech = e.Family("crossbow.life_leech"); // its best tier, "of the Vampire", is level 65
         Assert.True(leech.Tiers.Max(t => t.Level) < 70);
 
         var pool = e.Pool(CraftItem.Normal, [AffixSide.Prefix, AffixSide.Suffix], 82, 70, CraftRarity.Magic);
 
-        Assert.Equal(leech.Tiers.Count, pool.Count(p => p.Family.Id == "syn.leech")); // not shut out
-        Assert.DoesNotContain(pool, p => p.Family.Id == "syn.phys_pct" && p.Tier.Level < 70); // the rest keep the minimum
+        Assert.Equal(leech.Tiers.Count, pool.Count(p => p.Family.Id == "crossbow.life_leech")); // not shut out
+        Assert.DoesNotContain(pool, p => p.Family.Id == "crossbow.phys_pct" && p.Tier.Level < 70); // the rest keep the minimum
     }
 
     [Fact]
@@ -228,7 +229,7 @@ public class CraftEngineTests
         for (var seed = 1; seed <= 80; seed++)
         {
             var e = Engine(seed);
-            var item = Rare(e, ("syn.phys_pct", 3), ("syn.attack_speed", 3), ("syn.crit_chance", 2), ("syn.accuracy", 3));
+            var item = Rare(e, ("crossbow.phys_pct", 3), ("crossbow.attack_speed", 3), ("crossbow.crit_chance", 2), ("crossbow.accuracy", 3));
             var after = Use(e, item, "vaal");
 
             Assert.True(after.Corrupted);
@@ -246,7 +247,7 @@ public class CraftEngineTests
     public void An_essence_stat_can_be_fractured()
     {
         var e = Engine();
-        var item = Rare(e, ("syn.phys_pct", 1), ("syn.attack_speed", 2), ("syn.crit_chance", 2), ("syn.accuracy", 3));
+        var item = Rare(e, ("crossbow.phys_pct", 1), ("crossbow.attack_speed", 2), ("crossbow.crit_chance", 2), ("crossbow.accuracy", 3));
         item = item with { Mods = [.. item.Mods.Select(m => m with { Essence = true })] };
 
         var fractured = Use(e, item, "fracturing-orb");
@@ -258,7 +259,7 @@ public class CraftEngineTests
     public void Divine_rerolls_the_numbers_within_each_tier()
     {
         var e = Engine();
-        var item = Rare(e, ("syn.phys_pct", 1), ("syn.flat_phys", 2));
+        var item = Rare(e, ("crossbow.phys_pct", 1), ("crossbow.flat_phys", 2));
 
         var rerolled = Use(e, item, "divine");
 
@@ -274,7 +275,7 @@ public class CraftEngineTests
     public void Odds_are_the_wanted_tiers_weight_over_everything_that_can_roll()
     {
         var e = Engine();
-        var wants = new Dictionary<string, int> { ["syn.phys_pct"] = 2 }; // T2 or better
+        var wants = new Dictionary<string, int> { ["crossbow.phys_pct"] = 2 }; // T2 or better
 
         var odds = Assert.Single(e.Odds(CraftItem.Normal, At82, wants));
 
@@ -284,25 +285,25 @@ public class CraftEngineTests
         Assert.Equal(expected, odds.Chance, 10);
         Assert.False(odds.Estimate);
 
-        var have = Rare(e, ("syn.phys_pct", 1));
+        var have = Rare(e, ("crossbow.phys_pct", 1));
         Assert.Empty(e.Odds(have, At82, wants)); // already there at T1
-        Assert.Equal("Next Exalted (adds 2)", e.Odds(Rare(e, ("syn.attack_speed", 3)), CraftSetup.Of(82, OrbGrade.Regular, Omen.GreaterExaltation), wants)[0].Label);
+        Assert.Equal("Next Exalted (adds 2)", e.Odds(Rare(e, ("crossbow.attack_speed", 3)), CraftSetup.Of(82, OrbGrade.Regular, Omen.GreaterExaltation), wants)[0].Label);
     }
 
     [Fact]
     public void Stats_read_as_the_game_prints_them_and_the_weapon_numbers_follow()
     {
         var e = Engine();
-        var item = Rare(e, ("syn.phys_pct", 1), ("syn.flat_phys", 2), ("syn.attack_speed", 3), ("syn.accuracy", 3), ("syn.phys_pct_accuracy", 4));
+        var item = Rare(e, ("crossbow.phys_pct", 1), ("crossbow.flat_phys", 2), ("crossbow.attack_speed", 3), ("crossbow.crit_chance", 3), ("crossbow.phys_pct_accuracy", 4));
 
         Assert.Equal("170% increased Physical Damage", e.Text(item.Mods[0]));
-        Assert.Equal("Adds 20 to 34 Physical Damage", e.Text(item.Mods[1]));
-        Assert.Equal("+161 to Accuracy Rating", e.Text(item.Mods[3]));
-        Assert.Equal("45% increased Physical Damage\n+73 to Accuracy Rating", e.Text(item.Mods[4]));
+        Assert.Equal("Adds 29 to 50 Physical Damage", e.Text(item.Mods[1]));
+        Assert.Equal("+3.11% to Critical Hit Chance", e.Text(item.Mods[3]));
+        Assert.Equal("45% increased Physical Damage\n+98 to Accuracy Rating", e.Text(item.Mods[4]));
 
-        // (41 + 20) × (1 + 2.15) and (76 + 34) × 3.15, at 1.6 × 1.16 attacks per second.
-        Assert.Equal(new CraftWeapon(192, 347, 1.86m, 501.3m), e.Weapon(item));
-        Assert.Equal("Expert Bombard Crossbow", e.MagicName(CraftItem.Normal));
+        // (29 + 29) × (1 + 2.15) and (115 + 50) × 3.15, at 1.65 × 1.11 attacks per second.
+        Assert.Equal(new CraftWeapon(183, 520, 1.83m, 643.2m), e.Weapon(item));
+        Assert.Equal("Siege Crossbow", e.MagicName(CraftItem.Normal));
     }
 
     [Fact]
@@ -320,11 +321,11 @@ public class CraftEngineTests
     [Fact]
     public void The_loader_turns_down_an_essence_that_points_nowhere()
     {
-        var json = Fixtures.Text("packs/synthetic-demo.json").Replace("\"family\": \"syn.flat_phys\", \"tier\": 3", "\"family\": \"syn.flat_phys\", \"tier\": 9", StringComparison.Ordinal);
+        var json = Fixtures.Text(Fixtures.PackFile).Replace("\"family\": \"crossbow.flat_phys\", \"tier\": 5", "\"family\": \"crossbow.flat_phys\", \"tier\": 10", StringComparison.Ordinal);
 
         var load = DataPackLoader.Load(json);
 
         Assert.Null(load.Pack);
-        Assert.Equal("Essence essence-of-abrasion: family syn.flat_phys has no tier 9.", load.Error);
+        Assert.Equal("Essence essence-of-abrasion: family crossbow.flat_phys has no tier 10.", load.Error);
     }
 }

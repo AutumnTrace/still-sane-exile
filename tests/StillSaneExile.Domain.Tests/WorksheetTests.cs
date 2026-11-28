@@ -16,7 +16,7 @@ public class WorksheetTests
         Assert.Equal(2, selected.Count);
         Assert.Contains(ComparisonWorksheet.PhysicalDpsId, selected);
         Assert.Contains($"{RowKind.Explicit}:{ComparisonWorksheet.LocalAttackSpeed}", selected);
-        Assert.Equal(355.3m, w.Row(ComparisonWorksheet.PhysicalDpsId)!.Actual);
+        Assert.Equal(758.5m, w.Row(ComparisonWorksheet.PhysicalDpsId)!.Actual); // (205 + 581) / 2 × 1.93
     }
 
     [Fact]
@@ -30,7 +30,7 @@ public class WorksheetTests
     public void Every_line_gets_a_row_and_sources_stay_distinct()
     {
         var w = Crossbow();
-        Assert.Contains(w.Rows, r => r.Kind == RowKind.Rune && r.Template == "#% to Fire Resistance");
+        Assert.Contains(w.Rows, r => r.Kind == RowKind.Rune && r.Template == "Adds # to # Fire Damage");
         Assert.Contains(w.Rows, r => r.Kind == RowKind.Explicit && r.Template == "# to Accuracy Rating");
         Assert.False(w.Rows.Single(r => r.Kind == RowKind.Rune).Supported);
     }
@@ -74,7 +74,7 @@ public class WorksheetTests
         var w = Crossbow();
         w.Row($"{RowKind.Explicit}:{ComparisonWorksheet.LocalAttackSpeed}")!.Group = FilterGroup.Optional;
         var text = w.ToManualInstructions("Demo League (synthetic)");
-        Assert.Contains("Item base: Expert Bombard Crossbow", text);
+        Assert.Contains("Item base: Siege Crossbow", text);
         Assert.Contains("Not corrupted", text);
         Assert.Contains("Stat filters (AND):", text);
         Assert.Contains("Optional (COUNT ≥ 1):", text);

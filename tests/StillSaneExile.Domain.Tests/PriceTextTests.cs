@@ -73,12 +73,12 @@ public class WorksheetSearchTests
     {
         var w = Crossbow();
         var pdps = w.Row(ComparisonWorksheet.PhysicalDpsId)!;
-        Assert.Equal(319m, pdps.Min);
+        Assert.Equal(682m, pdps.Min); // ⌊758.5 × 0.9⌋
 
         w.SetStartingBounds(0m);
-        Assert.Equal(355m, pdps.Min);
+        Assert.Equal(758m, pdps.Min);
         w.SetStartingBounds(0.2m);
-        Assert.Equal(284m, pdps.Min);
+        Assert.Equal(606m, pdps.Min);
         Assert.True(pdps.Selected);
     }
 
@@ -97,7 +97,7 @@ public class WorksheetSearchTests
         w.CopySearchFrom(Crossbow());
 
         Assert.Equal(2, w.Selected.Count());
-        Assert.Equal(319m, w.Row(ComparisonWorksheet.PhysicalDpsId)!.Min);
+        Assert.Equal(682m, w.Row(ComparisonWorksheet.PhysicalDpsId)!.Min);
         Assert.True(w.BuyNowOnly);
         Assert.Null(w.MinItemLevel);
     }

@@ -126,15 +126,17 @@ public class CraftViewModelTests
         app.Shell.SettingsPage.SetCraftUseCommand.Execute("click");
         var craft = Bench(app);
         Orb(craft, "alch").ClickCommand.Execute(null);
-        var sinistral = craft.Omens.First(o => o.Info.Omen == Domain.Craft.Omen.SinistralExaltation);
-        sinistral.ToggleCommand.Execute(null);
+        // The side omen for a side with room left: an Exalted Orb can then add there.
+        var prefixRoom = craft.Sides[0].Rows.Any(r => r.IsOpen);
+        var omen = craft.Omens.First(o => o.Info.Omen == (prefixRoom ? Domain.Craft.Omen.SinistralExaltation : Domain.Craft.Omen.DextralExaltation));
+        omen.ToggleCommand.Execute(null);
 
-        Orb(craft, "chaos").ClickCommand.Execute(null); // not the orb it changes
-        Assert.True(sinistral.IsOn);
+        Orb(craft, "divine").ClickCommand.Execute(null); // not the orb it changes
+        Assert.True(omen.IsOn);
         Orb(craft, "exalted").ClickCommand.Execute(null);
 
-        Assert.False(sinistral.IsOn);
-        Assert.StartsWith("Exalted Orb + Omen of Sinistral Exaltation", craft.History[0].Label, StringComparison.Ordinal);
+        Assert.False(omen.IsOn);
+        Assert.StartsWith($"Exalted Orb + {omen.Name}", craft.History[0].Label, StringComparison.Ordinal);
         Assert.Contains("not priced", craft.SpentNote, StringComparison.Ordinal); // the demo book has no omens
     });
 
@@ -149,23 +151,23 @@ public class CraftViewModelTests
         Assert.Equal("Next Transmutation", odds.Label);
         Assert.Equal("exact", odds.Kind);
 
-        var crit = craft.Pool.SelectMany(s => s.Rows).First(r => r.Label == "#% increased Critical Hit Chance");
+        var crit = craft.Pool.SelectMany(s => s.Rows).First(r => r.Label == "+#% to Critical Hit Chance");
         crit.IsWanted = true;
-        Assert.Contains(craft.Wants, w => w.Label == "#% increased Critical Hit Chance");
+        Assert.Contains(craft.Wants, w => w.Label == "+#% to Critical Hit Chance");
 
         craft.Wants.First(w => w.Label == "#% increased Physical Damage").Remove.Execute(null);
         Assert.DoesNotContain(craft.Wants, w => w.Label == "#% increased Physical Damage");
     });
 
     [Fact]
-    public void A_live_league_practises_on_the_same_made_up_stats_priced_at_its_own_prices() => Sta.Run(() =>
+    public void A_live_league_practises_on_the_same_practice_stats_priced_at_its_own_prices() => Sta.Run(() =>
     {
         using var app = new TestApp(TradeRig.Live); // no prices fetched yet
         app.Shell.SettingsPage.SetCraftUseCommand.Execute("click");
         var craft = app.Shell.Craft;
 
         Assert.True(craft.HasData);
-        Assert.Equal("Expert Bombard Crossbow", craft.BaseName);
+        Assert.Equal("Siege Crossbow", craft.BaseName);
         Orb(craft, "transmute").ClickCommand.Execute(null);
 
         Assert.Equal(1, craft.Clicks);

@@ -1,11 +1,11 @@
 Item Class: Crossbows
 Rarity: Magic
-Merciless Expert Bombard Crossbow
+Merciless Siege Crossbow
 --------
-Physical Damage: 112-245 (augmented)
+Physical Damage: 79-313 (augmented)
 Critical Hit Chance: 5.00%
-Attacks per Second: 1.60
-Reload Time: 0.80
+Attacks per Second: 1.65
+Reload Time: 0.75
 --------
 Requires: Level 79, 89 Str, 89 Dex
 --------

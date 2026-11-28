@@ -228,7 +228,7 @@ public class TradeApiTests
     {
         var w = WorksheetFactory.Create(ItemReader.Read(Fixtures.Item("rare-crossbow-advanced"), Fixtures.Pack()));
         w.BuyNowOnly = false;
-        var stats = new Dictionary<string, decimal> { [ComparisonWorksheet.PhysicalDpsId] = 330, [$"{RowKind.Explicit}:{ComparisonWorksheet.LocalAttackSpeed}"] = 16 };
+        var stats = new Dictionary<string, decimal> { [ComparisonWorksheet.PhysicalDpsId] = 720, [$"{RowKind.Explicit}:{ComparisonWorksheet.LocalAttackSpeed}"] = 16 };
         List<Listing> listings =
         [
             new("unsure", 0.5m, "divine", stats, 82, false, Fixtures.DemoNow),
@@ -258,7 +258,7 @@ public class TradeApiTests
         .Reply(HttpStatusCode.OK, Fixtures.Text("trade/search.json"), SearchLimits)
         .Reply(HttpStatusCode.OK, Fixtures.Text("trade/fetch.json"), FetchLimits);
 
-    private const string Query = """{"query":{"status":{"option":"securable"},"type":"Expert Bombard Crossbow"}}""";
+    private const string Query = """{"query":{"status":{"option":"securable"},"type":"Siege Crossbow"}}""";
 
     [Fact]
     public async Task A_search_is_one_post_and_one_fetch_on_their_own_routes_and_the_governor_learns_both_limits()

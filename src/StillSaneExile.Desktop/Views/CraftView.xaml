@@ -122,8 +122,8 @@
                      AutomationProperties.Name="Item level" />
             <Button Style="{StaticResource StepButton}" Content="+" Command="{Binding RaiseItemLevelCommand}" AutomationProperties.Name="Raise the item level" ToolTip="Raise" />
             <TextBlock Text="{Binding ItemLevelNote}" Style="{StaticResource Faint}" VerticalAlignment="Center" Margin="10,0,18,0" />
-            <Border Style="{StaticResource DemoBadge}" ToolTip="Every stat, tier, weight and price here is made up for practice. What each orb and omen does has not been checked in the game yet.">
-              <TextBlock Text="practice · made-up stats" FontSize="12" FontWeight="Bold" />
+            <Border Style="{StaticResource DemoBadge}" ToolTip="The stats, tiers and ranges are the game's own for a Siege Crossbow in patch 0.5.5, not checked in the game. How often each one rolls is made up: the game files don't say, so every chance here is practice. In the demo the prices are made up too. What each orb and omen does has not been checked in the game yet.">
+              <TextBlock Text="practice · made-up odds" FontSize="12" FontWeight="Bold" />
             </Border>
           </WrapPanel>
           <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">

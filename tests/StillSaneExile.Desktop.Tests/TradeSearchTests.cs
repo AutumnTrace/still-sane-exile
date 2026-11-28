@@ -141,7 +141,7 @@ public class TradeSearchTests
     private static readonly Hotkey CtrlC = Hotkey.Parse("Ctrl+C")!;
 
     // Hand-written in the shape of a game copy; not one of the practice items.
-    private const string GameBoots = "Item Class: Boots\nRarity: Rare\nGale Stride\nLeather Boots\n--------\nItem Level: 80\n--------\n25% increased Movement Speed\n+60 to maximum Life";
+    private const string GameBoots = "Item Class: Boots\nRarity: Rare\nGale Stride\nCavalry Boots\n--------\nItem Level: 80\n--------\n25% increased Movement Speed\n+60 to maximum Life";
 
     [Fact]
     public void A_live_rare_waits_for_Search_and_changing_the_search_sends_nothing() => Sta.Run(() =>

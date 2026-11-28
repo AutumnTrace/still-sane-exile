@@ -3,19 +3,20 @@ Rarity: Rare
 Dusk Vigil
 Gladiatorial Helm
 --------
-Armour: 312 (augmented)
+Armour: 330 (augmented)
+Evasion Rating: 299 (augmented)
 --------
-Requires: Level 65, 121 Str
+Requires: Level 80, 63 Str, 63 Dex
 --------
-Item Level: 78
+Item Level: 81
 --------
 { Corruption Enhancement — Attack }
 +74(50-100) to Accuracy Rating
 --------
-{ Prefix Modifier "Hale" (Tier: 4) — Life }
+{ Prefix Modifier "Robust" (Tier: 5) — Life }
 +79(70-84) to maximum Life
-{ Prefix Modifier "Reinforced" (Tier: 3) — Defences, Armour }
-38(33-42)% increased Armour
+{ Prefix Modifier "Gladiator's" (Tier: 4) — Defences, Armour, Evasion }
+60(56-67)% increased Armour and Evasion
 { Suffix Modifier "of the Walrus" (Tier: 4) — Elemental, Cold, Resistance }
 +27(26-30)% to Cold Resistance
 { Suffix Modifier "of Plunder" (Tier: 3) }

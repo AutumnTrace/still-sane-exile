@@ -55,9 +55,9 @@ public class AccessibilityTests
 
         Assert.Equal("Paste an item", stops[0]);
         Assert.Contains("Doom Thirst, Rare crossbow, checked at", string.Join("\n", stops));
-        Assert.Contains("Lower the minimum for Physical DPS 355.3", stops);
-        Assert.Contains("Minimum for Physical DPS 355.3", stops);
-        Assert.Contains("Raise the minimum for Physical DPS 355.3", stops);
+        Assert.Contains("Lower the minimum for Physical DPS 758.5", stops);
+        Assert.Contains("Minimum for Physical DPS 758.5", stops);
+        Assert.Contains("Raise the minimum for Physical DPS 758.5", stops);
         Assert.Contains("Asking price", stops);
         Assert.Contains("Divine Orb", stops); // the asking price's currency, shown as "div"
         Assert.True(stops.IndexOf("Reset to my item") < stops.IndexOf("Search"));
@@ -114,8 +114,8 @@ public class AccessibilityTests
         var stops = Check(view);
 
         Assert.Equal("Close the price card", stops[0]);
-        Assert.Equal(new[] { "Physical DPS 355.3", "Lower the minimum for Physical DPS 355.3", "Raise the minimum for Physical DPS 355.3" }, stops[1..4]);
-        Assert.Contains("+18% to Fire Resistance", stops);
+        Assert.Equal(new[] { "Physical DPS 758.5", "Lower the minimum for Physical DPS 758.5", "Raise the minimum for Physical DPS 758.5" }, stops[1..4]);
+        Assert.Contains("Adds 26 to 32 Fire Damage", stops);
         Assert.Equal("Search", stops[^2]);
         Assert.Equal("All filters", stops[^1]);
     });
@@ -226,7 +226,7 @@ public class AccessibilityTests
             var line = (ValueLabel)view.FindName("PeekLineText");
             var before = (count.Text, price.Text);
             Assert.Equal(1, price.Opacity);
-            var dps = Descendants<CheckBox>(window).Single(c => SpokenName(c) == "Physical DPS 355.3");
+            var dps = Descendants<CheckBox>(window).Single(c => SpokenName(c) == "Physical DPS 758.5");
             Assert.True(dps.IsChecked);
 
             ((System.Windows.Automation.Provider.IToggleProvider)Peer(dps).GetPattern(PatternInterface.Toggle)).Toggle();

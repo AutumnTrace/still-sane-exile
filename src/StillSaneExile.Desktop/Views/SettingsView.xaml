@@ -134,7 +134,7 @@
               <TextBlock Style="{StaticResource Gist}" Text="Demo prices are made up for practice and never appear in a live league." />
               <Expander Style="{StaticResource Details}" Header="How leagues work">
                 <TextBlock Style="{StaticResource FinePrint}"
-                           Text="The demo profile uses synthetic prices, ranges and listings so you can practice; they never appear in a live profile. A live league must be confirmed once and is remembered. Switching league swaps prices, comparables and holdings together, and never shows the previous league's prices, even while a refresh is running." />
+                           Text="The demo profile uses made-up prices and listings so you can practice; they never appear in a live profile. Its practice items carry the game's 0.5.5 tiers and ranges, not checked in the game. A live league must be confirmed once and is remembered. Switching league swaps prices, comparables and holdings together, and never shows the previous league's prices, even while a refresh is running." />
               </Expander>
             </StackPanel>
           </Border>

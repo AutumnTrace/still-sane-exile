@@ -82,11 +82,11 @@ public sealed partial class PriceColoursViewModel : ObservableObject
     private static readonly (string Name, string Base, ItemRarity Rarity, decimal Amount, string Currency)[] Samples =
     [
         ("Sanity's Last Loop", "Gold Ring", ItemRarity.Unique, 25m, "divine"),
-        ("Doom Thirst", "Expert Bombard Crossbow", ItemRarity.Rare, 4m, "divine"),
-        ("Storm Mark", "Expert Bombard Crossbow", ItemRarity.Rare, 70m, "exalted"),
-        ("Gale Stride", "Advanced Leather Boots", ItemRarity.Rare, 12m, "exalted"),
-        ("Merciless Expert Bombard Crossbow", "Magic crossbow", ItemRarity.Magic, 3m, "exalted"),
-        ("Expert Bombard Crossbow", "Crafting base", ItemRarity.Normal, 0.4m, "exalted"),
+        ("Doom Thirst", "Siege Crossbow", ItemRarity.Rare, 4m, "divine"),
+        ("Storm Mark", "Siege Crossbow", ItemRarity.Rare, 70m, "exalted"),
+        ("Gale Stride", "Dragonscale Boots", ItemRarity.Rare, 12m, "exalted"),
+        ("Merciless Siege Crossbow", "Magic crossbow", ItemRarity.Magic, 3m, "exalted"),
+        ("Siege Crossbow", "Crafting base", ItemRarity.Normal, 0.4m, "exalted"),
     ];
 
     private readonly ShellViewModel _shell;

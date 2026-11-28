@@ -1,13 +1,14 @@
 Item Class: Crossbows
 Rarity: Rare
 Doom Thirst
-Expert Bombard Crossbow
+Siege Crossbow
 --------
 Quality: +20% (augmented)
-Physical Damage: 120-262 (augmented)
-Critical Hit Chance: 5.00%
-Attacks per Second: 1.86 (augmented)
-Reload Time: 0.80
+Physical Damage: 205-581 (augmented)
+Fire Damage: 26-32 (fire)
+Critical Hit Chance: 9.12% (augmented)
+Attacks per Second: 1.93 (augmented)
+Reload Time: 0.64 (augmented)
 --------
 Requires: Level 79, 89 Str, 89 Dex
 --------
@@ -15,18 +16,18 @@ Sockets: S S
 --------
 Item Level: 82
 --------
-+18% to Fire Resistance (rune)
+Adds 26 to 32 Fire Damage (rune)
 --------
-{ Implicit Modifier — Attack }
-Grenade Skills Fire an additional Projectile (implicit)
+{ Implicit Modifier }
+Grenade Skills Fire an additional Projectile
 --------
 { Prefix Modifier "Merciless" (Tier: 1) — Damage, Physical, Attack }
 175(170-179)% increased Physical Damage
 { Prefix Modifier "Tempered" (Tier: 2) — Damage, Physical, Attack }
-Adds 24(20-27) to 39(34-45) Physical Damage
-{ Suffix Modifier "of Fame" (Tier: 3) — Attack, Speed }
-17(16-19)% increased Attack Speed
-{ Suffix Modifier "of Incision" (Tier: 2) — Attack, Critical }
-31(30-34)% increased Critical Hit Chance
-{ Suffix Modifier "of the Sniper" (Tier: 3) — Attack }
-+196(161-240) to Accuracy Rating
+Adds 33(29-44) to 61(50-75) Physical Damage
+{ Prefix Modifier "Ranger's" (Tier: 3) — Attack }
++380(347-450) to Accuracy Rating
+{ Suffix Modifier "of Acclaim" (Tier: 1) — Attack, Speed }
+17(17-19)% increased Attack Speed
+{ Suffix Modifier "of Ruin" (Tier: 2) — Attack, Critical }
++4.12(3.81-4.4)% to Critical Hit Chance

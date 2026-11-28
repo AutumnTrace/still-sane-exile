@@ -21,7 +21,7 @@ Open work is tracked as [issues](https://github.com/AutumnTrace/still-sane-exile
 - [x] Roll bars from advanced-copy ranges, or a data pack when exactly one explanation fits; hybrid ambiguity
 - [x] Editable comparison worksheet, official trade-site handoff, manual comparables with the evidence policy
 - [x] Deterministic demo profile with synthetic fixtures and visible DEMO state
-- [ ] A verified (non-synthetic) data pack for one weapon family (#6)
+- [ ] A verified (non-synthetic) data pack for one weapon family (#6): the practice pack now holds the game's 0.5.5 crossbow families from Path of Building's export, but nobody has checked them against real copies, and the live profile still has no pack
 - [ ] Real-game acceptance run (#7)
 - [x] Peek on a spare mouse button, key-collision warnings (#8); game default keys still to be checked in game
 - [x] Clear "unsupported language" message (#9); practice-peek fix (#10)
@@ -50,7 +50,7 @@ My wealth is switched off for now while it is rethought (its page says so; holdi
 ## 5 · Craft
 
 - [ ] Crafting planner for one weapon family with success and failure branches (#22)
-- [x] Craft simulator for practice: every orb, essence and omen on one crossbow base, odds of the stats you want, the stat pool, history with costs, orbs picked up like in game. Its stats, tiers and weights are made up, in every profile (the owner's call), and what each orb does is not checked in game; a live league prices the clicks at its poe.ninja prices (#22 still needs a verified data pack, #6)
+- [x] Craft simulator for practice: every orb, essence and omen on one crossbow base, odds of the stats you want, the stat pool, history with costs, orbs picked up like in game. Its stats and tiers are the game's 0.5.5 data for a Siege Crossbow (not checked in game) and its weights are made up, in every profile (the owner's call), and what each orb does is not checked in game; a live league prices the clicks at its poe.ninja prices (#22 still needs a verified data pack, #6)
 
 ## Release
 

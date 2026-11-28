@@ -753,7 +753,7 @@
         <Setter Property="VerticalAlignment" Value="Center" />
         <Setter Property="TextElement.Foreground" Value="{StaticResource Accent}" />
         <Setter Property="TextElement.FontFamily" Value="{StaticResource CapsFont}" />
-        <Setter Property="ToolTip" Value="Every price, range and listing in the demo is made up for practice." />
+        <Setter Property="ToolTip" Value="Demo prices and listings are made up for practice. The practice items are made up too, with the game's 0.5.5 tiers and ranges, not checked in the game." />
       </Style>
 
       <Style x:Key="KeyCap" TargetType="Border">

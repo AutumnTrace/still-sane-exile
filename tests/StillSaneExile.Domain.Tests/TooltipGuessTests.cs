@@ -19,7 +19,7 @@ public class TooltipGuessTests
         var advanced = TooltipGuess.Measure(Advanced)!.Value;
         Assert.Equal(2, advanced.Header); // name and base; the rarity is their colour
         Assert.Equal(7, advanced.Separators);
-        Assert.Equal(22, advanced.Body);
+        Assert.Equal(23, advanced.Body);
 
         var normal = TooltipGuess.Measure(Normal)!.Value;
         Assert.Equal(advanced.Body - 6, normal.Body);

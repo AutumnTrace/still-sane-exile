@@ -158,7 +158,7 @@ public static class TradeQuery
         }
         else if (w.Rarity == ItemRarity.Magic)
         {
-            // A magic name wraps the base in its affixes ("Merciless Bombard Crossbow of Fame").
+            // A magic name wraps the base in its affixes ("Merciless Siege Crossbow of Acclaim").
             type = w.RequireExactBase ? BaseInside(w.BaseType, data) : null;
             if (w.RequireExactBase && type is null)
             {
