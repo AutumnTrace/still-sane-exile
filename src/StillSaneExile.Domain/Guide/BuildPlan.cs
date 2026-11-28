@@ -62,8 +62,9 @@ public enum MilestoneTrigger
     Zone,
 }
 
-/// <summary>One gem step from the player's notes. Every field comes from what the player typed (or
-/// pasted from their own copy of a guide); nothing is fetched.</summary>
+/// <summary>One gem step. Every field comes from text the player gave SSE: a Path of Building code they
+/// pasted (its notes and skill sets), or notes they typed before builds could be pasted. Nothing is
+/// fetched.</summary>
 public sealed record PlanMilestone
 {
     public const string NoPriority = "Author did not specify";
@@ -102,6 +103,10 @@ public sealed record PlanMilestone
 
     /// <summary>The guide author's priority as the player copied it; null when they gave none.</summary>
     public string? Priority { get; init; }
+
+    /// <summary>Where in a pasted build the step came from ("the build's notes", "skill set “Act 2”").
+    /// Null for steps the player wrote themselves before builds could be pasted.</summary>
+    public string? Origin { get; init; }
 
     [JsonIgnore]
     public MilestoneTrigger Trigger => ZoneId is null ? MilestoneTrigger.Stage : MilestoneTrigger.Zone;

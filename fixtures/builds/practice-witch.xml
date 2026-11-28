@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- SYNTHETIC. A practice build written by hand for Still Sane, Exile's tests and snapshots, in the shape
+     Path of Building for Path of Exile 2 saves (src/Modules/Build.lua, SkillsTab.lua, PassiveSpec.lua,
+     ItemsTab.lua). Not anyone's guide: the gems and node ids are real names and ids, the choices, items,
+     notes and numbers are made up. practice-witch.pob.txt is this file as a code (zlib, URL-safe base64). -->
+<PathOfBuilding2>
+	<Build level="38" targetVersion="0_5" className="Witch" ascendClassName="Blood Mage" mainSocketGroup="1" viewMode="TREE" characterLevelAutoMode="false">
+		<PlayerStat stat="Life" value="812"/>
+		<PlayerStat stat="EnergyShield" value="406"/>
+		<PlayerStat stat="Mana" value="590"/>
+		<PlayerStat stat="Spirit" value="30"/>
+	</Build>
+	<Import/>
+	<Items activeItemSet="1" useSecondWeaponSet="false" showStatDifferences="true">
+		<Item id="1">
+Rarity: RARE
+Practice Bane
+Withered Wand
+Unique ID: 0000000000000000000000000000000000000000000000000000000000000001
+Item Level: 30
+LevelReq: 25
+Implicits: 0
+{range:0.5}Adds 4 to 9 Chaos damage to Spells
+		</Item>
+		<Item id="2">
+Rarity: MAGIC
+Practice Ring of the Test
+Item Level: 20
+Implicits: 0
++12 to maximum Mana
+		</Item>
+		<ItemSet id="1" title="Campaign" useSecondWeaponSet="false">
+			<Slot name="Weapon 1" itemId="1" itemPbURL=""/>
+			<Slot name="Ring 1" itemId="2" itemPbURL=""/>
+			<Slot name="Helmet" itemId="0" itemPbURL=""/>
+		</ItemSet>
+	</Items>
+	<Skills activeSkillSet="2" defaultGemLevel="normalMaximum" defaultGemQuality="0" sortGemsByDPS="true" showSupportGemTypes="ALL" sortGemsByDPSField="CombinedDPS" showLegacyGems="false">
+		<SkillSet id="1" title="Act 1">
+			<Skill enabled="true" includeInFullDPS="false" label="Opener" set1="true" set2="true" mainActiveSkill="1" mainActiveSkillCalcs="1">
+				<Gem nameSpec="Entangle" skillId="EntanglePlayer" gemId="Metadata/Items/Gem/SkillGemEntangle" variantId="Entangle" level="3" quality="0" enabled="true" enableGlobal1="true" enableGlobal2="false" count="1" note="Practice note: cast it first."/>
+				<Gem nameSpec="Zenith I" skillId="SupportZenithPlayer" gemId="Metadata/Items/Gem/SupportGemZenith" variantId="ZenithSupport" level="1" quality="0" enabled="true" enableGlobal1="true" enableGlobal2="false" count="1"/>
+			</Skill>
+			<Skill enabled="true" includeInFullDPS="false" set1="true" set2="true" mainActiveSkill="1" mainActiveSkillCalcs="1">
+				<Gem nameSpec="Contagion" skillId="ContagionPlayer" gemId="Metadata/Items/Gems/SkillGemContagion" variantId="Contagion" level="2" quality="0" enabled="true" enableGlobal1="true" enableGlobal2="false" count="1"/>
+			</Skill>
+		</SkillSet>
+		<SkillSet id="2" title="Act 2">
+			<Skill enabled="true" includeInFullDPS="true" label="Main" set1="true" set2="true" mainActiveSkill="1" mainActiveSkillCalcs="1">
+				<Gem nameSpec="Essence Drain" skillId="EssenceDrainPlayer" gemId="Metadata/Items/Gems/SkillGemEssenceDrain" variantId="EssenceDrain" level="9" quality="0" enabled="true" enableGlobal1="true" enableGlobal2="false" count="1"/>
+				<Gem nameSpec="Zenith I" skillId="SupportZenithPlayer" gemId="Metadata/Items/Gem/SupportGemZenith" variantId="ZenithSupport" level="1" quality="0" enabled="true" enableGlobal1="true" enableGlobal2="false" count="1"/>
+				<Gem nameSpec="Controlled Destruction" skillId="SupportControlledDestructionPlayer" gemId="Metadata/Items/Gems/SupportGemControlledDestruction" variantId="ControlledDestruction" level="1" quality="0" enabled="true" enableGlobal1="true" enableGlobal2="false" count="1"/>
+			</Skill>
+			<Skill enabled="true" includeInFullDPS="false" set1="true" set2="true" mainActiveSkill="1" mainActiveSkillCalcs="1">
+				<Gem nameSpec="Contagion" skillId="ContagionPlayer" gemId="Metadata/Items/Gems/SkillGemContagion" variantId="Contagion" level="8" quality="0" enabled="true" enableGlobal1="true" enableGlobal2="false" count="1"/>
+			</Skill>
+			<Skill enabled="true" includeInFullDPS="false" set1="true" set2="true" mainActiveSkill="1" mainActiveSkillCalcs="1">
+				<Gem nameSpec="Entangle" skillId="EntanglePlayer" gemId="Metadata/Items/Gem/SkillGemEntangle" variantId="Entangle" level="8" quality="0" enabled="true" enableGlobal1="true" enableGlobal2="false" count="1"/>
+			</Skill>
+			<Skill enabled="false" includeInFullDPS="false" label="Switched off" set1="true" set2="true" mainActiveSkill="1" mainActiveSkillCalcs="1">
+				<Gem nameSpec="Herald of Ash" skillId="HeraldOfAshPlayer" gemId="Metadata/Items/Gems/SkillGemHeraldOfAsh" variantId="HeraldOfAsh" level="5" quality="0" enabled="true" enableGlobal1="true" enableGlobal2="false" count="1"/>
+			</Skill>
+		</SkillSet>
+		<SkillSet id="3" title="Endgame">
+			<Skill enabled="true" includeInFullDPS="true" label="Main" set1="true" set2="true" mainActiveSkill="1" mainActiveSkillCalcs="1">
+				<Gem nameSpec="Essence Drain" skillId="EssenceDrainPlayer" gemId="Metadata/Items/Gems/SkillGemEssenceDrain" variantId="EssenceDrain" level="20" quality="20" enabled="true" enableGlobal1="true" enableGlobal2="false" count="1"/>
+				<Gem nameSpec="Arcane Surge" skillId="SupportArcaneSurgePlayer" gemId="Metadata/Items/Gems/SupportGemArcaneSurge" variantId="ArcaneSurge" level="1" quality="0" enabled="true" enableGlobal1="true" enableGlobal2="false" count="1"/>
+			</Skill>
+		</SkillSet>
+	</Skills>
+	<Notes>^xE05030Practice build^7 written for SSE's tests. Not a real guide.
+
+Act 1
+cut Entangle at Mud Burrow
+Move on to the Grelwood once the Devourer is down.
+Act 2
+cut Essence Drain (priority: high)
+After ascendancy
+respec the passive tree for the endgame</Notes>
+	<Tree activeSpec="2">
+		<Spec title="Act 1" treeVersion="0_5" classId="3" ascendClassId="2" classInternalId="3" ascendancyInternalId="Witch2" secondaryAscendClassId="0" nodes="54447,1755,2254,3041,4739,4748,9642,14666" masteryEffects="">
+			<URL>https://www.pathofexile.com/passive-skill-tree/</URL>
+			<Sockets/>
+		</Spec>
+		<Spec title="Act 2" treeVersion="0_5" classId="3" ascendClassId="2" classInternalId="3" ascendancyInternalId="Witch2" secondaryAscendClassId="0" nodes="54447,1755,2254,3041,4739,4748,9642,14666,17973,18407,18845,19240,22419,29695,30346,30979,41965,43736,44733,44871,46358,47555,49363,51184,53697,59822,8415" masteryEffects="">
+			<URL>https://www.pathofexile.com/passive-skill-tree/</URL>
+			<WeaponSet1 nodes="44871"/>
+			<Notes>
+				<Note nodeId="49363">Practice note: take it last.</Note>
+			</Notes>
+			<Sockets/>
+		</Spec>
+	</Tree>
+	<Calcs/>
+	<Config/>
+</PathOfBuilding2>
