@@ -33,6 +33,9 @@ public sealed class AppPaths
     /// <summary>The trade site's filter ids (GGG's public trade metadata) that trade site links are built from.</summary>
     public string TradeData => Path.Combine(AppDir, "data", "trade", "trade-data.json");
 
+    /// <summary>Path of Exile 2's passive tree, trimmed from GGG's official export, that pasted builds are drawn on.</summary>
+    public string PassiveTree => Path.Combine(AppDir, "data", "tree", "poe2-tree.json");
+
     /// <summary>The last route pack that passed its checks, so a broken pack in an update cannot take
     /// the route away.</summary>
     public string RouteCache => Path.Combine(DataDir, "route-cache");

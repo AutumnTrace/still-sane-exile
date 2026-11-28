@@ -58,7 +58,12 @@ public static class SnapshotRenderer
         SeedGuide(shell.Guide, shell.Paths);
         shell.GoGuideCommand.Execute(null);
         Save(main, Path.Combine(dir, "guide.png"));
-        Find<FrameworkElement>(main, "BuildItemsCard")?.BringIntoView();
+        Find<FrameworkElement>(main, "BuildTreeCard")?.BringIntoView();
+        Save(main, Path.Combine(dir, "guide-tree.png"));
+        var tree = shell.Guide.Plan.Tree;
+        tree.ShowSpecCommand.Execute(tree.Specs.LastOrDefault());
+        Find<FrameworkElement>(main, "BuildAscendancy")?.BringIntoView();
+        Save(main, Path.Combine(dir, "guide-tree-later.png"));        Find<FrameworkElement>(main, "BuildItemsCard")?.BringIntoView();
         Save(main, Path.Combine(dir, "guide-build.png"));
         SeedPlanChange(shell.Guide.Plan, shell.Paths);
         Save(main, Path.Combine(dir, "guide-plan-change.png"));

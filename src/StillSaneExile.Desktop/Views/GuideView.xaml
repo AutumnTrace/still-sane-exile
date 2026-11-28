@@ -244,6 +244,99 @@
           </StackPanel>
         </Border>
 
+        <!-- The build's passive tree on GGG's tree. The drawing is mouse only; the buttons and the list of picks
+             under it carry everything it shows, for the keyboard and screen readers. -->
+        <Border x:Name="BuildTreeCard" Style="{StaticResource Card}" Visibility="{Binding Plan.Tree.HasSpecs, Converter={StaticResource Vis}}">
+          <StackPanel DataContext="{Binding Plan.Tree}">
+            <TextBlock Text="Passive tree" Style="{StaticResource CardTitle}" />
+            <TextBlock Text="{Binding Summary}" Style="{StaticResource CardLead}" />
+            <ItemsControl ItemsSource="{Binding Specs}" Focusable="False" Margin="0,12,0,0" AutomationProperties.Name="The build's trees"
+                          Visibility="{Binding HasSpecChoice, Converter={StaticResource Vis}}">
+              <ItemsControl.ItemsPanel>
+                <ItemsPanelTemplate>
+                  <WrapPanel />
+                </ItemsPanelTemplate>
+              </ItemsControl.ItemsPanel>
+              <ItemsControl.ItemTemplate>
+                <DataTemplate DataType="{x:Type vm:TreeSpecChoice}">
+                  <Button Style="{StaticResource SegmentButton}" Content="{Binding Title}" Tag="{Binding Tag}" Margin="0,0,4,4"
+                          AutomationProperties.Name="{Binding Title, StringFormat='Show tree {0}'}"
+                          Command="{Binding DataContext.Plan.Tree.ShowSpecCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{Binding}" />
+                </DataTemplate>
+              </ItemsControl.ItemTemplate>
+            </ItemsControl>
+            <TextBlock Text="{Binding Warning}" FontSize="14" Foreground="{StaticResource Hint}" TextWrapping="Wrap" Margin="0,8,0,0" Visibility="{Binding HasWarning, Converter={StaticResource Vis}}" />
+            <TextBlock Text="{Binding NoDataText}" FontSize="14" Foreground="{StaticResource Warn}" TextWrapping="Wrap" Margin="0,8,0,0" Visibility="{Binding HasData, Converter={StaticResource Vis}, ConverterParameter=invert}" />
+
+            <StackPanel Visibility="{Binding CanDraw, Converter={StaticResource Vis}}">
+              <Grid Height="440" Margin="0,12,0,0">
+                <Border BorderBrush="{StaticResource Line}" BorderThickness="1">
+                  <v:PassiveTreeView x:Name="BuildTree" Allocation="{Binding Allocation}" Hovered="{Binding Hovered}" />
+                </Border>
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,8,8,0">
+                  <Button Style="{StaticResource StepButton}" Content="−" ToolTip="Zoom out" AutomationProperties.Name="Zoom out of the passive tree"
+                          Command="{x:Static v:PassiveTreeView.ZoomOutCommand}" CommandTarget="{Binding ElementName=BuildTree}" />
+                  <Button Style="{StaticResource StepButton}" Content="+" ToolTip="Zoom in" AutomationProperties.Name="Zoom in on the passive tree" Margin="4,0,0,0"
+                          Command="{x:Static v:PassiveTreeView.ZoomInCommand}" CommandTarget="{Binding ElementName=BuildTree}" />
+                  <Button Style="{StaticResource GhostButton}" Content="Fit" ToolTip="Back to the build's points" AutomationProperties.Name="Fit the passive tree to the build" MinHeight="30" Padding="10,0" Margin="4,0,0,0"
+                          Command="{x:Static v:PassiveTreeView.FitBuildCommand}" CommandTarget="{Binding ElementName=BuildTree}" />
+                  <Button Style="{StaticResource GhostButton}" Content="Whole tree" AutomationProperties.Name="Show the whole passive tree" MinHeight="30" Padding="10,0" Margin="4,0,0,0"
+                          Command="{x:Static v:PassiveTreeView.ShowAllCommand}" CommandTarget="{Binding ElementName=BuildTree}" />
+                </StackPanel>
+              </Grid>
+              <TextBlock Text="{Binding HoveredText}" FontSize="14" TextWrapping="Wrap" Margin="0,8,0,0">
+                <TextBlock.Style>
+                  <Style TargetType="TextBlock">
+                    <Setter Property="Foreground" Value="{StaticResource TextFaint}" />
+                    <Style.Triggers>
+                      <DataTrigger Binding="{Binding HasHovered}" Value="True">
+                        <Setter Property="Foreground" Value="{StaticResource TextSoft}" />
+                      </DataTrigger>
+                    </Style.Triggers>
+                  </Style>
+                </TextBlock.Style>
+              </TextBlock>
+              <TextBlock Text="{Binding Source}" FontSize="13" Foreground="{StaticResource TextFaint}" TextWrapping="Wrap" Margin="0,4,0,0" />
+            </StackPanel>
+
+            <StackPanel Visibility="{Binding HasPicks, Converter={StaticResource Vis}}">
+              <TextBlock Text="KEYSTONES AND NOTABLES" Style="{StaticResource SectionTitle}" Margin="0,16,0,4" />
+              <ItemsControl ItemsSource="{Binding Picks}" Focusable="False" AutomationProperties.Name="Keystones and notables the build takes">
+                <ItemsControl.ItemTemplate>
+                  <DataTemplate DataType="{x:Type vm:TreePickViewModel}">
+                    <Border BorderBrush="{StaticResource RowLine}" BorderThickness="0,1,0,0" Padding="0,8">
+                      <StackPanel>
+                        <TextBlock FontSize="15" TextWrapping="Wrap"><Run Text="{Binding Name, Mode=OneWay}" FontWeight="SemiBold" /><Run Text="  " /><Run Text="{Binding Kind, Mode=OneWay}" FontSize="13" Foreground="{StaticResource TextFaint}" /></TextBlock>
+                        <TextBlock Text="{Binding Stats}" FontSize="13.5" Foreground="{StaticResource TextSoft}" TextWrapping="Wrap" Margin="0,2,0,0" />
+                        <TextBlock Text="{Binding Note}" FontSize="13.5" FontStyle="Italic" Foreground="{StaticResource TextSoft}" TextWrapping="Wrap" Margin="0,2,0,0" Visibility="{Binding HasNote, Converter={StaticResource Vis}}" />
+                      </StackPanel>
+                    </Border>
+                  </DataTemplate>
+                </ItemsControl.ItemTemplate>
+              </ItemsControl>
+            </StackPanel>
+
+            <StackPanel x:Name="BuildAscendancy" Visibility="{Binding HasAscendancy, Converter={StaticResource Vis}}">
+              <TextBlock Text="{Binding AscendancyTitle}" Style="{StaticResource SectionTitle}" Margin="0,16,0,6" />
+              <Border BorderBrush="{StaticResource Line}" BorderThickness="1" Height="230" Visibility="{Binding CanDraw, Converter={StaticResource Vis}}">
+                <v:PassiveTreeView Allocation="{Binding Allocation}" AscendancyOnly="True" Hovered="{Binding Hovered}" />
+              </Border>
+              <ItemsControl ItemsSource="{Binding AscendancyPicks}" Focusable="False" Margin="0,6,0,0" AutomationProperties.Name="Ascendancy notables the build takes">
+                <ItemsControl.ItemTemplate>
+                  <DataTemplate DataType="{x:Type vm:TreePickViewModel}">
+                    <Border BorderBrush="{StaticResource RowLine}" BorderThickness="0,1,0,0" Padding="0,8">
+                      <StackPanel>
+                        <TextBlock Text="{Binding Name}" FontSize="15" FontWeight="SemiBold" TextWrapping="Wrap" />
+                        <TextBlock Text="{Binding Stats}" FontSize="13.5" Foreground="{StaticResource TextSoft}" TextWrapping="Wrap" Margin="0,2,0,0" />
+                      </StackPanel>
+                    </Border>
+                  </DataTemplate>
+                </ItemsControl.ItemTemplate>
+              </ItemsControl>
+            </StackPanel>
+          </StackPanel>
+        </Border>
+
         <!-- The build's skills, one skill set at a time: what to cut and what goes with it. -->
         <Border Style="{StaticResource Card}" Visibility="{Binding Plan.HasSkills, Converter={StaticResource Vis}}">
           <StackPanel DataContext="{Binding Plan}">

@@ -69,12 +69,24 @@ A code that unpacks to more than 32 MB, or that carries a document type (which c
   - **The build's notes**, read by the same reader as before (`PlanNotesParser`: `cut Entangle`, `cut support Zenith I`, `socket Zenith I into Entangle`, `move Zenith I: Entangle → Essence Drain`, `upgrade …`, `reserve …`, `respec …`, stage labels like `Act 2:` or `after ascendancy:`, and `at Mud Burrow`, `(needs …)`, `(priority: …)`). A line counts only when every gem it names is in the build, so prose like "Move on to the Grelwood" never becomes a step.
   - **The skill sets.** A set's stage comes from its title: "Act 2", "Acts 4-6", "Leveling (Act 1)", "after ascendancy", "Act 3, post-ascendancy". The first set counts from the start when its title names none. For each set in order: cut each skill and support not cut yet, socket each support into its group's skill (the group's first skill), and move a support that now sits in another skill. A support in two groups of one set goes into the first. Switched-off groups and skills granted by items give no steps. **A later set whose title names no stage ("Endgame", "Level 40") gives no steps**, so it never leaks into Act 1; the page says which sets those are and that naming them after a stage in Path of Building and pasting again brings them in.
   - Within a stage the notes' steps come first. Gem levels are not turned into upgrades, because Path of Building often sets every gem to its top level whatever the stage. Whether a gem is a support comes from the ids Path of Building writes (`Metadata/Items/Gem/SupportGem…`, a `Support…` granted effect); SSE ships no gem data and claims nothing else about a gem, so a step says "Cut Entangle", never which uncut gem or level it takes.
+- **The passive tree**, drawn on the game's tree (below).
 - **Skills and supports**, one skill set at a time with a picker: each skill with its supports, the group's label, the level Path of Building has for it, and the author's gem notes. The set shown is the latest one for a stage you have reached, else the one the author had open.
 - **The notes** as written, with Path of Building's colour codes taken out.
 - **Items**: the item set the author had open, slot by slot, with names and base types only.
 - **A few numbers** Path of Building worked out when the code was made (Life, Energy Shield, Mana, Spirit), labelled as Path of Building's.
 
 Each step is a milestone: stage, zone or NPC, trigger (stage, or zone), prerequisites, action, gem, target skill, uncut gem type and level (only when the notes give them), the author's priority or "Author did not specify", and where in the build it came from.
+
+### The passive tree
+
+The build's tree is drawn on Path of Exile 2's own tree: `data/tree/poe2-tree.json`, a trim of Grinding Gear Games' official export (see [SOURCES.md](SOURCES.md), row 23), refreshed by hand with `scripts/update-passive-tree.ps1` after a patch. It ships with the app; nothing is downloaded.
+
+- Every node and connection sits where the export puts it, curves along their orbits; the build's points and the connections between them are gold, notables and keystones larger, jewel sockets blue. The shapes are drawn in the game's colours; the game's art is not used (an owner decision, row 22).
+- It opens on the build's points. The wheel zooms around the pointer and dragging moves it; **−**, **+**, **Fit** and **Whole tree** do the same from the keyboard. Pointing at a node shows its name and stats under the drawing.
+- When the build has several trees (Path of Building's "Act 1", "Act 2", …), a picker shows each; the one shown first is the latest whose title names a stage you have reached, else the one the author had open. A tick elsewhere on the page never changes the drawing.
+- The ascendancy is drawn on its own, under the main tree, because the export places ascendancies far outside it.
+- Under the drawing: how many points the tree takes (the class and ascendancy starts are not counted), how many of them belong to weapon set 1 or 2, then the keystones and notables by name with their stats and the author's notes on them. That list is what a screen reader reads; the drawing is not a tab stop.
+- A tree Path of Building made for another game version (`treeVersion` "0_4" against the shipped 0.5.5) says so. Points the shipped tree does not have are counted and named as missing, never placed by guesswork.
 
 ### Stage gating
 

@@ -2,6 +2,7 @@ using System.Globalization;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using StillSaneExile.Desktop.Infrastructure;
+using StillSaneExile.Desktop.Services;
 using StillSaneExile.Domain.Guide;
 using StillSaneExile.Domain.Items;
 
@@ -84,7 +85,11 @@ public sealed partial class BuildPlanViewModel : ObservableObject
         _progress = progress;
         _route = route;
         _changed = changed;
+        Tree = new PassiveTreeViewModel(() => PassiveTreeFile.Load(shell.Paths));
     }
+
+    /// <summary>The build's passive tree, drawn on the tree that ships with the app.</summary>
+    public PassiveTreeViewModel Tree { get; }
 
     [ObservableProperty]
     public partial string? Message { get; set; }
@@ -376,6 +381,7 @@ public sealed partial class BuildPlanViewModel : ObservableObject
         HiddenCount = checks.Count(c => !c.Visible);
         NextGem = PlanGate.Next(_active, position, _done)?.Milestone.Describe();
         RefreshSkills(position);
+        Tree.Load(Build, position);
         OnPropertyChanged(string.Empty);
     }
 
