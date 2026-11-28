@@ -5,7 +5,8 @@ using StillSaneExile.Domain.Items;
 namespace StillSaneExile.Domain.Data;
 
 /// <summary>A versioned bundle of base/modifier facts. Every pack states where its data came from and
-/// what it may be used for. A synthetic pack is test data and is labelled as such wherever it is used.</summary>
+/// what it may be used for. A synthetic pack is test data and is labelled as such wherever it is used.
+/// Bases and essences are optional: the craft simulator needs them, reading an item does not.</summary>
 public sealed record DataPack(
     int SchemaVersion,
     string Id,
@@ -15,7 +16,9 @@ public sealed record DataPack(
     string? VerifiedDate,
     IReadOnlyList<string> CompatibleBuilds,
     IReadOnlyList<string> Locales,
-    IReadOnlyList<ModFamily> Families)
+    IReadOnlyList<ModFamily> Families,
+    IReadOnlyList<CraftBaseData>? Bases = null,
+    IReadOnlyList<EssenceData>? Essences = null)
 {
     public const int SupportedSchemaVersion = 1;
 
@@ -46,10 +49,19 @@ public sealed record ModFamily(
 
 public sealed record FamilyLine(string Template, StatDirection Direction, string Unit, int Components = 1);
 
-public sealed record FamilyTier(int Tier, string Name, int Level, IReadOnlyList<decimal[]> Ranges)
+/// <param name="Weight">How often the tier rolls against the others that can (the craft simulator); null when the
+/// pack does not say.</param>
+public sealed record FamilyTier(int Tier, string Name, int Level, IReadOnlyList<decimal[]> Ranges, int? Weight = null)
 {
     public (decimal Lo, decimal Hi) Range(int component) => (Ranges[component][0], Ranges[component][1]);
 }
+
+/// <summary>A base the craft simulator can start from: its physical damage and attack speed before any
+/// modifier, and its implicit line.</summary>
+public sealed record CraftBaseData(string Name, string ItemClass, decimal[] Physical, decimal AttacksPerSecond, string? Implicit = null);
+
+/// <summary>An essence: the stat it guarantees, as a family and tier of the same pack.</summary>
+public sealed record EssenceData(string Id, string Name, string Family, int Tier);
 
 public sealed record PackLoadResult(DataPack? Pack, string? Error);
 
@@ -106,6 +118,27 @@ public static class DataPackLoader
                 {
                     return new PackLoadResult(null, $"Family {f.Id} tier {t.Tier}: each range must be [min, max] with min ≤ max.");
                 }
+
+                if (t.Weight is < 0)
+                {
+                    return new PackLoadResult(null, $"Family {f.Id} tier {t.Tier}: a weight can't be below 0.");
+                }
+            }
+        }
+
+        foreach (var b in pack.Bases ?? [])
+        {
+            if (b.Physical is not [var lo, var hi] || lo > hi || b.AttacksPerSecond <= 0)
+            {
+                return new PackLoadResult(null, $"Base {b.Name}: physical damage must be [min, max] and attacks per second above 0.");
+            }
+        }
+
+        foreach (var e in pack.Essences ?? [])
+        {
+            if (pack.Families.FirstOrDefault(f => f.Id == e.Family) is not { } family || family.Tiers.All(t => t.Tier != e.Tier))
+            {
+                return new PackLoadResult(null, $"Essence {e.Id}: family {e.Family} has no tier {e.Tier}.");
             }
         }
 

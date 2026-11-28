@@ -18,7 +18,7 @@ public sealed partial class ShellViewModel : ObservableObject
         Session = Session.Create(store, settings, paths);
         TradeSite = new TradeSiteSwitch(this);
         Inspect = new InspectViewModel(this, clipboard);
-        Craft = PlaceholderViewModel.Craft();
+        Craft = new CraftViewModel(this);
         StashPictures = new StashPicturesViewModel(this);
         Wealth = PlaceholderViewModel.Wealth();
         Guide = new GuideViewModel(this);
@@ -103,7 +103,7 @@ public sealed partial class ShellViewModel : ObservableObject
     public partial Session Session { get; private set; }
 
     public InspectViewModel Inspect { get; }
-    public PlaceholderViewModel Craft { get; }
+    public CraftViewModel Craft { get; }
 
     /// <summary>"Collect stash pictures": the switch and the pictures to label, in Settings.</summary>
     public StashPicturesViewModel StashPictures { get; }
@@ -135,6 +135,7 @@ public sealed partial class ShellViewModel : ObservableObject
     public string PageName => CurrentPage switch
     {
         InspectViewModel => "Price check",
+        CraftViewModel => "Crafting",
         PlaceholderViewModel p => p.Title,
         GuideViewModel => "Campaign guide",
         SettingsViewModel => "Settings",
@@ -190,12 +191,6 @@ public sealed partial class ShellViewModel : ObservableObject
         Navigate(SettingsPage);
     }
 
-    public void OpenCraftWith(ItemViewModel? item)
-    {
-        Craft.Context = item is null ? null : $"Item handed over from the price check: {item.Item.DisplayName} (snapshot {item.CapturedAt}). Crafting plans will start from this exact snapshot.";
-        Navigate(Craft);
-    }
-
     /// <summary>Rebuilds the session from settings and swaps it in one assignment, then re-reads items and
     /// holdings against it.</summary>
     public void ReloadSession()
@@ -203,6 +198,7 @@ public sealed partial class ShellViewModel : ObservableObject
         Session = Session.Create(Store, Settings, Paths);
         TrackPrices();
         Inspect.Rebuild();
+        Craft.Load();
         SettingsPage.Load();
     }
 

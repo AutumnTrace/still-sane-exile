@@ -43,7 +43,7 @@ If a feature seems to need breaking one of these, stop and ask the owner instead
 
 | Path | What it is |
 |---|---|
-| `src/StillSaneExile.Domain` | Pure .NET 10 library, no packages, no Windows or UI code: item parsing (`Items`, `Reading`, `Rolls`), pricing and evidence (`Pricing`), the trade worksheet and trade-site links (`Trade`), the rate-limit client and poe.ninja client (`Market`), the capture gate (`Capture`), wealth (`Wealth`), the guide (`Guide`), release notes (`Releases`). Put logic here so it can be unit-tested. |
+| `src/StillSaneExile.Domain` | Pure .NET 10 library, no packages, no Windows or UI code: item parsing (`Items`, `Reading`, `Rolls`), pricing and evidence (`Pricing`), the trade worksheet and trade-site links (`Trade`), the rate-limit client and poe.ninja client (`Market`), the capture gate (`Capture`), wealth (`Wealth`), the guide (`Guide`), the craft simulator (`Craft`), release notes (`Releases`). Put logic here so it can be unit-tested. |
 | `src/StillSaneExile.Desktop` | WPF app (`net10.0-windows`, CommunityToolkit.Mvvm, Microsoft.Data.Sqlite, Velopack). `Infrastructure/` wraps Windows (hooks, foreground, clipboard, SQLite `Store`, paths), `Services/` holds the app logic (`HudController`, `Session`, `Settings`, `LivePrices`, `UpdateService`, `SnapshotRenderer`), `ViewModels/` and `Views/` the UI. `App.xaml` holds the theme and every shared style. |
 | `tests/StillSaneExile.Domain.Tests` | xunit tests for the domain. Fixtures come from `fixtures/` via `Fixtures.cs`. |
 | `tests/StillSaneExile.Desktop.Tests` | xunit tests for the app: seams with fakes (`Fakes.cs`), STA helpers (`Sta.Run`, `UiThread.Run`), `TestApp`, and `AccessibilityTests` (tab order, names, visible focus). |

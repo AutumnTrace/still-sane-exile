@@ -338,6 +338,25 @@ public class AccessibilityTests
     });
 
     [Fact]
+    public void The_craft_simulator_works_from_the_keyboard() => UiThread.Run(() =>
+    {
+        using var app = new TestApp();
+        var craft = app.Shell.Craft;
+        craft.Restart(new Random(3));
+        craft.Groups.SelectMany(g => g.Orbs).First(o => o.Id == "transmute").ClickCommand.Execute(null); // in hand: the item is a button
+
+        var stops = Check(new CraftView { DataContext = craft });
+
+        Assert.Equal(["Lower the item level", "Item level", "Raise the item level", "Start over", "Regular orbs"], stops[..5]); // no click yet: nothing to undo
+        Assert.True(stops.IndexOf("Orb of Transmutation") < stops.IndexOf("Orb of Augmentation"));
+        Assert.Contains("Omen of Whittling", stops);
+        Assert.Contains("Use Orb of Transmutation on the item", stops);
+        Assert.True(stops.IndexOf("Omen of Dextral Annulment") < stops.IndexOf("Use Orb of Transmutation on the item")); // the bench, then the item
+        Assert.Contains("T2+ for #% increased Physical Damage", stops);
+        Assert.Contains("Stop wanting #% increased Attack Speed", stops);
+    });
+
+    [Fact]
     public void The_campaign_guide_works_from_the_keyboard() => UiThread.Run(() =>
     {
         using var app = new TestApp();
@@ -415,7 +434,7 @@ public class AccessibilityTests
 
         var stops = Check(window);
 
-        Assert.Equal(new[] { "Price check", "Crafting later", "My wealth later", "Campaign guide" }, stops[..4]);
+        Assert.Equal(new[] { "Price check", "Crafting", "My wealth later", "Campaign guide" }, stops[..4]);
         var league = stops.FindIndex(s => s.StartsWith("League: ", StringComparison.Ordinal));
         var currency = stops.FindIndex(s => s.StartsWith("Show prices in: ", StringComparison.Ordinal));
         var settings = stops.IndexOf("Settings");

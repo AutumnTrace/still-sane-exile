@@ -761,6 +761,9 @@
       <DataTemplate DataType="{x:Type vm:PlaceholderViewModel}">
         <v:PlaceholderView />
       </DataTemplate>
+      <DataTemplate DataType="{x:Type vm:CraftViewModel}">
+        <v:CraftView />
+      </DataTemplate>
       <DataTemplate DataType="{x:Type vm:GuideViewModel}">
         <v:GuideView />
       </DataTemplate>

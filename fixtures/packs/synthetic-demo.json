@@ -1,5 +1,7 @@
 // SYNTHETIC DATA PACK. Every range below was written for tests and the demo profile.
 // It is NOT game data and must never be shown as such. Affix names are placeholders.
+// Tier weights, the crafting base and what each essence guarantees are made up as well: they feed the
+// craft simulator, which says so.
 {
   "schemaVersion": 1,
   "id": "sse-synthetic-demo",
@@ -17,14 +19,14 @@
       "itemClasses": ["Crossbows", "Bows", "Spears", "Quarterstaves", "One Hand Maces", "Two Hand Maces"],
       "lines": [ { "template": "#% increased Physical Damage", "direction": "higherIsBetter", "unit": "%" } ],
       "tiers": [
-        { "tier": 1, "name": "Merciless", "level": 82, "ranges": [[170, 179]] },
-        { "tier": 2, "name": "Tyrannical", "level": 73, "ranges": [[155, 169]] },
-        { "tier": 3, "name": "Cruel", "level": 60, "ranges": [[135, 154]] },
-        { "tier": 4, "name": "Bloodthirsty", "level": 46, "ranges": [[110, 134]] },
-        { "tier": 5, "name": "Vicious", "level": 35, "ranges": [[85, 109]] },
-        { "tier": 6, "name": "Wicked", "level": 23, "ranges": [[65, 84]] },
-        { "tier": 7, "name": "Serrated", "level": 11, "ranges": [[50, 64]] },
-        { "tier": 8, "name": "Heavy", "level": 1, "ranges": [[40, 49]] }
+        { "tier": 1, "name": "Merciless", "level": 82, "weight": 250, "ranges": [[170, 179]] },
+        { "tier": 2, "name": "Tyrannical", "level": 73, "weight": 500, "ranges": [[155, 169]] },
+        { "tier": 3, "name": "Cruel", "level": 60, "weight": 1000, "ranges": [[135, 154]] },
+        { "tier": 4, "name": "Bloodthirsty", "level": 46, "weight": 1000, "ranges": [[110, 134]] },
+        { "tier": 5, "name": "Vicious", "level": 35, "weight": 1000, "ranges": [[85, 109]] },
+        { "tier": 6, "name": "Wicked", "level": 23, "weight": 1000, "ranges": [[65, 84]] },
+        { "tier": 7, "name": "Serrated", "level": 11, "weight": 1000, "ranges": [[50, 64]] },
+        { "tier": 8, "name": "Heavy", "level": 1, "weight": 1000, "ranges": [[40, 49]] }
       ]
     },
     {
@@ -37,10 +39,10 @@
         { "template": "# to Accuracy Rating", "direction": "higherIsBetter", "unit": "" }
       ],
       "tiers": [
-        { "tier": 1, "name": "Dictator's", "level": 75, "ranges": [[75, 79], [175, 200]] },
-        { "tier": 2, "name": "Emperor's", "level": 60, "ranges": [[65, 74], [124, 174]] },
-        { "tier": 3, "name": "Conqueror's", "level": 46, "ranges": [[55, 64], [98, 123]] },
-        { "tier": 4, "name": "Champion's", "level": 35, "ranges": [[45, 54], [73, 97]] }
+        { "tier": 1, "name": "Dictator's", "level": 75, "weight": 250, "ranges": [[75, 79], [175, 200]] },
+        { "tier": 2, "name": "Emperor's", "level": 60, "weight": 500, "ranges": [[65, 74], [124, 174]] },
+        { "tier": 3, "name": "Conqueror's", "level": 46, "weight": 1000, "ranges": [[55, 64], [98, 123]] },
+        { "tier": 4, "name": "Champion's", "level": 35, "weight": 1000, "ranges": [[45, 54], [73, 97]] }
       ]
     },
     {
@@ -50,10 +52,10 @@
       "itemClasses": ["Crossbows", "Bows", "Spears", "Quarterstaves", "One Hand Maces", "Two Hand Maces"],
       "lines": [ { "template": "Adds # to # Physical Damage", "direction": "higherIsBetter", "unit": "", "components": 2 } ],
       "tiers": [
-        { "tier": 1, "name": "Flaring", "level": 75, "ranges": [[26, 35], [44, 58]] },
-        { "tier": 2, "name": "Tempered", "level": 65, "ranges": [[20, 27], [34, 45]] },
-        { "tier": 3, "name": "Razor-sharp", "level": 54, "ranges": [[15, 20], [26, 34]] },
-        { "tier": 4, "name": "Honed", "level": 36, "ranges": [[10, 14], [17, 25]] }
+        { "tier": 1, "name": "Flaring", "level": 75, "weight": 250, "ranges": [[26, 35], [44, 58]] },
+        { "tier": 2, "name": "Tempered", "level": 65, "weight": 500, "ranges": [[20, 27], [34, 45]] },
+        { "tier": 3, "name": "Razor-sharp", "level": 54, "weight": 1000, "ranges": [[15, 20], [26, 34]] },
+        { "tier": 4, "name": "Honed", "level": 36, "weight": 1000, "ranges": [[10, 14], [17, 25]] }
       ]
     },
     {
@@ -63,12 +65,12 @@
       "itemClasses": ["Crossbows", "Bows", "Spears", "Quarterstaves", "One Hand Maces", "Two Hand Maces"],
       "lines": [ { "template": "# to Accuracy Rating", "direction": "higherIsBetter", "unit": "" } ],
       "tiers": [
-        { "tier": 1, "name": "of the Ranger", "level": 76, "ranges": [[301, 350]] },
-        { "tier": 2, "name": "of the Marksman", "level": 67, "ranges": [[241, 300]] },
-        { "tier": 3, "name": "of the Sniper", "level": 58, "ranges": [[161, 240]] },
-        { "tier": 4, "name": "of the Deadeye", "level": 40, "ranges": [[101, 160]] },
-        { "tier": 5, "name": "of the Hunter", "level": 20, "ranges": [[41, 100]] },
-        { "tier": 6, "name": "of Steadiness", "level": 1, "ranges": [[11, 40]] }
+        { "tier": 1, "name": "of the Ranger", "level": 76, "weight": 250, "ranges": [[301, 350]] },
+        { "tier": 2, "name": "of the Marksman", "level": 67, "weight": 500, "ranges": [[241, 300]] },
+        { "tier": 3, "name": "of the Sniper", "level": 58, "weight": 1000, "ranges": [[161, 240]] },
+        { "tier": 4, "name": "of the Deadeye", "level": 40, "weight": 1000, "ranges": [[101, 160]] },
+        { "tier": 5, "name": "of the Hunter", "level": 20, "weight": 1000, "ranges": [[41, 100]] },
+        { "tier": 6, "name": "of Steadiness", "level": 1, "weight": 1000, "ranges": [[11, 40]] }
       ]
     },
     {
@@ -78,11 +80,11 @@
       "itemClasses": ["Crossbows", "Bows", "Spears", "Quarterstaves", "One Hand Maces", "Two Hand Maces"],
       "lines": [ { "template": "#% increased Attack Speed", "direction": "higherIsBetter", "unit": "%" } ],
       "tiers": [
-        { "tier": 1, "name": "of Celebration", "level": 77, "ranges": [[24, 26]] },
-        { "tier": 2, "name": "of Infamy", "level": 60, "ranges": [[20, 23]] },
-        { "tier": 3, "name": "of Fame", "level": 45, "ranges": [[16, 19]] },
-        { "tier": 4, "name": "of Acclaim", "level": 30, "ranges": [[11, 15]] },
-        { "tier": 5, "name": "of Skill", "level": 1, "ranges": [[5, 10]] }
+        { "tier": 1, "name": "of Celebration", "level": 77, "weight": 250, "ranges": [[24, 26]] },
+        { "tier": 2, "name": "of Infamy", "level": 60, "weight": 500, "ranges": [[20, 23]] },
+        { "tier": 3, "name": "of Fame", "level": 45, "weight": 1000, "ranges": [[16, 19]] },
+        { "tier": 4, "name": "of Acclaim", "level": 30, "weight": 1000, "ranges": [[11, 15]] },
+        { "tier": 5, "name": "of Skill", "level": 1, "weight": 1000, "ranges": [[5, 10]] }
       ]
     },
     {
@@ -92,11 +94,11 @@
       "itemClasses": ["Crossbows", "Bows", "Spears", "Quarterstaves", "One Hand Maces", "Two Hand Maces"],
       "lines": [ { "template": "#% increased Critical Hit Chance", "direction": "higherIsBetter", "unit": "%" } ],
       "tiers": [
-        { "tier": 1, "name": "of Unmaking", "level": 73, "ranges": [[35, 38]] },
-        { "tier": 2, "name": "of Incision", "level": 59, "ranges": [[30, 34]] },
-        { "tier": 3, "name": "of Rupturing", "level": 44, "ranges": [[25, 29]] },
-        { "tier": 4, "name": "of Puncturing", "level": 20, "ranges": [[20, 24]] },
-        { "tier": 5, "name": "of Needling", "level": 1, "ranges": [[10, 19]] }
+        { "tier": 1, "name": "of Unmaking", "level": 73, "weight": 250, "ranges": [[35, 38]] },
+        { "tier": 2, "name": "of Incision", "level": 59, "weight": 500, "ranges": [[30, 34]] },
+        { "tier": 3, "name": "of Rupturing", "level": 44, "weight": 1000, "ranges": [[25, 29]] },
+        { "tier": 4, "name": "of Puncturing", "level": 20, "weight": 1000, "ranges": [[20, 24]] },
+        { "tier": 5, "name": "of Needling", "level": 1, "weight": 1000, "ranges": [[10, 19]] }
       ]
     },
     {
@@ -106,11 +108,11 @@
       "itemClasses": ["Boots"],
       "lines": [ { "template": "#% increased Movement Speed", "direction": "higherIsBetter", "unit": "%" } ],
       "tiers": [
-        { "tier": 1, "name": "Hellion's", "level": 82, "ranges": [[35, 35]] },
-        { "tier": 2, "name": "Cheetah's", "level": 55, "ranges": [[30, 30]] },
-        { "tier": 3, "name": "Gazelle's", "level": 40, "ranges": [[25, 25]] },
-        { "tier": 4, "name": "Stallion's", "level": 15, "ranges": [[20, 20]] },
-        { "tier": 5, "name": "Runner's", "level": 1, "ranges": [[10, 10]] }
+        { "tier": 1, "name": "Hellion's", "level": 82, "weight": 250, "ranges": [[35, 35]] },
+        { "tier": 2, "name": "Cheetah's", "level": 55, "weight": 500, "ranges": [[30, 30]] },
+        { "tier": 3, "name": "Gazelle's", "level": 40, "weight": 1000, "ranges": [[25, 25]] },
+        { "tier": 4, "name": "Stallion's", "level": 15, "weight": 1000, "ranges": [[20, 20]] },
+        { "tier": 5, "name": "Runner's", "level": 1, "weight": 1000, "ranges": [[10, 10]] }
       ]
     },
     {
@@ -120,12 +122,12 @@
       "itemClasses": ["Boots", "Gloves", "Helmets", "Body Armours"],
       "lines": [ { "template": "# to maximum Life", "direction": "higherIsBetter", "unit": "" } ],
       "tiers": [
-        { "tier": 1, "name": "Prime", "level": 80, "ranges": [[120, 139]] },
-        { "tier": 2, "name": "Virile", "level": 65, "ranges": [[100, 119]] },
-        { "tier": 3, "name": "Robust", "level": 44, "ranges": [[80, 99]] },
-        { "tier": 4, "name": "Stout", "level": 24, "ranges": [[60, 79]] },
-        { "tier": 5, "name": "Healthy", "level": 11, "ranges": [[40, 59]] },
-        { "tier": 6, "name": "Hale", "level": 1, "ranges": [[10, 39]] }
+        { "tier": 1, "name": "Prime", "level": 80, "weight": 250, "ranges": [[120, 139]] },
+        { "tier": 2, "name": "Virile", "level": 65, "weight": 500, "ranges": [[100, 119]] },
+        { "tier": 3, "name": "Robust", "level": 44, "weight": 1000, "ranges": [[80, 99]] },
+        { "tier": 4, "name": "Stout", "level": 24, "weight": 1000, "ranges": [[60, 79]] },
+        { "tier": 5, "name": "Healthy", "level": 11, "weight": 1000, "ranges": [[40, 59]] },
+        { "tier": 6, "name": "Hale", "level": 1, "weight": 1000, "ranges": [[10, 39]] }
       ]
     },
     {
@@ -135,15 +137,158 @@
       "itemClasses": ["Boots", "Gloves", "Helmets", "Body Armours", "Rings", "Amulets"],
       "lines": [ { "template": "#% to Fire Resistance", "direction": "higherIsBetter", "unit": "%" } ],
       "tiers": [
-        { "tier": 1, "name": "of Tzteosh", "level": 82, "ranges": [[41, 45]] },
-        { "tier": 2, "name": "of the Magma", "level": 71, "ranges": [[36, 40]] },
-        { "tier": 3, "name": "of the Volcano", "level": 60, "ranges": [[31, 35]] },
-        { "tier": 4, "name": "of the Furnace", "level": 48, "ranges": [[26, 30]] },
-        { "tier": 5, "name": "of the Kiln", "level": 36, "ranges": [[21, 25]] },
-        { "tier": 6, "name": "of the Drake", "level": 24, "ranges": [[16, 20]] },
-        { "tier": 7, "name": "of the Salamander", "level": 12, "ranges": [[11, 15]] },
-        { "tier": 8, "name": "of the Whelpling", "level": 1, "ranges": [[6, 10]] }
+        { "tier": 1, "name": "of Tzteosh", "level": 82, "weight": 250, "ranges": [[41, 45]] },
+        { "tier": 2, "name": "of the Magma", "level": 71, "weight": 500, "ranges": [[36, 40]] },
+        { "tier": 3, "name": "of the Volcano", "level": 60, "weight": 1000, "ranges": [[31, 35]] },
+        { "tier": 4, "name": "of the Furnace", "level": 48, "weight": 1000, "ranges": [[26, 30]] },
+        { "tier": 5, "name": "of the Kiln", "level": 36, "weight": 1000, "ranges": [[21, 25]] },
+        { "tier": 6, "name": "of the Drake", "level": 24, "weight": 1000, "ranges": [[16, 20]] },
+        { "tier": 7, "name": "of the Salamander", "level": 12, "weight": 1000, "ranges": [[11, 15]] },
+        { "tier": 8, "name": "of the Whelpling", "level": 1, "weight": 1000, "ranges": [[6, 10]] }
+      ]
+    },
+    {
+      "id": "syn.flat_fire",
+      "group": "local added fire damage",
+      "side": "prefix",
+      "itemClasses": ["Crossbows", "Bows", "Spears", "Quarterstaves", "One Hand Maces", "Two Hand Maces"],
+      "lines": [ { "template": "Adds # to # Fire Damage", "direction": "higherIsBetter", "unit": "", "components": 2 } ],
+      "tiers": [
+        { "tier": 1, "name": "Incinerating", "level": 81, "weight": 250, "ranges": [[36, 48], [56, 72]] },
+        { "tier": 2, "name": "Blasting", "level": 66, "weight": 500, "ranges": [[28, 37], [44, 57]] },
+        { "tier": 3, "name": "Smoking", "level": 48, "weight": 1000, "ranges": [[19, 26], [31, 41]] },
+        { "tier": 4, "name": "Burning", "level": 28, "weight": 1000, "ranges": [[11, 15], [18, 24]] },
+        { "tier": 5, "name": "Heated", "level": 1, "weight": 1000, "ranges": [[4, 6], [7, 10]] }
+      ]
+    },
+    {
+      "id": "syn.flat_cold",
+      "group": "local added cold damage",
+      "side": "prefix",
+      "itemClasses": ["Crossbows", "Bows", "Spears", "Quarterstaves", "One Hand Maces", "Two Hand Maces"],
+      "lines": [ { "template": "Adds # to # Cold Damage", "direction": "higherIsBetter", "unit": "", "components": 2 } ],
+      "tiers": [
+        { "tier": 1, "name": "Entombing", "level": 81, "weight": 250, "ranges": [[31, 42], [52, 64]] },
+        { "tier": 2, "name": "Polar", "level": 66, "weight": 500, "ranges": [[24, 32], [39, 51]] },
+        { "tier": 3, "name": "Frosted", "level": 48, "weight": 1000, "ranges": [[16, 22], [27, 36]] },
+        { "tier": 4, "name": "Chilled", "level": 28, "weight": 1000, "ranges": [[9, 13], [15, 21]] },
+        { "tier": 5, "name": "Frosty", "level": 1, "weight": 1000, "ranges": [[3, 5], [6, 9]] }
+      ]
+    },
+    {
+      "id": "syn.flat_lightning",
+      "group": "local added lightning damage",
+      "side": "prefix",
+      "itemClasses": ["Crossbows", "Bows", "Spears", "Quarterstaves", "One Hand Maces", "Two Hand Maces"],
+      "lines": [ { "template": "Adds # to # Lightning Damage", "direction": "higherIsBetter", "unit": "", "components": 2 } ],
+      "tiers": [
+        { "tier": 1, "name": "Electrocuting", "level": 81, "weight": 250, "ranges": [[3, 6], [95, 110]] },
+        { "tier": 2, "name": "Shocking", "level": 66, "weight": 500, "ranges": [[2, 5], [76, 88]] },
+        { "tier": 3, "name": "Humming", "level": 48, "weight": 1000, "ranges": [[2, 4], [55, 64]] },
+        { "tier": 4, "name": "Buzzing", "level": 28, "weight": 1000, "ranges": [[1, 3], [32, 38]] },
+        { "tier": 5, "name": "Charged", "level": 1, "weight": 1000, "ranges": [[1, 2], [11, 14]] }
+      ]
+    },
+    {
+      "id": "syn.projectile_level",
+      "group": "projectile skill levels",
+      "side": "prefix",
+      "itemClasses": ["Crossbows", "Bows", "Spears", "Quarterstaves", "One Hand Maces", "Two Hand Maces"],
+      "lines": [ { "template": "# to Level of all Projectile Skills", "direction": "higherIsBetter", "unit": "" } ],
+      "tiers": [
+        { "tier": 1, "name": "Sharpshooter's", "level": 81, "weight": 250, "ranges": [[3, 3]] },
+        { "tier": 2, "name": "Marksman's", "level": 55, "weight": 500, "ranges": [[2, 2]] },
+        { "tier": 3, "name": "Archer's", "level": 25, "weight": 1000, "ranges": [[1, 1]] }
+      ]
+    },
+    {
+      "id": "syn.crit_damage",
+      "group": "local critical damage bonus",
+      "side": "suffix",
+      "itemClasses": ["Crossbows", "Bows", "Spears", "Quarterstaves", "One Hand Maces", "Two Hand Maces"],
+      "lines": [ { "template": "#% increased Critical Damage Bonus", "direction": "higherIsBetter", "unit": "%" } ],
+      "tiers": [
+        { "tier": 1, "name": "of Destruction", "level": 73, "weight": 250, "ranges": [[35, 39]] },
+        { "tier": 2, "name": "of Ruin", "level": 59, "weight": 500, "ranges": [[30, 34]] },
+        { "tier": 3, "name": "of Calamity", "level": 44, "weight": 1000, "ranges": [[25, 29]] },
+        { "tier": 4, "name": "of Disaster", "level": 30, "weight": 1000, "ranges": [[20, 24]] },
+        { "tier": 5, "name": "of Ire", "level": 8, "weight": 1000, "ranges": [[10, 19]] }
+      ]
+    },
+    {
+      "id": "syn.reload_speed",
+      "group": "reload speed",
+      "side": "suffix",
+      "itemClasses": ["Crossbows", "Bows", "Spears", "Quarterstaves", "One Hand Maces", "Two Hand Maces"],
+      "lines": [ { "template": "#% increased Reload Speed", "direction": "higherIsBetter", "unit": "%" } ],
+      "tiers": [
+        { "tier": 1, "name": "of the Gunner", "level": 70, "weight": 250, "ranges": [[22, 25]] },
+        { "tier": 2, "name": "of Reloading", "level": 50, "weight": 500, "ranges": [[17, 21]] },
+        { "tier": 3, "name": "of Loading", "level": 30, "weight": 1000, "ranges": [[12, 16]] },
+        { "tier": 4, "name": "of Readiness", "level": 10, "weight": 1000, "ranges": [[7, 11]] }
+      ]
+    },
+    {
+      "id": "syn.dexterity",
+      "group": "dexterity",
+      "side": "suffix",
+      "itemClasses": ["Crossbows", "Bows", "Spears", "Quarterstaves", "One Hand Maces", "Two Hand Maces"],
+      "lines": [ { "template": "# to Dexterity", "direction": "higherIsBetter", "unit": "" } ],
+      "tiers": [
+        { "tier": 1, "name": "of the Phantom", "level": 74, "weight": 250, "ranges": [[29, 33]] },
+        { "tier": 2, "name": "of the Jaguar", "level": 60, "weight": 500, "ranges": [[25, 28]] },
+        { "tier": 3, "name": "of the Panther", "level": 46, "weight": 1000, "ranges": [[21, 24]] },
+        { "tier": 4, "name": "of the Fox", "level": 32, "weight": 1000, "ranges": [[16, 20]] },
+        { "tier": 5, "name": "of the Lynx", "level": 18, "weight": 1000, "ranges": [[11, 15]] },
+        { "tier": 6, "name": "of the Mongoose", "level": 1, "weight": 1000, "ranges": [[5, 10]] }
+      ]
+    },
+    {
+      "id": "syn.strength",
+      "group": "strength",
+      "side": "suffix",
+      "itemClasses": ["Crossbows", "Bows", "Spears", "Quarterstaves", "One Hand Maces", "Two Hand Maces"],
+      "lines": [ { "template": "# to Strength", "direction": "higherIsBetter", "unit": "" } ],
+      "tiers": [
+        { "tier": 1, "name": "of the Titan", "level": 74, "weight": 250, "ranges": [[29, 33]] },
+        { "tier": 2, "name": "of the Gorilla", "level": 60, "weight": 500, "ranges": [[25, 28]] },
+        { "tier": 3, "name": "of the Lion", "level": 46, "weight": 1000, "ranges": [[21, 24]] },
+        { "tier": 4, "name": "of the Bear", "level": 32, "weight": 1000, "ranges": [[16, 20]] },
+        { "tier": 5, "name": "of the Wrestler", "level": 18, "weight": 1000, "ranges": [[11, 15]] },
+        { "tier": 6, "name": "of the Brute", "level": 1, "weight": 1000, "ranges": [[5, 10]] }
+      ]
+    },
+    {
+      "id": "syn.leech",
+      "group": "life leech",
+      "side": "suffix",
+      "itemClasses": ["Crossbows", "Bows", "Spears", "Quarterstaves", "One Hand Maces", "Two Hand Maces"],
+      "lines": [ { "template": "Leeches #% of Physical Damage as Life", "direction": "higherIsBetter", "unit": "%" } ],
+      "tiers": [
+        { "tier": 1, "name": "of the Parasite", "level": 68, "weight": 250, "ranges": [[8, 9]] },
+        { "tier": 2, "name": "of the Remora", "level": 52, "weight": 500, "ranges": [[6, 7]] },
+        { "tier": 3, "name": "of the Lamprey", "level": 36, "weight": 1000, "ranges": [[4, 5]] }
+      ]
+    },
+    {
+      "id": "syn.life_on_kill",
+      "group": "life gained on kill",
+      "side": "suffix",
+      "itemClasses": ["Crossbows", "Bows", "Spears", "Quarterstaves", "One Hand Maces", "Two Hand Maces"],
+      "lines": [ { "template": "Gain # Life per Enemy Killed", "direction": "higherIsBetter", "unit": "" } ],
+      "tiers": [
+        { "tier": 1, "name": "of Triumph", "level": 75, "weight": 250, "ranges": [[33, 40]] },
+        { "tier": 2, "name": "of Success", "level": 55, "weight": 500, "ranges": [[24, 32]] },
+        { "tier": 3, "name": "of Victory", "level": 32, "weight": 1000, "ranges": [[15, 23]] },
+        { "tier": 4, "name": "of Rejuvenation", "level": 11, "weight": 1000, "ranges": [[7, 14]] }
       ]
     }
+  ],
+  "bases": [
+    { "name": "Expert Bombard Crossbow", "itemClass": "Crossbows", "physical": [41, 76], "attacksPerSecond": 1.6, "implicit": "Grenade Skills Fire an additional Projectile" }
+  ],
+  "essences": [
+    { "id": "essence-of-abrasion", "name": "Essence of Abrasion", "family": "syn.flat_phys", "tier": 3 },
+    { "id": "essence-of-haste", "name": "Essence of Haste", "family": "syn.attack_speed", "tier": 3 }
   ]
 }

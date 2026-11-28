@@ -53,8 +53,7 @@ public static class SnapshotRenderer
         Shot(shell, main, dir, "currency-exalted.txt", "inspect-currency");
 
         shell.Inspect.Selected = shell.Inspect.Recent.First(r => r.Item.CaptureId.Length > 0 && r.Title == "Doom Thirst");
-        shell.OpenCraftWith(shell.Inspect.Selected);
-        Save(main, Path.Combine(dir, "craft.png"));
+        RenderCraft(shell, main, dir);
         SeedGuide(shell.Guide);
         shell.GoGuideCommand.Execute(null);
         Save(main, Path.Combine(dir, "guide.png"));
@@ -149,6 +148,29 @@ public static class SnapshotRenderer
         copy.Matches = [];
         copy.Answer = PriceAnswer.Baseline(copy.Price!, null, session.PriceText());
         return copy;
+    }
+
+    /// <summary>The craft simulator after a few clicks with an orb in hand (picked up, like in game), on the
+    /// wanted stats and on the stat pool. Seeded, so the craft is the same every run.</summary>
+    private static void RenderCraft(ShellViewModel shell, MainWindow main, string dir)
+    {
+        var craft = shell.Craft;
+        craft.Restart(new Random(7));
+        shell.GoCraftCommand.Execute(null);
+        foreach (var id in new[] { "transmute", "aug", "regal", "exalted" })
+        {
+            craft.Groups.SelectMany(g => g.Orbs).First(o => o.Id == id).ClickCommand.Execute(null);
+            craft.UseHeldCommand.Execute(null);
+        }
+
+        craft.Groups.SelectMany(g => g.Orbs).First(o => o.Id == "chaos").ClickCommand.Execute(null);
+        Save(main, Path.Combine(dir, "craft.png"));
+        craft.ShowTabCommand.Execute("pool");
+        Save(main, Path.Combine(dir, "craft-pool.png"));
+        craft.ShowTabCommand.Execute("history");
+        Save(main, Path.Combine(dir, "craft-history.png"));
+        craft.ShowTabCommand.Execute("want");
+        craft.Restart(new Random());
     }
 
     /// <summary>"Collect stash pictures" switched on with three made-up pictures: its

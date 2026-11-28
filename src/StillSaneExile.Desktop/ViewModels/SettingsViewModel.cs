@@ -38,6 +38,7 @@ public sealed partial class SettingsViewModel : ObservableObject
         new("keys", "Keys"),
         new("card", "Price card"),
         new("colours", "Price colours"),
+        new("crafting", "Crafting"),
         new("market", "Live prices and trade"),
         new("pictures", "Stash pictures"),
         new("about", "Updates and privacy"),
@@ -119,6 +120,11 @@ public sealed partial class SettingsViewModel : ObservableObject
 
     [ObservableProperty]
     public partial double PeekScale { get; set; }
+
+    /// <summary>Settings, Crafting: an orb is picked up, then clicked on the item, as in the game (the default),
+    /// rather than used by clicking it.</summary>
+    [ObservableProperty]
+    public partial bool CraftPickUp { get; set; }
 
     [ObservableProperty]
     public partial string ExpiryDays { get; set; } = "3";
@@ -308,6 +314,7 @@ public sealed partial class SettingsViewModel : ObservableObject
         ToggleMode = S.PeekMode == HoldMode.Toggle;
         Anchor = S.Anchor;
         PeekScale = S.PeekScale;
+        CraftPickUp = S.CraftPickUp;
         ExpiryDays = S.ComparableExpiryDays.ToString(CultureInfo.InvariantCulture);
         AutoUpdate = S.AutoUpdate;
         LivePricesOn = S.LivePrices;
@@ -464,6 +471,11 @@ public sealed partial class SettingsViewModel : ObservableObject
     private void RestartToUpdate() => Updates.RestartNow();
 
     partial void OnPeekScaleChanged(double value) => S.PeekScale = value;
+
+    partial void OnCraftPickUpChanged(bool value) => S.CraftPickUp = value;
+
+    [RelayCommand]
+    private void SetCraftUse(string mode) => CraftPickUp = mode != "click";
 
     partial void OnExpiryDaysChanged(string value)
     {

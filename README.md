@@ -85,6 +85,10 @@ GGG doesn't approve or guarantee any third-party tool, and its rules can change,
 
 ## Also in the app
 
+**Crafting** is a practice bench: a crossbow base, every orb, both essences and eight omens, the odds of rolling the stats you mark, each stat's chance in the pool, and a history of clicks with what they cost at the session's prices. Like in game, you pick an orb up, it follows the cursor, and you click the item to use it; `Shift` keeps it in hand, right-click or `Esc` puts it back (Settings → **Crafting** switches to clicking the orb itself). It runs on the demo's made-up stats, tiers and weights only, so it is practice for how orbs behave, not a forecast for a real item; a live league shows no simulator until a verified data pack exists.
+
+<img src="docs/screenshots/craft.png" width="720" alt="The craft simulator: orbs and omens with the game's pictures on the left, a rare crossbow with its prefixes and suffixes in the middle, a Chaos Orb in hand, and the odds of the wanted stats on the right">
+
 **My wealth** is switched off for now while it is rethought; counts saved by earlier versions stay in your data folder. The **Campaign guide** walks the start of Act 1 (a draft route, not yet checked in game) and turns your own build notes into gem steps for the stage you are at; a pasted guide link only ever opens in your browser.
 
 **Help build stash reading.** Path of Exile 2 has no stash API, so SSE will read your stash from a picture of the game window. To build that, switch on **Collect stash pictures** in Settings → **Stash pictures**, open your stash in the game and press `Right Alt` (or your stash key) once per tab: each press saves one picture of the game window, with notes on your screen setup, in your data folder. Label them on the same page. They are never uploaded; before you share any on [issue #3](https://github.com/AutumnTrace/still-sane-exile/issues/3), crop or blur chat and character names.

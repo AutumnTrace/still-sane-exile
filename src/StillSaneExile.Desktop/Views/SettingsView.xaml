@@ -387,6 +387,23 @@
           </Border>
         </StackPanel>
 
+        <!-- Crafting: how the simulator uses an orb. -->
+        <StackPanel Visibility="{Binding Section, Converter={StaticResource VisibleWhen}, ConverterParameter=crafting}">
+          <TextBlock Text="Crafting" Style="{StaticResource PageTitle}" />
+          <Border Style="{StaticResource Card}">
+            <StackPanel>
+              <TextBlock Text="Using an orb" Style="{StaticResource CardTitle}" Margin="0,0,0,12" />
+              <WrapPanel>
+                <Button Style="{StaticResource ChoiceButton}" MinHeight="40" Content="Pick it up, then click the item (like in game)" Command="{Binding SetCraftUseCommand}" CommandParameter="pickup" Margin="0,0,6,6"
+                        Tag="{Binding CraftPickUp, Converter={StaticResource Active}, ConverterParameter=True}" />
+                <Button Style="{StaticResource ChoiceButton}" MinHeight="40" Content="Click the orb to use it" Command="{Binding SetCraftUseCommand}" CommandParameter="click" Margin="0,0,0,6"
+                        Tag="{Binding CraftPickUp, Converter={StaticResource Active}, ConverterParameter=False}" />
+              </WrapPanel>
+              <TextBlock Style="{StaticResource Gist}" Text="Like in game: click an orb and it follows the cursor, then click the item. Hold Shift to keep it for the next click; right-click or Esc puts it back." />
+            </StackPanel>
+          </Border>
+        </StackPanel>
+
         <!-- Live prices and the trade site: what is fetched, when, and the switches -->
         <StackPanel Visibility="{Binding Section, Converter={StaticResource VisibleWhen}, ConverterParameter=market}">
           <TextBlock Text="Live prices and trade" Style="{StaticResource PageTitle}" />
