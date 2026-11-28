@@ -78,7 +78,7 @@ cut Essence Drain (priority: high)
 After ascendancy
 respec the passive tree for the endgame</Notes>
 	<Tree activeSpec="2">
-		<Spec title="Act 1" treeVersion="0_5" classId="3" ascendClassId="2" classInternalId="3" ascendancyInternalId="Witch2" secondaryAscendClassId="0" nodes="54447,1755,2254,3041,4739,4748,9642,14666" masteryEffects="">
+		<Spec title="Act 1" treeVersion="0_5" classId="3" ascendClassId="2" classInternalId="3" ascendancyInternalId="Witch2" secondaryAscendClassId="0" nodes="54447,2254,4739,18407,22419,29695,30346,43736,44871,47555,51184" masteryEffects="">
 			<URL>https://www.pathofexile.com/passive-skill-tree/</URL>
 			<Sockets/>
 		</Spec>

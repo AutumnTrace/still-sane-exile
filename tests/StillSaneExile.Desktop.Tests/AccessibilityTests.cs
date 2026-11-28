@@ -441,6 +441,13 @@ public class AccessibilityTests
         Assert.Contains(stops, s => s.StartsWith("Next: ", StringComparison.Ordinal));
         Assert.Contains("One more ascendancy", stops);
         Assert.Contains("Cut Contagion", stops); // a gem step's tick box
+        Assert.Contains("Show tree Act 2", stops);
+        Assert.Contains("Zoom out of the passive tree", stops);
+        Assert.Contains("Zoom in on the passive tree", stops);
+        Assert.Contains("Fit the passive tree to the build", stops);
+        Assert.Contains("Show the whole passive tree", stops);
+        Assert.True(stops.IndexOf("One more ascendancy") < stops.IndexOf("Show tree Act 1"));
+        Assert.True(stops.IndexOf("Show the whole passive tree") < stops.IndexOf("Show skill set Act 1"));
         Assert.Contains("Show skill set Act 1", stops);
         Assert.Contains("Show skill set Endgame", stops);
         Assert.Contains("Path of Building code", stops);

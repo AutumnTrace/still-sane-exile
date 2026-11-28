@@ -49,8 +49,8 @@ If a feature seems to need breaking one of these, stop and ask the owner instead
 | `tests/StillSaneExile.Desktop.Tests` | xunit tests for the app: seams with fakes (`Fakes.cs`), STA helpers (`Sta.Run`, `UiThread.Run`), `TestApp`, and `AccessibilityTests` (tab order, names, visible focus). |
 | `tools/CaptureSpike` (+ `.Tests`) | Developer tool from the #4 spike: one Windows.Graphics.Capture frame per press. Not packed with the app. |
 | `fixtures/` | Synthetic test and demo data (items, demo price book, data pack, poe.ninja shapes, wealth CSVs). Copied to the app output; never real market data. |
-| `data/` | Data the app ships: route packs (`routes/`), the trade site's filter ids (`trade/trade-data.json`, refreshed by `scripts/update-trade-data.ps1`), poe.ninja categories (`poe-ninja.json`). |
-| `scripts/` | `pack-local.ps1` (publish + `vpk pack`, used by CI and releases), `smoke-packed.ps1` (starts the packed app once), `release.ps1`, `release-notes.ps1`, `verify-release.ps1`, `update-trade-data.ps1`, `update-currency-icons.ps1`, `make-icon.ps1`. |
+| `data/` | Data the app ships: route packs (`routes/`), the trade site's filter ids (`trade/trade-data.json`, refreshed by `scripts/update-trade-data.ps1`), the passive tree from GGG's export (`tree/poe2-tree.json`, refreshed by `scripts/update-passive-tree.ps1`), poe.ninja categories (`poe-ninja.json`). |
+| `scripts/` | `pack-local.ps1` (publish + `vpk pack`, used by CI and releases), `smoke-packed.ps1` (starts the packed app once), `release.ps1`, `release-notes.ps1`, `verify-release.ps1`, `update-trade-data.ps1`, `update-passive-tree.ps1`, `update-currency-icons.ps1`, `make-icon.ps1`. |
 | `docs/` | The source of truth for behaviour and decisions; see below. |
 
 ## Build, test, run

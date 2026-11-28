@@ -66,6 +66,52 @@ public class GuideBuildTests
     });
 
     [Fact]
+    public void The_build_tree_for_the_stage_is_drawn_on_the_shipped_tree_with_its_picks_and_ascendancy() => Sta.Run(() =>
+    {
+        using var app = new TestApp();
+        var plan = Character(app).Plan;
+        plan.CodeDraft = PracticeCode(app);
+        plan.ReadCodeCommand.Execute(null);
+        var tree = plan.Tree;
+
+        Assert.True(tree.CanDraw);
+        Assert.Equal(new[] { "Act 1", "Act 2" }, tree.Specs.Select(s => s.Title));
+        Assert.Equal("Act 1", tree.Specs.Single(s => s.IsShown).Title); // the author had Act 2 open; the player is in Act 1
+        Assert.Equal("10 points on the tree", tree.Summary);
+        Assert.Equal("Blood Mage: no points yet", tree.AscendancyTitle);
+        Assert.Null(tree.Warning);
+        Assert.Contains("Grinding Gear Games' own export, game version 0.5", tree.Source, StringComparison.Ordinal);
+        Assert.Equal("Point at a node to read it.", tree.HoveredText);
+
+        tree.ShowSpecCommand.Execute(tree.Specs.Single(s => s.Title == "Act 2"));
+
+        Assert.Equal("24 points on the tree · 1 for weapon set 1 and 0 for weapon set 2 among them", tree.Summary);
+        Assert.Equal("Blood Mage: 1 point", tree.AscendancyTitle);
+        Assert.Equal("Wildsurge Incantation, Keystone, Storm and Plant Spells: • deal 50% more damage, • cost 50% less, • have 75% less duration, Practice note: take it last.", tree.Picks[0].ToString());
+        Assert.Equal(["Sanguimancy"], tree.AscendancyPicks.Select(p => p.Name));
+
+        tree.Hovered = tree.Allocation!.Tree.Nodes[2254];
+        Assert.Equal("Pure Energy (notable, taken): 30% increased maximum Energy Shield; +10 to Intelligence", tree.HoveredText);
+
+        plan.ToggleStepCommand.Execute(plan.Checklist[1]); // a tick elsewhere on the page keeps the tree the player chose
+        Assert.Equal("Act 2", tree.Specs.Single(s => s.IsShown).Title);
+    });
+
+    [Fact]
+    public void A_tree_made_for_another_game_version_says_so() => Sta.Run(() =>
+    {
+        using var app = new TestApp();
+        var plan = Character(app).Plan;
+        plan.CodeDraft = PracticeCode(app, xml => xml.Replace("treeVersion=\"0_5\"", "treeVersion=\"0_4\"", StringComparison.Ordinal).Replace(",8415\"", ",8415,123456789\"", StringComparison.Ordinal));
+        plan.ReadCodeCommand.Execute(null);
+        var tree = plan.Tree;
+
+        Assert.Equal("This tree was made for game version 0.4; SSE has the 0.5.5 tree, so some points may have moved.", tree.Warning);
+        tree.ShowSpecCommand.Execute(tree.Specs.Single(s => s.Title == "Act 2"));
+        Assert.Equal("This tree was made for game version 0.4; SSE has the 0.5.5 tree, where 1 point of it is not found and not drawn.", tree.Warning);
+    });
+
+    [Fact]
     public void Reaching_the_zone_and_the_act_brings_the_steps_forward_and_the_zenith_move_waits_for_essence_drain() => Sta.Run(() =>
     {
         using var app = new TestApp();
