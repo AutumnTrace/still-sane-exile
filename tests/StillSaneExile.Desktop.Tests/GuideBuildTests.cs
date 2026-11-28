@@ -81,7 +81,9 @@ public class GuideBuildTests
         Assert.Equal("Blood Mage: no points yet", tree.AscendancyTitle);
         Assert.Null(tree.Warning);
         Assert.Contains("Grinding Gear Games' own export, game version 0.5", tree.Source, StringComparison.Ordinal);
-        Assert.Equal("Point at a node to read it.", tree.HoveredText);
+        Assert.Equal("", tree.HoveredText);
+        Assert.False(tree.HasSelected);
+        Assert.NotNull(tree.Art); // the shipped pictures
 
         tree.ShowSpecCommand.Execute(tree.Specs.Single(s => s.Title == "Act 2"));
 

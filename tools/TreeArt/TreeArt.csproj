@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Developer tool for scripts/update-passive-tree.ps1: turns the WebP sprite sheets of GGG's passive tree
+       export into the PNG sheets and atlas the app ships in data/tree/art, because WPF cannot read WebP on a
+       clean Windows. Run by hand only. Not in StillSaneExile.sln, not packed, never part of the app: SkiaSharp
+       (MIT, Microsoft's binding of Google's Skia) is needed here and nowhere else. -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <AssemblyName>TreeArt</AssemblyName>
+    <RootNamespace>StillSaneExile.TreeArt</RootNamespace>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="SkiaSharp" Version="4.158.0" />
+  </ItemGroup>
+
+</Project>

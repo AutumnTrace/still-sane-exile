@@ -18,18 +18,22 @@ public enum TreeNodeKind
 }
 
 /// <summary>A passive skill node, as Grinding Gear Games' export has it. <see cref="Stats"/> are the
-/// game's lines with their markup removed.</summary>
-public sealed record TreeNode(int Id, string Name, TreeNodeKind Kind, double X, double Y, string? Ascendancy, IReadOnlyList<string> Stats)
+/// game's lines with their markup removed. <see cref="Icon"/> and <see cref="Pattern"/> (a mastery's
+/// background) name pictures in the export's sprite sheets; <see cref="Blighted"/> nodes have their own frames.</summary>
+public sealed record TreeNode(int Id, string Name, TreeNodeKind Kind, double X, double Y, string? Ascendancy, IReadOnlyList<string> Stats, string? Icon = null, string? Pattern = null, bool Blighted = false)
 {
     public bool IsPick => Kind is TreeNodeKind.Notable or TreeNodeKind.Keystone;
+
+    /// <summary>A nameless point without an icon that connections pass through; nothing to draw or pick.</summary>
+    public bool IsWaypoint => Name.Length == 0 && string.IsNullOrEmpty(Icon) && Kind is TreeNodeKind.Normal;
 
     /// <summary>Counts as a passive point when allocated: everything but the starting points.</summary>
     public bool IsPoint => Kind is not (TreeNodeKind.Start or TreeNodeKind.AscendancyStart);
 }
 
-/// <summary>A connection between two nodes. A curve along an orbit has the orbit's centre; the rest are
-/// straight lines.</summary>
-public sealed record TreeEdge(int From, int To, double? CentreX, double? CentreY)
+/// <summary>A connection between two nodes. A curve along an orbit has the orbit's centre and index (orbit
+/// 0 is drawn with the export's Orbit1 sprite); the rest are straight lines.</summary>
+public sealed record TreeEdge(int From, int To, double? CentreX, double? CentreY, int? Orbit = null)
 {
     public bool IsArc => CentreX is not null && CentreY is not null;
 }
@@ -87,7 +91,10 @@ public sealed class PassiveTree
                     n.GetProperty("x").GetDouble(),
                     n.GetProperty("y").GetDouble(),
                     n.TryGetProperty("ascendancy", out var a) ? a.GetString() : null,
-                    stats);
+                    stats,
+                    n.TryGetProperty("icon", out var icon) ? icon.GetString() : null,
+                    n.TryGetProperty("pattern", out var pattern) ? pattern.GetString() : null,
+                    n.TryGetProperty("blighted", out var blighted) && blighted.GetBoolean());
                 nodes[node.Id] = node;
             }
 
@@ -95,7 +102,7 @@ public sealed class PassiveTree
             foreach (var e in root.GetProperty("edges").EnumerateArray())
             {
                 var v = e.EnumerateArray().ToList();
-                var edge = new TreeEdge(v[0].GetInt32(), v[1].GetInt32(), v.Count > 3 ? v[2].GetDouble() : null, v.Count > 3 ? v[3].GetDouble() : null);
+                var edge = new TreeEdge(v[0].GetInt32(), v[1].GetInt32(), v.Count > 3 ? v[2].GetDouble() : null, v.Count > 3 ? v[3].GetDouble() : null, v.Count > 4 ? v[4].GetInt32() : null);
                 if (nodes.ContainsKey(edge.From) && nodes.ContainsKey(edge.To))
                 {
                     edges.Add(edge);

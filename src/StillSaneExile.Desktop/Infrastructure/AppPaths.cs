@@ -36,6 +36,9 @@ public sealed class AppPaths
     /// <summary>Path of Exile 2's passive tree, trimmed from GGG's official export, that pasted builds are drawn on.</summary>
     public string PassiveTree => Path.Combine(AppDir, "data", "tree", "poe2-tree.json");
 
+    /// <summary>The passive tree's pictures (GGG's export sheets as JPEG and PNG) and their atlas.</summary>
+    public string PassiveTreeArt => Path.Combine(AppDir, "data", "tree", "art");
+
     /// <summary>The last route pack that passed its checks, so a broken pack in an update cannot take
     /// the route away.</summary>
     public string RouteCache => Path.Combine(DataDir, "route-cache");

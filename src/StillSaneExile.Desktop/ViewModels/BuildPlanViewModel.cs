@@ -85,7 +85,7 @@ public sealed partial class BuildPlanViewModel : ObservableObject
         _progress = progress;
         _route = route;
         _changed = changed;
-        Tree = new PassiveTreeViewModel(() => PassiveTreeFile.Load(shell.Paths));
+        Tree = new PassiveTreeViewModel(() => PassiveTreeFile.Load(shell.Paths), () => PassiveTreeArt.Load(shell.Paths));
     }
 
     /// <summary>The build's passive tree, drawn on the tree that ships with the app.</summary>

@@ -58,12 +58,8 @@ public static class SnapshotRenderer
         SeedGuide(shell.Guide, shell.Paths);
         shell.GoGuideCommand.Execute(null);
         Save(main, Path.Combine(dir, "guide.png"));
-        Find<FrameworkElement>(main, "BuildTreeCard")?.BringIntoView();
-        Save(main, Path.Combine(dir, "guide-tree.png"));
-        var tree = shell.Guide.Plan.Tree;
-        tree.ShowSpecCommand.Execute(tree.Specs.LastOrDefault());
-        Find<FrameworkElement>(main, "BuildAscendancy")?.BringIntoView();
-        Save(main, Path.Combine(dir, "guide-tree-later.png"));        Find<FrameworkElement>(main, "BuildItemsCard")?.BringIntoView();
+        RenderTree(shell, main, dir);
+        Find<FrameworkElement>(main, "BuildItemsCard")?.BringIntoView();
         Save(main, Path.Combine(dir, "guide-build.png"));
         SeedPlanChange(shell.Guide.Plan, shell.Paths);
         Save(main, Path.Combine(dir, "guide-plan-change.png"));
@@ -203,6 +199,41 @@ public static class SnapshotRenderer
         copy.Matches = [];
         copy.Answer = PriceAnswer.Baseline(copy.Price!, null, session.PriceText());
         return copy;
+    }
+
+    /// <summary>The practice build's passive tree: as it opens, with a node selected, the whole tree, zoomed
+    /// in close, then the later tree with its ascendancy.</summary>
+    private static void RenderTree(ShellViewModel shell, MainWindow main, string dir)
+    {
+        var tree = shell.Guide.Plan.Tree;
+        if (Find<PassiveTreeView>(main, "BuildTree") is not { } drawing)
+        {
+            return;
+        }
+
+        void Show()
+        {
+            drawing.BringIntoView(new Rect(0, 0, drawing.ActualWidth, drawing.ActualHeight + 160));
+        }
+
+        Show();
+        Save(main, Path.Combine(dir, "guide-tree.png"));
+
+        tree.Selected = tree.Allocation?.Picks.FirstOrDefault();
+        Show();
+        Save(main, Path.Combine(dir, "guide-tree-selected.png"));
+
+        PassiveTreeView.ShowAllCommand.Execute(null, drawing);
+        Save(main, Path.Combine(dir, "guide-tree-whole.png"));
+
+        PassiveTreeView.FitBuildCommand.Execute(null, drawing);
+        PassiveTreeView.ZoomInCommand.Execute(null, drawing);
+        PassiveTreeView.ZoomInCommand.Execute(null, drawing);
+        Save(main, Path.Combine(dir, "guide-tree-zoom.png"));
+
+        tree.ShowSpecCommand.Execute(tree.Specs.LastOrDefault());
+        Find<FrameworkElement>(main, "BuildAscendancy")?.BringIntoView();
+        Save(main, Path.Combine(dir, "guide-tree-later.png"));
     }
 
     /// <summary>The craft simulator after a few clicks with an orb in hand (picked up, like in game), on the
