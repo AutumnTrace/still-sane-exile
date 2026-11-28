@@ -8,16 +8,21 @@ namespace StillSaneExile.Domain.Items;
 /// to the same resistance share one template.</summary>
 public static partial class StatText
 {
-    private const string Num = @"[+-]?\d+(?:\.\d+)?";
+    // A number as the game prints it, thousands separated by commas from 1,000 up: "1,043".
+    private const string Unsigned = @"(?:\d{1,3}(?:,\d{3})+|\d+)(?:\.\d+)?";
+    private const string Num = @"[+-]?" + Unsigned;
 
-    // Advanced copy: 179(170-179) or -12(-15--10). The range sits directly after the value.
-    [GeneratedRegex(@"(?<v>[+-]?\d+(?:\.\d+)?)\((?<lo>-?\d+(?:\.\d+)?)\s*[-–]\s*(?<hi>-?\d+(?:\.\d+)?)\)")]
+    // Advanced copy: 179(170-179). A reduction prints positive, high to low, "13(15-10)% reduced", and the
+    // bounds are swapped below. The range sits directly after the value.
+    [GeneratedRegex(@"(?<v>" + Num + @")\((?<lo>-?" + Unsigned + @")\s*[-–]\s*(?<hi>-?" + Unsigned + @")\)")]
     private static partial Regex RangedNumber();
 
     [GeneratedRegex(@"(?<![\w.#])" + Num + @"(?![\w.])")]
     private static partial Regex PlainNumber();
 
-    [GeneratedRegex(@"\s*\((implicit|rune|enchant|crafted|fractured|desecrated|augmented|unscalable value|local)\)\s*$", RegexOptions.IgnoreCase)]
+    // Source tags and "(augmented)", the element tags of property lines ("Lightning Damage: 11-78 (lightning)"),
+    // and the advanced copy's " — Unscalable Value".
+    [GeneratedRegex(@"(?:\s*\((implicit|rune|enchant|crafted|fractured|desecrated|augmented|unscalable value|local|physical|fire|cold|lightning|chaos)\)|\s+[—–]\s+(Unscalable Value))\s*$", RegexOptions.IgnoreCase)]
     private static partial Regex TrailingTag();
 
     [GeneratedRegex(@"\s+")]
@@ -36,7 +41,7 @@ public static partial class StatText
                 break;
             }
 
-            tags.Insert(0, m.Groups[1].Value.ToLowerInvariant());
+            tags.Insert(0, (m.Groups[1].Success ? m.Groups[1].Value : m.Groups[2].Value).ToLowerInvariant());
             text = text[..m.Index].TrimEnd();
         }
 
@@ -101,7 +106,7 @@ public static partial class StatText
     public static string NormalizeTemplate(string template) =>
         Spaces().Replace(template.Replace("+#", "#", StringComparison.Ordinal), " ").Trim();
 
-    public static decimal Dec(string s) => decimal.Parse(s, NumberStyles.AllowLeadingSign | NumberStyles.AllowDecimalPoint, CultureInfo.InvariantCulture);
+    public static decimal Dec(string s) => decimal.Parse(s, NumberStyles.AllowLeadingSign | NumberStyles.AllowDecimalPoint | NumberStyles.AllowThousands, CultureInfo.InvariantCulture);
 
     private static List<StatComponent> OrderByTemplatePosition(string text, List<StatComponent> components)
     {

@@ -42,7 +42,9 @@ public enum Omen
 public sealed record CraftMod(int Id, string Family, int Tier, IReadOnlyList<decimal> Values, bool Essence = false, bool Fractured = false);
 
 /// <summary>The simulated item between two clicks. Immutable: history keeps every one.</summary>
-public sealed record CraftItem(CraftRarity Rarity, string? Name, bool Corrupted, IReadOnlyList<CraftMod> Mods)
+/// <param name="Enchanted">A Vaal Orb added a corruption enchantment (which one is not simulated).</param>
+/// <param name="ExtraSocket">A Vaal Orb added a socket past the item's usual number.</param>
+public sealed record CraftItem(CraftRarity Rarity, string? Name, bool Corrupted, IReadOnlyList<CraftMod> Mods, bool Enchanted = false, bool ExtraSocket = false)
 {
     /// <summary>A fresh Normal base, as a craft starts.</summary>
     public static CraftItem Normal { get; } = new(CraftRarity.Normal, null, false, []);

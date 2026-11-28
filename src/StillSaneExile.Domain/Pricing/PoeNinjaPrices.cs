@@ -28,9 +28,9 @@ public sealed record PoeNinjaCatalog(IReadOnlyList<PoeNinjaCategory> Categories)
     /// <summary>The types that returned data on 27 November 2026.</summary>
     public static PoeNinjaCatalog Default { get; } = new(
     [
-        .. new[] { "Currency", "Fragments", "Essences", "Runes", "SoulCores", "Idols", "UncutGems", "LineageSupportGems", "Ritual", "Delirium", "Expedition", "Verisium" }
+        .. new[] { "Currency", "Fragments", "Essences", "Runes", "SoulCores", "Idols", "UncutGems", "LineageSupportGems", "Ritual", "Delirium", "Expedition", "Verisium", "Abyss", "Breach" }
             .Select(t => new PoeNinjaCategory(PoeNinjaOverview.Exchange, t)),
-        .. new[] { "UniqueWeapons", "UniqueArmours", "UniqueAccessories", "UniqueFlasks", "UniqueCharms", "UniqueJewels", "UniqueTablets", "PrecursorTablets" }
+        .. new[] { "UniqueWeapons", "UniqueArmours", "UniqueAccessories", "UniqueFlasks", "UniqueCharms", "UniqueJewels", "UniqueTablets", "PrecursorTablets", "UniqueSanctumRelics" }
             .Select(t => new PoeNinjaCategory(PoeNinjaOverview.Items, t)),
     ]);
 

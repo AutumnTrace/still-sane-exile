@@ -72,6 +72,9 @@ public enum ItemStates
     Mirrored = 4,
     Fractured = 8,
     Desecrated = 16,
+
+    /// <summary>Sanctified: its values are fixed for good (docs/GAME.md §1.7).</summary>
+    Sanctified = 32,
 }
 
 /// <summary>One number inside a modifier line, e.g. the "26" in "Adds 26 to 43 Physical Damage".</summary>

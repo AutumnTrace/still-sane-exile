@@ -1,4 +1,4 @@
-﻿using StillSaneExile.Domain.Craft;
+using StillSaneExile.Domain.Craft;
 using StillSaneExile.Domain.Data;
 using StillSaneExile.Domain.Items;
 
@@ -93,14 +93,20 @@ public class CraftEngineTests
     public void Graded_orbs_only_roll_stats_from_their_level_up_and_need_the_item_level_for_it()
     {
         var e = Engine();
-        Assert.Equal("Item level 30 is too low for greater orbs: they only roll stats of level 35 and up.",
-            e.Check("transmute", CraftItem.Normal, CraftSetup.Of(30, OrbGrade.Greater)));
+        // The game's minimums (0.5.0): Transmutation and Augmentation 44 and 70, Regal, Exalted and Chaos 35 and 50.
+        Assert.Equal("Item level 40 is too low for greater orbs: they only roll stats of level 44 and up.",
+            e.Check("transmute", CraftItem.Normal, CraftSetup.Of(40, OrbGrade.Greater)));
+        Assert.Equal((44, 70, 35, 50), (CraftEngine.MinLevel("aug", OrbGrade.Greater), CraftEngine.MinLevel("transmute", OrbGrade.Perfect),
+            CraftEngine.MinLevel("regal", OrbGrade.Greater), CraftEngine.MinLevel("chaos", OrbGrade.Perfect)));
+        Assert.Equal(0, CraftEngine.MinLevel("annul", OrbGrade.Perfect)); // not graded
 
         for (var seed = 1; seed <= 60; seed++)
         {
             var engine = Engine(seed);
             var item = Use(engine, CraftItem.Normal, "transmute", CraftSetup.Of(82, OrbGrade.Perfect));
-            Assert.True(engine.TierOf(item.Mods[0]).Level >= 50);
+            var family = engine.Family(item.Mods[0].Family);
+            // Level 70 and up, unless the whole family tops out lower: then it still rolls.
+            Assert.True(engine.TierOf(item.Mods[0]).Level >= 70 || family.Tiers.Max(t => t.Level) < 70);
         }
 
         Assert.Equal("greater-exalted-orb", CraftEngine.PriceId("exalted", OrbGrade.Greater));
@@ -184,7 +190,68 @@ public class CraftEngineTests
         Assert.Equal("Nothing can be removed there.", e.Check("annul", item, At82));
         var corrupted = Use(e, item, "vaal");
         Assert.True(corrupted.Corrupted);
-        Assert.All(e.Currencies, c => Assert.Equal("This item is corrupted: nothing can change it now. Undo or start over.", e.Check(c.Id, corrupted, At82)));
+        Assert.All(e.Currencies, c => Assert.Equal("Corrupted: no orb on this bench can change it now. Undo or start over.", e.Check(c.Id, corrupted, At82)));
+    }
+
+    [Fact]
+    public void A_family_the_minimum_would_shut_out_still_rolls_its_tiers()
+    {
+        var e = Engine();
+        var leech = e.Family("syn.leech"); // its best tier is level 68
+        Assert.True(leech.Tiers.Max(t => t.Level) < 70);
+
+        var pool = e.Pool(CraftItem.Normal, [AffixSide.Prefix, AffixSide.Suffix], 82, 70, CraftRarity.Magic);
+
+        Assert.Equal(leech.Tiers.Count, pool.Count(p => p.Family.Id == "syn.leech")); // not shut out
+        Assert.DoesNotContain(pool, p => p.Family.Id == "syn.phys_pct" && p.Tier.Level < 70); // the rest keep the minimum
+    }
+
+    [Fact]
+    public void Alchemy_also_turns_a_Magic_item_Rare_and_its_stats_are_not_kept()
+    {
+        var e = Engine();
+        var magic = Use(e, CraftItem.Normal, "transmute");
+
+        var outcome = e.Use("alch", magic, At82);
+
+        Assert.True(outcome.Ok);
+        Assert.Equal(4, outcome.Item!.Mods.Count);
+        Assert.DoesNotContain(outcome.Item.Mods, m => m.Id == magic.Mods[0].Id);
+        Assert.EndsWith("the Magic stats are gone", outcome.Message, StringComparison.Ordinal);
+        Assert.Equal("Alchemy works on a Normal or Magic item.", e.Check("alch", outcome.Item, At82));
+    }
+
+    [Fact]
+    public void A_Vaal_Orb_has_the_games_four_outcomes_and_never_raises_a_tier()
+    {
+        var seen = new HashSet<string>();
+        for (var seed = 1; seed <= 80; seed++)
+        {
+            var e = Engine(seed);
+            var item = Rare(e, ("syn.phys_pct", 3), ("syn.attack_speed", 3), ("syn.crit_chance", 2), ("syn.accuracy", 3));
+            var after = Use(e, item, "vaal");
+
+            Assert.True(after.Corrupted);
+            Assert.Equal(4, after.Mods.Count); // a reroll replaces stats one for one
+            var kept = after.Mods.Where(m => item.Mods.Any(o => o.Id == m.Id)).ToList();
+            Assert.All(kept, m => Assert.Equal(item.Mods.First(o => o.Id == m.Id), m)); // untouched: same tier, same numbers
+            seen.Add(after.Enchanted ? "enchant" : after.ExtraSocket ? "socket" : kept.Count < 4 ? "reroll" : "nothing");
+            Assert.InRange(4 - kept.Count, 0, 3);
+        }
+
+        Assert.Equal(["enchant", "nothing", "reroll", "socket"], seen.Order());
+    }
+
+    [Fact]
+    public void An_essence_stat_can_be_fractured()
+    {
+        var e = Engine();
+        var item = Rare(e, ("syn.phys_pct", 1), ("syn.attack_speed", 2), ("syn.crit_chance", 2), ("syn.accuracy", 3));
+        item = item with { Mods = [.. item.Mods.Select(m => m with { Essence = true })] };
+
+        var fractured = Use(e, item, "fracturing-orb");
+
+        Assert.Single(fractured.Mods, m => m.Fractured && m.Essence);
     }
 
     [Fact]
@@ -233,7 +300,7 @@ public class CraftEngineTests
         Assert.Equal("+161 to Accuracy Rating", e.Text(item.Mods[3]));
         Assert.Equal("45% increased Physical Damage\n+73 to Accuracy Rating", e.Text(item.Mods[4]));
 
-        // (41 + 20) Ã— (1 + 2.15) and (76 + 34) Ã— 3.15, at 1.6 Ã— 1.16 attacks per second.
+        // (41 + 20) × (1 + 2.15) and (76 + 34) × 3.15, at 1.6 × 1.16 attacks per second.
         Assert.Equal(new CraftWeapon(192, 347, 1.86m, 501.3m), e.Weapon(item));
         Assert.Equal("Expert Bombard Crossbow", e.MagicName(CraftItem.Normal));
     }

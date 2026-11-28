@@ -430,13 +430,7 @@ A snapshot of 28 Nov 2026, worst first. Fix the code or the data, then delete th
 
 ### 10.1 Craft simulator (`src/StillSaneExile.Domain/Craft/CraftEngine.cs`)
 
-1. **Vaal Orb outcomes are wrong.** SSE: no change, every number rerolled, one stat a tier up, or one stat removed. Game: no change, up to three modifiers rerolled into *new* modifiers, a corruption enchantment added, or a socket added (§3.4). Two of SSE's four results don't exist on rare equipment.
-2. **Greater and Perfect Transmutation and Augmentation** use 35 / 50 (`MinLevel`); the game uses 44 / 70 (§3.2). The grade buttons say "Only rolls stats of level 35 and up" for every orb.
-3. **The minimum-level exception is missing.** SSE drops every tier below the orb's minimum, so a family whose best tier is below it can't roll at all; in the game that family is not excluded (§3.2). Pools and odds with Greater and Perfect orbs differ.
-4. **Orb of Alchemy refuses Magic items** ("Alchemy only works on a Normal (white) item."); since 0.3.1 it works on Magic items and discards their modifiers.
-5. **Essence modifiers can't be fractured** in SSE; real copies show fractured crafted modifiers (§1.7). The game's real exclusion is desecrated modifiers, which SSE doesn't model.
-6. **"This item is corrupted: nothing can change it now"**: Architect's Orb, Vaal Cultivation Orb, Orbs of Sacrifice and the Vaal Siphoner still change corrupted items, and augments can be swapped. Fine for the simulator's orbs, not as a statement about the game.
-7. README and CHANGELOG say "every orb"; the bench has no Orb of Chance, Artificer's Orb, Hinekora's Lock, Perfect or Corrupted essences, or desecration. Matches: Chaos (remove one, add one on either side), Whittling (lowest modifier level), the side omens, Greater Exaltation, Annulment, Divine (fractured kept), Fracturing (Rare, 4+ modifiers, one only), the ilvl-below-minimum refusal, 1/1 and 3/3 limits, poe.ninja ids.
+Fixed on 28 Nov 2026: Vaal Orb outcomes, the Greater and Perfect minimum levels and their exception, Alchemy on Magic items, fracturing crafted stats, the corrupted wording, "every orb". Still left out of the bench: Orb of Chance, Artificer's Orb, Hinekora's Lock, Perfect and Corrupted essences, desecration, and which corruption enchantment a Vaal Orb adds.
 
 ### 10.2 Demo data pack
 
@@ -447,13 +441,10 @@ A snapshot of 28 Nov 2026, worst first. Fix the code or the data, then delete th
 
 ### 10.3 Item parser (`src/StillSaneExile.Domain/Items/`)
 
-1. **Thousands separators.** `Physical Damage: 414-1,043` is read as 414–1 (`DamageRange`), so physical DPS and the DPS search filter go wrong on strong weapons. A stat line with a comma, if the game prints one, would split into two numbers.
-2. **Status lines it doesn't know** are read as modifiers: `Sanctified`, `Unidentified (Tier 4)`.
-3. **Unrevealed desecrated modifiers** (`Desecrated Prefix` / `Desecrated Suffix`, and `{ Prefix Modifier "Veiled" }` in an advanced copy) become an explicit modifier with the text "Desecrated Prefix" instead of an unrevealed slot.
-4. **` — Unscalable Value`** after a line (advanced copy) stays in the stat's template; SSE strips only `(unscalable value)`.
-5. **Catalyst headers** `{ … — Attack — 60% Increased }`: the third part lands in the tag list.
-6. **Element tags on properties** (`11-78 (lightning)`) are not stripped; no elemental damage is read. `Requires: 78 (unmet) Intelligence` (unidentified items) is not read.
-7. The comment in `StatText` shows negative ranges as `-12(-15--10)`; the game prints `13(15-10)% reduced …` (positive, high to low). The parser copes by swapping.
+Fixed on 28 Nov 2026: thousands separators, `Sanctified` and `Unidentified (Tier N)`, ` — Unscalable Value`, element tags on properties, `(unmet)` requirements and the comment on reductions. Still open:
+
+1. **Unrevealed desecrated modifiers** (`Desecrated Prefix` / `Desecrated Suffix`, and `{ Prefix Modifier "Veiled" }` in an advanced copy) become an explicit modifier with the text "Desecrated Prefix" instead of an unrevealed slot.
+2. **Catalyst headers** `{ … — Attack — 60% Increased }`: the third part lands in the tag list.
 
 ### 10.4 Practice items (`fixtures/items/`)
 
@@ -464,7 +455,7 @@ A snapshot of 28 Nov 2026, worst first. Fix the code or the data, then delete th
 
 ### 10.5 Live prices (`data/poe-ninja.json`)
 
-1. Three poe.ninja types with lines today are not fetched: `Abyss` (bones, 15 lines in Forbidden Rites), `Breach` (catalysts, splinters, 28 lines) and `UniqueSanctumRelics` (5 lines; SSE tried `UniqueRelics`, which answers 404). Checked 28 Nov 2026 with one request each.
+Fixed on 28 Nov 2026: `Abyss`, `Breach` and `UniqueSanctumRelics` are fetched.
 
 ## Sources
 

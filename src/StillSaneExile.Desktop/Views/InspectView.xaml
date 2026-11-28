@@ -75,7 +75,7 @@
         <Border Style="{StaticResource Card}" DataContext="{Binding Selected}" Visibility="{Binding HasRollRows, Converter={StaticResource Vis}}">
           <StackPanel>
             <TextBlock Text="How good are your rolls?" Style="{StaticResource CardTitle}" />
-            <TextBlock Style="{StaticResource CardLead}" Text="Tiers as the game numbers them. Each bar shows where your roll sits between the lowest and highest number of its tier." />
+            <TextBlock Style="{StaticResource CardLead}" Text="Tier 1 is the best a stat can roll on this kind of item. Each bar shows where your roll sits between the lowest and highest number of its tier." />
             <ItemsControl ItemsSource="{Binding RollRows}" Margin="0,10,0,0" Focusable="False" AutomationProperties.Name="How good are your rolls?">
               <ItemsControl.ItemTemplate>
                 <DataTemplate DataType="{x:Type vm:RollRowViewModel}">
