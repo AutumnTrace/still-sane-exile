@@ -5,6 +5,7 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:vm="clr-namespace:StillSaneExile.Desktop.ViewModels"
              xmlns:v="clr-namespace:StillSaneExile.Desktop.Views"
+             xmlns:pricing="clr-namespace:StillSaneExile.Domain.Pricing;assembly=StillSaneExile.Domain"
              mc:Ignorable="d"
              d:DataContext="{d:DesignInstance Type=vm:SettingsViewModel}"
              PreviewKeyDown="OnPreviewKeyDown"
@@ -272,6 +273,117 @@
               </StackPanel>
               <TextBlock Style="{StaticResource Gist}" Text="Scale is the card's own size. Windows' text size enlarges this window and the price check over the game, not the card." />
             </StackPanel>
+          </Border>
+        </StackPanel>
+
+        <!-- Price colours: where each colour of the price label starts. The rows are a draft that the
+             preview follows as you type; Apply saves it and recolours every open card and price check. -->
+        <StackPanel x:Name="PriceColoursCard" DataContext="{Binding Colours}"
+                    Visibility="{Binding DataContext.Section, RelativeSource={RelativeSource AncestorType=UserControl}, Converter={StaticResource VisibleWhen}, ConverterParameter=colours}">
+          <TextBlock Text="Price colours" Style="{StaticResource PageTitle}" />
+          <Border Style="{StaticResource Card}">
+            <Grid>
+              <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="36" />
+                <ColumnDefinition Width="*" MinWidth="300" />
+              </Grid.ColumnDefinitions>
+
+              <StackPanel>
+                <TextBlock Text="Where each colour starts" Style="{StaticResource CardTitle}" />
+                <TextBlock Style="{StaticResource Gist}" Margin="0,4,0,14" MaxWidth="430" HorizontalAlignment="Left"
+                           Text="The louder the label, the more an item is worth. Early in a league, 1 div can already be a jackpot." />
+                <ItemsControl ItemsSource="{Binding Steps}" Focusable="False" Grid.IsSharedSizeScope="True" AutomationProperties.Name="Where each colour starts">
+                  <ItemsControl.ItemTemplate>
+                    <DataTemplate DataType="{x:Type vm:ColourStepViewModel}">
+                      <Grid Margin="0,0,0,8">
+                        <Grid.ColumnDefinitions>
+                          <ColumnDefinition Width="Auto" SharedSizeGroup="Swatch" />
+                          <ColumnDefinition Width="Auto" />
+                          <ColumnDefinition Width="Auto" />
+                          <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <v:ValueLabel Text="{Binding Name}" Tier="{Binding Tier}" Size="Medium" VerticalAlignment="Center" />
+                        <TextBlock Grid.Column="1" Text="from" Style="{StaticResource FieldLabel}" Margin="14,0,8,0" />
+                        <TextBox Grid.Column="2" Width="76" Height="34" MinHeight="0" HorizontalContentAlignment="Right" VerticalContentAlignment="Center" FontSize="15" FontWeight="SemiBold"
+                                 Text="{Binding Amount, UpdateSourceTrigger=PropertyChanged}" AutomationProperties.Name="{Binding AmountName}">
+                          <TextBox.Style>
+                            <Style TargetType="TextBox" BasedOn="{StaticResource {x:Type TextBox}}">
+                              <Style.Triggers>
+                                <DataTrigger Binding="{Binding IsWrong}" Value="True">
+                                  <Setter Property="BorderBrush" Value="{StaticResource Warn}" />
+                                </DataTrigger>
+                              </Style.Triggers>
+                            </Style>
+                          </TextBox.Style>
+                        </TextBox>
+                        <StackPanel Grid.Column="3" Orientation="Horizontal" Margin="8,0,0,0">
+                          <Button Style="{StaticResource SegmentButton}" MinHeight="34" Padding="8,0" Margin="0,0,2,0" ToolTip="Divine Orbs"
+                                  Command="{Binding SetCurrencyCommand}" CommandParameter="divine" AutomationProperties.Name="{Binding DivineName}"
+                                  Tag="{Binding Currency, Converter={StaticResource Active}, ConverterParameter=divine}">
+                            <StackPanel Orientation="Horizontal">
+                              <v:CurrencyIcon Currency="divine" Width="18" Height="18" Margin="0,0,5,0" VerticalAlignment="Center" />
+                              <TextBlock Text="div" VerticalAlignment="Center" />
+                            </StackPanel>
+                          </Button>
+                          <Button Style="{StaticResource SegmentButton}" MinHeight="34" Padding="8,0" ToolTip="Exalted Orbs"
+                                  Command="{Binding SetCurrencyCommand}" CommandParameter="exalted" AutomationProperties.Name="{Binding ExaltedName}"
+                                  Tag="{Binding Currency, Converter={StaticResource Active}, ConverterParameter=exalted}">
+                            <StackPanel Orientation="Horizontal">
+                              <v:CurrencyIcon Currency="exalted" Width="18" Height="18" Margin="0,0,5,0" VerticalAlignment="Center" />
+                              <TextBlock Text="ex" VerticalAlignment="Center" />
+                            </StackPanel>
+                          </Button>
+                        </StackPanel>
+                      </Grid>
+                    </DataTemplate>
+                  </ItemsControl.ItemTemplate>
+                </ItemsControl>
+                <!-- The dark tag has no start of its own: everything under tan. -->
+                <StackPanel Orientation="Horizontal">
+                  <v:ValueLabel Text="Dark" Tier="{x:Static pricing:ValueTier.E}" Size="Medium" VerticalAlignment="Center" />
+                  <TextBlock Text="{Binding DarkFrom}" Style="{StaticResource FieldLabel}" Margin="14,0,0,0" />
+                </StackPanel>
+                <TextBlock Text="{Binding Problem}" FontSize="14.5" Foreground="{StaticResource Warn}" TextWrapping="Wrap" MaxWidth="430" HorizontalAlignment="Left" Margin="0,12,0,0"
+                           Visibility="{Binding HasProblem, Converter={StaticResource Vis}}" />
+                <StackPanel Orientation="Horizontal" Margin="0,16,0,0">
+                  <Button Style="{StaticResource PrimaryButton}" Content="Apply" MinWidth="110" Command="{Binding ApplyCommand}"
+                          AutomationProperties.HelpText="Saves the colours: every card and price check uses them from now on" />
+                  <Button Content="Undo changes" Command="{Binding UndoCommand}" Margin="8,0,0,0" />
+                  <Button Style="{StaticResource LinkButton}" Content="Default steps" Command="{Binding UseDefaultCommand}" FontSize="14.5" Margin="14,0,0,0" VerticalAlignment="Center"
+                          ToolTip="10 div, 1 div, 30 ex, 6 ex and 1 ex. Apply still decides." />
+                </StackPanel>
+              </StackPanel>
+
+              <!-- Made-up items at made-up prices, in the colours as typed: what Apply would do to them. -->
+              <StackPanel Grid.Column="2">
+                <TextBlock Text="Preview" Style="{StaticResource CardTitle}" />
+                <TextBlock Style="{StaticResource Gist}" Margin="0,4,0,14" Text="Follows as you type. Cards change when you press Apply." />
+                <Border Style="{StaticResource GamePanel}">
+                  <Border Style="{StaticResource GamePanelInner}" Padding="14,8">
+                    <ItemsControl ItemsSource="{Binding Examples}" Focusable="False" AutomationProperties.Name="Preview">
+                      <ItemsControl.ItemTemplate>
+                        <DataTemplate DataType="{x:Type vm:ColourExampleViewModel}">
+                          <Grid Margin="0,5">
+                            <Grid.ColumnDefinitions>
+                              <ColumnDefinition Width="*" />
+                              <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <StackPanel VerticalAlignment="Center" Margin="0,0,12,0">
+                              <TextBlock Text="{Binding Name}" FontSize="15" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" Foreground="{Binding Rarity, Converter={StaticResource RarityBrush}}" />
+                              <TextBlock Text="{Binding Base}" FontSize="12.5" Foreground="{StaticResource TextFaint}" TextTrimming="CharacterEllipsis" />
+                            </StackPanel>
+                            <v:ValueLabel Grid.Column="1" Text="{Binding Price}" Tier="{Binding Tier}" Size="Medium" VerticalAlignment="Center" />
+                          </Grid>
+                        </DataTemplate>
+                      </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                  </Border>
+                </Border>
+                <TextBlock Text="Made-up items and prices." FontSize="13.5" Foreground="{StaticResource TextFaint}" Margin="0,8,0,0" />
+                <TextBlock Text="{Binding RateLine}" FontSize="13.5" Foreground="{StaticResource TextFaint}" TextWrapping="Wrap" Margin="0,2,0,0" />
+              </StackPanel>
+            </Grid>
           </Border>
         </StackPanel>
 

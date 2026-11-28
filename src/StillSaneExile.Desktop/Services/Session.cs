@@ -20,8 +20,9 @@ public sealed class Session
 
     private Session(Store store, ProfileKind kind, string league, string displayCurrency, string? listingDenomination,
         PriceBook book, DataPack? pack, string packStatus, TimeProvider clock, IReadOnlyList<(string, Comparable)> seeded,
-        TradeData trade, IReadOnlySet<string>? practiceTexts = null, bool livePrices = false)
+        TradeData trade, IReadOnlySet<string>? practiceTexts = null, bool livePrices = false, ValueLadder? colours = null)
     {
+        Colours = colours ?? ValueLadder.Default;
         _store = store;
         _practiceTexts = practiceTexts ?? new HashSet<string>();
         Trade = trade;
@@ -46,6 +47,12 @@ public sealed class Session
     public string? ListingDenomination { get; }
     public PriceBook Book { get; }
     public CurrencyConverter Converter { get; }
+
+    /// <summary>Where each colour of the price label starts: the player's steps.</summary>
+    public ValueLadder Colours { get; }
+
+    /// <summary>Prices as the cards show them: this session's rates, display currency, clock and colours.</summary>
+    public PriceText PriceText() => new(Converter, DisplayCurrency, Now, Colours);
     public DataPack? Pack { get; }
     public string PackStatus { get; }
     public TimeProvider Clock { get; }
@@ -146,7 +153,7 @@ public sealed class Session
         var book = settings.LivePrices ? LiveBook(league, fresh, paths) ?? PriceBook.Empty(league) : PriceBook.Empty(league);
         PriceBookGuard.EnsureAllowed(ProfileKind.Live, league, book);
         return new Session(store, kind, league, settings.DisplayCurrency(kind), settings.ListingDenomination(kind), book,
-            pack: null, "No verified data pack yet: ranges come from advanced copies only", TimeProvider.System, [], TradeDataFile.Load(paths), livePrices: settings.LivePrices);
+            pack: null, "No verified data pack yet: ranges come from advanced copies only", TimeProvider.System, [], TradeDataFile.Load(paths), livePrices: settings.LivePrices, colours: settings.PriceColours);
     }
 
     /// <summary>The live book for exactly <paramref name="league"/>: never synthetic, never another league's.</summary>
@@ -166,7 +173,7 @@ public sealed class Session
         PriceBookGuard.EnsureAllowed(ProfileKind.Demo, Settings.DemoLeague, book);
         return new Session(store, ProfileKind.Demo, book.League, settings.DisplayCurrency(ProfileKind.Demo), settings.ListingDenomination(ProfileKind.Demo), book,
             load.Pack, load.Pack is null ? $"Pack failed to load: {load.Error}" : "Synthetic demo pack (not game data)",
-            new DemoTimeProvider(DemoTimeProvider.Start), LoadSeeded(paths), TradeDataFile.Load(paths), LoadPracticeTexts(paths));
+            new DemoTimeProvider(DemoTimeProvider.Start), LoadSeeded(paths), TradeDataFile.Load(paths), LoadPracticeTexts(paths), colours: settings.PriceColours);
     }
 
     /// <summary>The practice items' text, so the demo can tell them from items copied from the game.</summary>

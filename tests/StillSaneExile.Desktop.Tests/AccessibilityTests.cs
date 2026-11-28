@@ -255,6 +255,12 @@ public class AccessibilityTests
         Assert.Contains("Press again to hide (accessibility)", card);
         Assert.Contains("Quick price card scale", card);
 
+        var colours = Section("colours");
+        Assert.Equal("Where white and red starts", colours[0]);
+        Assert.True(colours.IndexOf("White and red in Divine Orbs") < colours.IndexOf("Where red starts")); // row by row
+        Assert.Contains("Tan in Exalted Orbs", colours);
+        Assert.DoesNotContain("Apply", colours); // nothing to apply until a step changes
+
         var market = Section("market");
         Assert.Contains("Search the trade site from SSE", market);
         Assert.Contains("Days until prices you write down expire", market);

@@ -802,7 +802,7 @@ public sealed partial class ItemViewModel : ObservableObject
             return;
         }
 
-        var price = new PriceText(_session.Converter, _session.DisplayCurrency, _session.Now);
+        var price = _session.PriceText();
         Matches = [];
         NoMatches = false;
 

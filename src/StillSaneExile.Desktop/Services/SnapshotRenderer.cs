@@ -72,6 +72,16 @@ public static class SnapshotRenderer
             Save(main, Path.Combine(dir, section.Key == "general" ? "settings.png" : $"settings-{section.Key}.png"));
         }
 
+        // Price colours with a draft not yet applied: white from 1 div, red from 40 ex. The preview follows;
+        // nothing else does until Apply, so the draft is undone afterwards.
+        shell.OpenSettings("colours");
+        var colours = shell.SettingsPage.Colours;
+        colours.Steps[0].Amount = "1";
+        colours.Steps[1].Amount = "40";
+        colours.Steps[1].SetCurrencyCommand.Execute("exalted");
+        Save(main, Path.Combine(dir, "settings-colours-draft.png"));
+        colours.UndoCommand.Execute(null);
+
         shell.OpenSettings("general");
         RenderStashPictures(shell, main, dir);
 
@@ -137,7 +147,7 @@ public static class SnapshotRenderer
         var session = shell.Session;
         var copy = new ItemViewModel(item.Item, session);
         copy.Matches = [];
-        copy.Answer = PriceAnswer.Baseline(copy.Price!, null, new Domain.Pricing.PriceText(session.Converter, session.DisplayCurrency, session.Now));
+        copy.Answer = PriceAnswer.Baseline(copy.Price!, null, session.PriceText());
         return copy;
     }
 
