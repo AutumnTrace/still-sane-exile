@@ -2,6 +2,14 @@
 
 Every release is a tag `vX.Y.Z` on `main` that matches `<Version>` in `Directory.Build.props`. See [docs/RELEASING.md](docs/RELEASING.md).
 
+## [0.8.0] - 2026-11-28
+
+- **SSE stays in the notification area:** closing or minimizing the window keeps it running by the clock, and your keys keep working. Right-click the icon → Quit to end it; downloaded updates install when you quit. Settings → **Updates and privacy** can turn either off.
+- **The passive tree looks like the game's:** node icons in their frames, lit paths, masteries and the background, from the game's own tree. Click a node to read it; `Tab` to the tree and use the arrow keys to walk your build's points.
+- **Closer to the game:** the Vaal Orb has the game's four outcomes; Greater and Perfect Transmutation and Augmentation roll from level 44 and 70; Alchemy works on Magic items too. Tier 1 is the best tier, as in the game. The practice items and the craft simulator now use the game's real stats for patch 0.5.5 (Siege Crossbow); only the odds are still made up.
+- **Price check fixes:** weapons with over 1,000 damage show the right physical DPS; Sanctified and "Unidentified (Tier N)" items read correctly.
+- **More live prices:** abyss bones, breach catalysts and splinters, and Sanctum relics.
+
 ## [0.7.0] - 2026-11-28
 
 - **Crafting is open:** a practice bench with every orb, both essences, eight omens and regular, greater and perfect grades, drawn with the game's own pictures. Like in game, click an orb to pick it up and click the item to use it; hold `Shift` to keep it in hand, right-click or `Esc` to put it back. Mark the stats you want to see the odds of the next orb, check each stat's chance in the pool, and go back to any step in the history, with what the clicks cost. Its stats are made up for practice; in a live league the clicks are priced at that league's prices. Settings → **Crafting** switches to one-click orbs.
