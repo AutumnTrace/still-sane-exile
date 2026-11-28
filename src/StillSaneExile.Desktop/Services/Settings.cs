@@ -97,6 +97,14 @@ public sealed class Settings(Store store)
         set => store.Set("peek.scale", value.ToString(CultureInfo.InvariantCulture));
     }
 
+    /// <summary>Where each colour of the price label starts (Settings, Price colours). The same for every
+    /// profile and league; anything stored that does not read back is the default.</summary>
+    public ValueLadder PriceColours
+    {
+        get => ValueLadder.Parse(store.Get("prices.colours")) ?? ValueLadder.Default;
+        set => store.Set("prices.colours", value.Format());
+    }
+
     /// <summary>Fetch the live league's prices from poe.ninja, hourly. On by default, but it only ever runs
     /// for a live profile with a confirmed league, so confirming one is what turns it on.</summary>
     public bool LivePrices

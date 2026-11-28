@@ -57,7 +57,8 @@
         <StackPanel Margin="18,16,18,14">
           <StackPanel Style="{StaticResource Dimmable}">
             <TextBlock Text="{Binding Answer.Lead}" FontFamily="{StaticResource CapsFont}" FontSize="14.5" Foreground="{StaticResource TextDim}" TextAlignment="Center" TextWrapping="Wrap" />
-            <v:ValueLabel Text="{Binding Answer.Big}" Tier="{Binding Answer.Tier}" Size="Large" HorizontalAlignment="Center" Margin="0,7,0,8" />
+            <v:ValueLabel Text="{Binding Answer.Big}" Tier="{Binding Answer.Tier}" Size="Large" HorizontalAlignment="Center" Margin="0,7,0,8"
+                          ToolTip="Where each colour starts: Settings, Price colours" />
           </StackPanel>
           <TextBlock Text="{Binding NoteLine}" FontSize="15.5" TextAlignment="Center" TextWrapping="Wrap">
             <TextBlock.Style>

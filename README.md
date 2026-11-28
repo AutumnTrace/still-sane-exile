@@ -10,6 +10,11 @@ Windows 10/11 · x64 · Windowed or borderless · Game set to English (other lan
 
 Doom Thirst in the demo profile: items like it ask about 1.8–2.6 div, with 29 for sale. The search wanted physical DPS of at least 319 and attack speed of at least 15, 10% under its own rolls. The price is coloured like a loot filter label (white and red for a jackpot, red for Divines, orange to tan for Exalted money, dark for small change) and shows the game's own orbs instead of "div" and "ex".
 
+**Settings → Price colours** moves where each colour starts, in Divine or Exalted Orbs: on a league's first day, 1 div can already get the white and red label. A preview of example items follows as you type, and the cards change when you press **Apply**.
+
+<img src="docs/screenshots/settings-colours.png" width="720" alt="Settings, Price colours: white and red from 1 div and red from 40 ex typed in but not applied yet; the preview shows a 4 div item turned white and red and a 70 ex item turned red">
+
+
 ## Try it on a crossbow
 
 You don't need the game running. Run `StillSaneExile-win-Setup.exe` from the [latest release](https://github.com/AutumnTrace/still-sane-exile/releases/latest) (it installs for your user, no admin rights) or unzip `StillSaneExile-win-Portable.zip` anywhere. The build isn't code-signed yet, so SmartScreen may warn you: choose **More info → Run anyway**. Installed copies apply downloaded updates when you close the app.

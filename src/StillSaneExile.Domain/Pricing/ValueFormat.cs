@@ -34,9 +34,12 @@ public static class Currencies
 
 /// <summary>Prices as people read them. Values are in the display currency; when that is Divine, anything
 /// under one Divine Orb shows in whole Exalted Orbs instead ("cheap items still show in Exalted").
-/// Divine amounts keep one decimal. Rounding happens here only, never in the maths before it.</summary>
-public sealed class PriceText(CurrencyConverter converter, string display, DateTimeOffset now)
+/// Divine amounts keep one decimal. Rounding happens here only, never in the maths before it. A price's
+/// colour step follows <paramref name="ladder"/>, the player's, or the default one.</summary>
+public sealed class PriceText(CurrencyConverter converter, string display, DateTimeOffset now, ValueLadder? ladder = null)
 {
+    public ValueLadder Ladder { get; } = ladder ?? ValueLadder.Default;
+
     public string Display => display;
 
     public (decimal Value, string Denomination) Unit(decimal value)
@@ -85,14 +88,17 @@ public sealed class PriceText(CurrencyConverter converter, string display, DateT
         var ex = converter.Convert(value, denomination, "exalted", now);
 
         // A rate stored as its inverse turns 120 ex into 0.99999 div: on a step's edge that is the step.
-        return div.Ok && ex.Ok ? ValueTiers.Of(Math.Round(div.Value, 4), Math.Round(ex.Value, 2)) : null;
+        return div.Ok && ex.Ok ? Ladder.Of(Math.Round(div.Value, 4), Math.Round(ex.Value, 2)) : null;
     }
 
     /// <summary>"1 div = 120 ex", or null when the price book has no rate.</summary>
-    public string? DivineRate()
+    public string? DivineRate() => ExaltedPerDivine() is { } rate ? $"1 div = {ValueFormat.Amount(Math.Round(rate))} ex" : null;
+
+    /// <summary>Exalted Orbs to one Divine Orb, or null when the price book has no rate.</summary>
+    public decimal? ExaltedPerDivine()
     {
         var rate = converter.Convert(1m, "divine", "exalted", now);
-        return rate.Ok ? $"1 div = {ValueFormat.Amount(Math.Round(rate.Value))} ex" : null;
+        return rate.Ok ? rate.Value : null;
     }
 
     private static string Number(decimal v, string denomination) =>

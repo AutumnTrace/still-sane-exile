@@ -37,6 +37,7 @@ public sealed partial class SettingsViewModel : ObservableObject
         new("general", "League and prices"),
         new("keys", "Keys"),
         new("card", "Price card"),
+        new("colours", "Price colours"),
         new("market", "Live prices and trade"),
         new("pictures", "Stash pictures"),
         new("about", "Updates and privacy"),
@@ -50,6 +51,7 @@ public sealed partial class SettingsViewModel : ObservableObject
     public SettingsViewModel(ShellViewModel shell)
     {
         _shell = shell;
+        Colours = new PriceColoursViewModel(shell);
         Load();
         shell.StashPictures.PropertyChanged += (_, e) =>
         {
@@ -62,6 +64,9 @@ public sealed partial class SettingsViewModel : ObservableObject
     }
 
     private Settings S => _shell.Settings;
+
+    /// <summary>Settings, Price colours: where each colour of the price label starts.</summary>
+    public PriceColoursViewModel Colours { get; }
 
     /// <summary>The "Stash reading (coming soon): help build it" card.</summary>
     public StashPicturesViewModel Pictures => _shell.StashPictures;
@@ -218,7 +223,7 @@ public sealed partial class SettingsViewModel : ObservableObject
     public IReadOnlyList<GuideStep> GuideSteps =>
     [
         new(1, "Item name", "Coloured the same as in game: white, blue, yellow or orange."),
-        new(2, "What it’s worth, coloured like a loot filter", "White and red is a jackpot, red is Divines, orange to tan is Exalted money, dark is cheap. Under it, in plain words, how sure that is."),
+        new(2, "What it’s worth, coloured like a loot filter", $"White and red from {S.PriceColours.S}, red from {S.PriceColours.A}, orange to tan down to {S.PriceColours.D}, dark under that (Settings, Price colours). Under it, in plain words, how sure that is."),
         new(3, "How many are for sale", "More for sale means a better price guess."),
         new(4, "The cheapest listings", "What the cheapest items like yours ask, and how long ago they were listed. Only instant buyout asks set the price."),
         new(5, "Stats in the search", "How many of your stats were used to find similar items."),
@@ -308,6 +313,7 @@ public sealed partial class SettingsViewModel : ObservableObject
         LivePricesOn = S.LivePrices;
         TradeSearchOn = S.TradeSearch;
         OnPricesChanged();
+        Colours.Load();
         IsOnboarding = !S.Onboarded;
         _samplePeek = null; // keys or currency may have changed
         OnPropertyChanged(nameof(CurrentCurrency));
