@@ -5,10 +5,10 @@ using System.Windows.Media.Imaging;
 
 namespace StillSaneExile.Desktop.Views;
 
-/// <summary>A currency's own picture from the game (Divine, Exalted or Chaos Orb), so a price reads the way
-/// the game shows money. The pictures ship with the app (Assets/Currency, fetched once by
-/// scripts/update-currency-icons.ps1): drawing one never makes a request. Decorative: the price next to it
-/// carries the name for screen readers.</summary>
+/// <summary>A currency's own picture from the game: the Divine, Exalted and Chaos Orbs next to prices, and the
+/// orbs, essences and omens of the craft simulator. The pictures ship with the app (Assets/Currency, fetched
+/// once by scripts/update-currency-icons.ps1): drawing one never makes a request. Decorative: the price or
+/// the button next to it carries the name for screen readers.</summary>
 public sealed class CurrencyIcon : Image
 {
     public static readonly DependencyProperty CurrencyProperty = DependencyProperty.Register(
@@ -16,16 +16,24 @@ public sealed class CurrencyIcon : Image
 
     private static readonly Dictionary<string, ImageSource> Cache = new(StringComparer.OrdinalIgnoreCase);
 
+    // 16 px unless told otherwise, as a default rather than a value set here: a value set in the constructor
+    // would outrank a size given inside a template, and every picture in a list would stay 16 px.
+    static CurrencyIcon()
+    {
+        WidthProperty.OverrideMetadata(typeof(CurrencyIcon), new FrameworkPropertyMetadata(16.0));
+        HeightProperty.OverrideMetadata(typeof(CurrencyIcon), new FrameworkPropertyMetadata(16.0));
+    }
+
     public CurrencyIcon()
     {
         Stretch = Stretch.Uniform;
-        Width = Height = 16;
         Focusable = false;
         SnapsToDevicePixels = true;
         RenderOptions.SetBitmapScalingMode(this, BitmapScalingMode.HighQuality);
     }
 
-    /// <summary>"divine", "exalted" or "chaos"; anything else shows nothing.</summary>
+    /// <summary>poe.ninja's id of a picture the app ships ("divine", "transmute", "omen-of-whittling"); anything
+    /// else shows nothing.</summary>
     public string? Currency
     {
         get => (string?)GetValue(CurrencyProperty);
@@ -67,13 +75,16 @@ public sealed class CurrencyIcon : Image
         }
     }
 
-    private static string? FileFor(string id) => id.ToLowerInvariant() switch
+    /// <summary>The pictures in Assets/Currency, named after poe.ninja's ids (the script fetches the same list).</summary>
+    private static readonly HashSet<string> Shipped = new(StringComparer.OrdinalIgnoreCase)
     {
-        "divine" => "divine",
-        "exalted" => "exalted",
-        "chaos" => "chaos",
-        _ => null,
+        "divine", "exalted", "chaos", "transmute", "aug", "regal", "alch", "annul", "fracturing-orb", "vaal",
+        "essence-of-abrasion", "essence-of-haste",
+        "omen-of-sinistral-exaltation", "omen-of-dextral-exaltation", "omen-of-greater-exaltation", "omen-of-whittling",
+        "omen-of-sinistral-erasure", "omen-of-dextral-erasure", "omen-of-sinistral-annulment", "omen-of-dextral-annulment",
     };
+
+    private static string? FileFor(string id) => Shipped.Contains(id) ? id.ToLowerInvariant() : null;
 
     private void Update()
     {

@@ -34,17 +34,19 @@ public class ValueLabelTests
     }
 
     [Fact]
-    public void Each_display_currency_has_its_picture_in_the_app_and_nothing_else_is_guessed() => UiThread.Run(() =>
+    public void Each_shipped_picture_loads_and_nothing_else_is_guessed() => UiThread.Run(() =>
     {
         using var app = new TestApp();
-        foreach (var currency in Currencies.Display)
+        // The display currencies, and every orb, essence and omen of the craft simulator.
+        var bench = new Domain.Craft.CraftEngine(app.Shell.Session.Pack!, app.Shell.Session.Pack!.Bases![0]);
+        foreach (var currency in Currencies.Display.Concat(bench.Currencies.Select(c => c.Id)).Concat(Domain.Craft.CraftEngine.OmenList.Select(o => o.Id)))
         {
             var picture = Assert.IsAssignableFrom<ImageSource>(CurrencyIcon.Picture(currency));
             Assert.True(picture.Width > 0, currency);
         }
 
-        Assert.Null(CurrencyIcon.Picture("regal"));
-        Assert.Equal(Visibility.Collapsed, new CurrencyIcon { Currency = "regal" }.Visibility);
+        Assert.Null(CurrencyIcon.Picture("mirror"));
+        Assert.Equal(Visibility.Collapsed, new CurrencyIcon { Currency = "mirror" }.Visibility);
     });
 
     [Fact]

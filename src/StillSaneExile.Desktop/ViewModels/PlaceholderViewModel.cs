@@ -28,16 +28,4 @@ public sealed partial class PlaceholderViewModel(string title, string milestone,
             "Session rate only from comparable holdings at fixed prices; transfers between tracked tabs net to zero.",
             "Held-key price chips never create history on their own.",
         ]);
-
-    public static PlaceholderViewModel Craft() => new(
-        "Crafting",
-        "Milestone 5 · not available yet",
-        "Plan a craft on the same item snapshot you inspected, with explicit success and failure branches, priced from the same price book as Wealth.",
-        [
-            "Pin the mods to keep, pick target stats or minimum tiers, allowed methods and a currency budget.",
-            "Unreachable targets come with a reason: item level, family conflict, full affix side, or method not modelled.",
-            "Starts with verified Augmentation, Regal and Exalted operations on one weapon family. Essences, omens, desecration and runeforging only after each is verified for the patch.",
-            "Odds are labelled exact, estimated or unknown. Recommendations stop when unknown odds or prices would change the answer.",
-            "After each real step you paste the new item and replan. No button performs a craft in game.",
-        ]);
 }

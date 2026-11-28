@@ -105,6 +105,14 @@ public sealed class Settings(Store store)
         set => store.Set("prices.colours", value.Format());
     }
 
+    /// <summary>How the craft simulator uses an orb (Settings, Crafting): picked up, then clicked on the item,
+    /// as in the game (the default); or used by clicking the orb itself.</summary>
+    public bool CraftPickUp
+    {
+        get => store.Get("craft.use") != "click";
+        set => store.Set("craft.use", value ? "pickup" : "click");
+    }
+
     /// <summary>Fetch the live league's prices from poe.ninja, hourly. On by default, but it only ever runs
     /// for a live profile with a confirmed league, so confirming one is what turns it on.</summary>
     public bool LivePrices

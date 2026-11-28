@@ -24,7 +24,7 @@
         <StackPanel DockPanel.Dock="Left" Orientation="Horizontal">
           <Button Style="{StaticResource TabButton}" Content="Price check" Command="{Binding GoInspectCommand}" Tag="{Binding PageName, Converter={StaticResource Active}, ConverterParameter='Price check'}" Margin="0,0,2,0" />
           <Button Style="{StaticResource TabButton}" Command="{Binding GoCraftCommand}" Tag="{Binding PageName, Converter={StaticResource Active}, ConverterParameter=Crafting}" Margin="0,0,2,0">
-            <TextBlock><Run Text="Crafting" /><Run Text=" later" FontSize="12.5" Foreground="{StaticResource TextFaint}" FontWeight="Normal" /></TextBlock>
+            <TextBlock Text="Crafting" />
           </Button>
           <Button Style="{StaticResource TabButton}" Command="{Binding GoWealthCommand}" Tag="{Binding PageName, Converter={StaticResource Active}, ConverterParameter='My wealth'}" Margin="0,0,2,0">
             <TextBlock><Run Text="My wealth" /><Run Text=" later" FontSize="12.5" Foreground="{StaticResource TextFaint}" FontWeight="Normal" /></TextBlock>
