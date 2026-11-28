@@ -18,18 +18,8 @@ public class AccessibilityTests
 {
     private const string Crossbow = "rare-crossbow-advanced.txt";
 
-    private const string GuideNotes = """
-        Act 1
-        cut Entangle
-        upgrade Entangle at Mud Burrow
-        cut Contagion
-        socket Zenith I into Entangle
-        After ascendancy
-        respec the passive tree
-        """;
-
     /// <summary>A character a few stops into the route, as a player gets there: one step ticked, one
-    /// skipped, and their notes saved as a plan with the first step ticked.</summary>
+    /// skipped, and the synthetic practice build's code pasted with its first gem step ticked.</summary>
     private static ViewModels.GuideViewModel SeedGuide(TestApp app)
     {
         var guide = app.Shell.Guide;
@@ -41,8 +31,9 @@ public class AccessibilityTests
         guide.NextCommand.Execute(null);
         guide.SkipCommand.Execute(guide.Steps.FirstOrDefault());
         guide.NextCommand.Execute(null);
-        guide.Plan.NotesDraft = GuideNotes;
-        guide.Plan.SavePlanCommand.Execute(null);
+        guide.Plan.CodeDraft = GuideBuildTests.PracticeCode(app);
+        guide.Plan.ReadCodeCommand.Execute(null);
+        Assert.True(guide.Plan.HasBuild, guide.Plan.Message);
         guide.Plan.ToggleStepCommand.Execute(guide.Plan.Checklist.FirstOrDefault());
         return guide;
     }
@@ -439,8 +430,6 @@ public class AccessibilityTests
     {
         using var app = new TestApp();
         var guide = SeedGuide(app);
-        guide.Plan.LinkDraft = "https://mobalytics.gg/poe-2/builds";
-        guide.Plan.SaveLinkCommand.Execute(null);
 
         var stops = Check(new GuideView { DataContext = guide });
 
@@ -451,8 +440,15 @@ public class AccessibilityTests
         Assert.Contains("Previous stop", stops);
         Assert.Contains(stops, s => s.StartsWith("Next: ", StringComparison.Ordinal));
         Assert.Contains("One more ascendancy", stops);
-        Assert.Contains("Forget the build guide link", stops);
+        Assert.Contains("Cut Contagion", stops); // a gem step's tick box
+        Assert.Contains("Show skill set Act 1", stops);
+        Assert.Contains("Show skill set Endgame", stops);
+        Assert.Contains("Path of Building code", stops);
+        Assert.Contains("Read the build code", stops);
         Assert.True(stops.IndexOf("Previous stop") < stops.IndexOf("One more ascendancy"));
+        Assert.True(stops.IndexOf("One more ascendancy") < stops.IndexOf("Show skill set Act 1"));
+        Assert.True(stops.IndexOf("Show skill set Endgame") < stops.IndexOf("Path of Building code"));
+        Assert.True(stops.IndexOf("Path of Building code") < stops.IndexOf("Read the build code"));
     });
 
     [Fact]
@@ -482,20 +478,14 @@ public class AccessibilityTests
     });
 
     [Fact]
-    public void The_build_notes_editor_and_a_waiting_revision_work_from_the_keyboard() => UiThread.Run(() =>
+    public void A_newer_build_code_waiting_as_a_revision_works_from_the_keyboard() => UiThread.Run(() =>
     {
         using var app = new TestApp();
         var plan = SeedGuide(app).Plan;
-        plan.EditNotesCommand.Execute(null);
-        plan.NotesDraft = GuideNotes.Replace("cut Contagion", "cut Contagion (level 5 uncut)", StringComparison.Ordinal) + "\nthis line means nothing";
+        plan.CodeDraft = GuideBuildTests.PracticeCode(app, xml => xml.Replace("title=\"Endgame\"", "title=\"After ascendancy\"", StringComparison.Ordinal));
+        plan.ReadCodeCommand.Execute(null);
 
-        var editing = Check(new GuideView { DataContext = app.Shell.Guide });
-
-        Assert.Contains("Your build notes", editing);
-        Assert.Contains("Cancel editing the build notes", editing);
-
-        plan.SavePlanCommand.Execute(null);
-        Assert.True(plan.HasPending);
+        Assert.True(plan.HasPending, plan.Message);
         var pending = Check(new GuideView { DataContext = app.Shell.Guide });
 
         Assert.Contains(pending, s => s.StartsWith("Use revision ", StringComparison.Ordinal));

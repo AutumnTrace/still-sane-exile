@@ -1,8 +1,8 @@
 # Campaign guide
 
-The guide page tracks one route through the campaign for each of your characters, turns your own build notes into gem steps that come up one stage at a time, and can pin two short lines over the game: where you are and what to do there, then your next gem step or the route's next stop.
+The guide page tracks one route through the campaign for each of your characters, reads your build from the Path of Building code you paste and turns its gems into steps that come up one stage at a time, and can pin two short lines over the game: where you are and what to do there, then your next gem step or the route's next stop.
 
-SSE never reads the game's memory, files or logs, so it does not know which zone you are in. You tell it, with the zone list or Next and Back. Picking a zone only moves you: it never ticks a step. Everything works offline.
+SSE never reads the game's memory, files or logs, so it does not know which zone you are in. You tell it, with the zone list or Next and Back. Picking a zone only moves you: it never ticks a step. Everything works offline: the build code is read on your PC and no guide site is ever opened.
 
 ## Route packs
 
@@ -37,50 +37,59 @@ Progress is per character and stays on this PC (see [CAPTURE-AND-PRIVACY.md](CAP
 - **Zone list**: picking a zone looks ahead first (the next visit from where you are), then back (the latest visit behind you). Coming back out of the Mud Burrow lands on the second Clearfell visit, not the first.
 - Steps left open on an earlier visit to the same zone show up again when you come back.
 - **Missed permanent rewards** lists rewards you skipped and rewards still open on legs you have moved past. Skipped steps can be reopened.
-- Past the last leg you set the act yourself, so later build-plan stages know how far along you are.
+- Past the last leg you set the act yourself, so the build's later stages know how far along you are.
 
 ## HUD lines
 
 Off by default; switch them on in the guide page. They show only while the game is in front (or for a few seconds over SSE when you press Preview), in a topmost, click-through window that never takes focus. They step aside while the item price card is showing and come back when it hides, and they hide on minimize and lock. Changing zone only changes the text: nothing pops up.
 
-Line 1 is the zone and the first open step there (or the leg's hint). Line 2 is the build plan's next gem step when one is due ("Next gem · Upgrade Entangle"), otherwise the route's next stop. Placement (top left, below the buffs) has not been measured on real screens yet (#5).
+Line 1 is the zone and the first open step there (or the leg's hint). Line 2 is the build's next gem step when one is due ("Next gem · Cut support Zenith I"), otherwise the route's next stop. Placement (top left, below the buffs) has not been measured on real screens yet (#5).
 
-## Build plans
+## Your build
 
-### The guide link: save and open, nothing else
+### Paste a Path of Building code, nothing else
 
-Mobalytics' terms restrict software access, downloads, mirroring and framing, and there is no authorized export. So SSE only **saves the link you paste** and, when you click "Open in browser", asks Windows to open it in your default browser. It never fetches, embeds, frames or reads the page. Any `https://` link is accepted (Mobalytics or another planner; the same rule holds for all of them); `http`, `file`, `javascript`, addresses with a user name or password, and bare IP addresses are refused. An automatic import will only be added if Mobalytics offers an authorized one.
+The page has one input for the build: a Path of Building code. Copy it from Path of Building (Import/Export Build, Generate) or from your guide's Path of Building export, paste it and press **Read build**. Mobalytics' terms bar software access, downloads, mirroring and framing, and there is no authorized export, so SSE never opens, fetches or shows a guide page; the code is your own text and is read on your PC (`PobCode`).
 
-### Your notes become the checklist
+A code is the build's XML (root `PathOfBuilding2`), zlib-compressed, then base64 with `-` and `_` in place of `+` and `/`: Path of Building's `ImportTab.lua` and SimpleGraphic's `Deflate` (see [SOURCES.md](SOURCES.md), row 22). SSE also takes plain base64, a missing `=` padding, line breaks and gzip. What it says when the text is not a build:
 
-You type or paste your own steps, one per line. `PlanNotesParser` reads them locally and the page shows a preview of every line next to what SSE made of it; lines it cannot read say what to write instead. Nothing is saved until you press Save, so you correct the notes while watching the preview.
-
-| You write | SSE reads |
+| You paste | SSE says |
 |---|---|
-| `cut Entangle` | Cut a skill gem |
-| `cut support Zenith I` | Cut a support gem |
-| `upgrade Entangle to level 5` | Upgrade a gem (with the uncut gem's level) |
-| `socket Zenith I into Entangle` | Socket a support into a skill |
-| `move Zenith I: Entangle → Essence Drain` (or `move … from … to …`) | Move a support to another skill |
-| `reserve Herald of Ash` | Reserve spirit for a gem |
-| `respec …` | Respec, with whatever you wrote |
-| `Act 2:` or `after ascendancy:` (alone or in front of a step) | The stage, from that line down |
-| `at Mud Burrow`, `(level 3 uncut)`, `(needs Essence Drain)`, `(priority: high)`, `(optional)` | Where, uncut gem type and level, prerequisites, the author's priority |
+| A link (pobb.in, poe.ninja, Maxroll, Pastebin, any site) | It is a link: copy the code itself. Nothing is opened. |
+| A Mobalytics link | Use the page's Path of Building export and paste that code. |
+| Text that is not base64, or base64 that is not compressed | Not a Path of Building code, and what one looks like |
+| A code cut short or damaged | Cut short or damaged: copy all of it again |
+| A Path of Exile 1 code (root `PathOfBuilding`) | It is a Path of Exile 1 build |
 
-Bullets, numbering and tick boxes are ignored, and so are lines starting with `#` or `//`. A step with no priority shows "Author did not specify". A place that names a zone in the route pack makes the step wait until you reach that zone; any other place (an NPC) is shown as written.
+A code that unpacks to more than 32 MB, or that carries a document type (which could pull in other files), is refused. Nothing is saved until a code reads.
 
-Each step is a milestone: stage, zone or NPC, trigger (stage, or zone), prerequisites, action, gem, target skill, uncut gem type and level, and priority.
+### What the build gives the guide
+
+- **Gem steps**, from two places, both the author's own:
+  - **The build's notes**, read by the same reader as before (`PlanNotesParser`: `cut Entangle`, `cut support Zenith I`, `socket Zenith I into Entangle`, `move Zenith I: Entangle → Essence Drain`, `upgrade …`, `reserve …`, `respec …`, stage labels like `Act 2:` or `after ascendancy:`, and `at Mud Burrow`, `(needs …)`, `(priority: …)`). A line counts only when every gem it names is in the build, so prose like "Move on to the Grelwood" never becomes a step.
+  - **The skill sets.** A set's stage comes from its title: "Act 2", "Acts 4-6", "Leveling (Act 1)", "after ascendancy", "Act 3, post-ascendancy". The first set counts from the start when its title names none. For each set in order: cut each skill and support not cut yet, socket each support into its group's skill (the group's first skill), and move a support that now sits in another skill. A support in two groups of one set goes into the first. Switched-off groups and skills granted by items give no steps. **A later set whose title names no stage ("Endgame", "Level 40") gives no steps**, so it never leaks into Act 1; the page says which sets those are and that naming them after a stage in Path of Building and pasting again brings them in.
+  - Within a stage the notes' steps come first. Gem levels are not turned into upgrades, because Path of Building often sets every gem to its top level whatever the stage. Whether a gem is a support comes from the ids Path of Building writes (`Metadata/Items/Gem/SupportGem…`, a `Support…` granted effect); SSE ships no gem data and claims nothing else about a gem, so a step says "Cut Entangle", never which uncut gem or level it takes.
+- **Skills and supports**, one skill set at a time with a picker: each skill with its supports, the group's label, the level Path of Building has for it, and the author's gem notes. The set shown is the latest one for a stage you have reached, else the one the author had open.
+- **The notes** as written, with Path of Building's colour codes taken out.
+- **Items**: the item set the author had open, slot by slot, with names and base types only.
+- **A few numbers** Path of Building worked out when the code was made (Life, Energy Shield, Mana, Spirit), labelled as Path of Building's.
+
+Each step is a milestone: stage, zone or NPC, trigger (stage, or zone), prerequisites, action, gem, target skill, uncut gem type and level (only when the notes give them), the author's priority or "Author did not specify", and where in the build it came from.
 
 ### Stage gating
 
 A step comes up only when all of these hold:
 
-- **Its stage is reached.** The act comes from the zone you picked (or the act you set past the route); ascendancies are the count you set on the page. Stage labels only move forward through the notes, and an act label after "after ascendancy" keeps the ascendancy. So entering Act 2 keeps the pre-ascendancy plan going until you say the ascendancy is done, and steps for later stages stay hidden: they are counted, never shown as a prompt and never put on the HUD.
-- **Every gem it acts on is in hand.** A gem the plan cuts is in hand once that cut is ticked. A gem the plan never cuts is taken as already in hand. So `move Zenith I: Entangle → Essence Drain` waits until `cut Essence Drain` is ticked, whatever the act.
+- **Its stage is reached.** The act comes from the zone you picked (or the act you set past the route); ascendancies are the count you set on the page. Stages only move forward through the notes and through the skill sets, and an act label after "after ascendancy" keeps the ascendancy. So entering Act 2 keeps the pre-ascendancy steps going until you say the ascendancy is done, and steps for later stages stay hidden: they are counted, never shown as a prompt and never put on the HUD.
+- **Every gem it acts on is in hand.** A gem the build cuts is in hand once that cut is ticked. A gem it never cuts is taken as already in hand. So `move Zenith I: Entangle → Essence Drain` waits until `cut Essence Drain` is ticked, whatever the act.
 - **Its zone is reached**, if it names one.
 
-The first step that passes, in note order, is the HUD's "Next gem". The acceptance journey is a unit test (`PlanGateTests`) with notes written for SSE: cut Entangle, then Contagion, and the Zenith I move only once Essence Drain exists. It was not copied from any guide.
+The first step that passes, in order, is the HUD's "Next gem". The acceptance journey is a unit test on the synthetic practice build (`PobPlannerTests`, `fixtures/builds/practice-witch.xml`, and `PlanGateTests` on notes): cut Entangle, then Contagion, and the Zenith I move only once Essence Drain exists. It was not copied from any guide.
 
 ### Revisions
 
-Each save is a revision, stored with the steps as they were read, so a later version of the parser never changes a saved plan. The first plan is used straight away. When you change a plan in use, the new revision waits: the page lists what was added, removed and changed (a new target, stage, level, place or priority), and the old revision stays in use, on the HUD too, until you press "Use revision N". "Keep revision N" drops the new one. Ticks are kept per step, so they carry over to every step that did not change.
+Each code you read is a revision, stored with the code and the steps as they were read, so a later version of SSE never changes a saved plan. The first build is used straight away, and so is a newer code whose steps are the same (new items or tree only). When a newer code changes the steps, it waits: the page lists what was added, removed and changed (a new target, stage, level, place or priority), and the old revision stays in use, on the HUD too, until you press "Use revision N". "Keep revision N" drops the new one. Ticks are kept per step, so they carry over to every step that did not change.
+
+### Steps written in earlier versions
+
+SSE 0.6 and earlier had you type your gem steps and save a guide link. That editor is gone: the pasted code replaces both. Steps you saved then stay in use, ticks included, until you paste a build, which then waits as a revision like any other change. A guide link saved then stays in your data folder but is no longer shown or opened.
