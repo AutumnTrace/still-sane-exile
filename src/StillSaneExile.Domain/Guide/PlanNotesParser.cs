@@ -143,6 +143,28 @@ public static partial class PlanNotesParser
         return (text, labelled, problem);
     }
 
+    /// <summary>The stage a title names anywhere in it ("Act 2", "Acts 4-6", "Leveling (Act 1)", "After
+    /// ascendancy", "Act 3, post-ascendancy"), moving forward from <paramref name="current"/> only. Null
+    /// when the title names no stage ("Endgame", "Level 12"): SSE does not guess what a level means.</summary>
+    public static PlanStage? StageInTitle(string? title, PlanStage current)
+    {
+        var text = title ?? "";
+        int? act = ActInTitle().Match(text) is { Success: true } a ? ActNumber(a.Groups["n"].Value) : null;
+        int? asc = null;
+        if (AscendancyInTitle().Match(text) is { Success: true } m)
+        {
+            asc = m.Groups["before"].Success ? 0 : AscendancyNumber(m.Groups["num"].Success ? m.Groups["num"].Value : m.Groups["ord"].Value);
+        }
+
+        if (act is null && asc is null)
+        {
+            return null;
+        }
+
+        var wanted = new PlanStage(act ?? current.Act, asc ?? current.Ascendancies);
+        return new PlanStage(Math.Max(wanted.Act, current.Act), Math.Max(wanted.Ascendancies, current.Ascendancies));
+    }
+
     private static (PlanMilestone? Milestone, string? Problem) ReadStep(string text, int line, string source, PlanStage stage, RoutePack? route)
     {
         string? priority = null;
@@ -336,6 +358,12 @@ public static partial class PlanNotesParser
 
     [GeneratedRegex(@"^(?:act\s*(?<n>\d{1,2}|[ivx]{1,4})\b|(?<asc>(?:after\s+(?:the\s+|your\s+)?(?:(?<ord>first|1st|second|2nd|third|3rd|fourth|4th)\s+)?|post[\s-]?)ascendancy(?:\s+trial)?(?:\s*#?(?<num>[1-4]))?)\b|(?<before>(?:before\s+(?:the\s+|your\s+)?(?:first\s+|1st\s+)?|pre[\s-]?)ascendancy)\b)\s*[:,\-–—]?\s*", RegexOptions.IgnoreCase)]
     private static partial Regex StageLabel();
+
+    [GeneratedRegex(@"(?<![a-z])acts?\s*(?<n>\d{1,2}|[ivx]{1,4})(?![a-z0-9])", RegexOptions.IgnoreCase)]
+    private static partial Regex ActInTitle();
+
+    [GeneratedRegex(@"(?<![a-z])(?:(?<before>(?:before|pre)[\s-]+(?:the\s+|your\s+)?(?:first\s+|1st\s+)?ascendancy)|(?:after|post)[\s-]+(?:the\s+|your\s+)?(?:(?<ord>first|1st|second|2nd|third|3rd|fourth|4th)\s+)?ascendancy(?:\s+trial)?(?:\s*#?(?<num>[1-4]))?|(?<ord>first|1st|second|2nd|third|3rd|fourth|4th)\s+ascendancy)", RegexOptions.IgnoreCase)]
+    private static partial Regex AscendancyInTitle();
 
     [GeneratedRegex(@"\(([^()]*)\)")]
     private static partial Regex Bracketed();
