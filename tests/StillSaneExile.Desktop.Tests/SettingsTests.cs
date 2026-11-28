@@ -31,6 +31,9 @@ public class SettingsTests
         Assert.False(s.PressClick);
         Assert.Equal(0.85, s.PeekScale);
         Assert.True(s.AutoUpdate);
+        Assert.True(s.CloseToTray);
+        Assert.True(s.MinimizeToTray);
+        Assert.False(s.TrayNoticeShown);
         Assert.True(s.LivePrices);
         Assert.True(s.TradeSearch);
         Assert.Equal(3, s.ComparableExpiryDays);
@@ -53,6 +56,9 @@ public class SettingsTests
             PressClick = true,
             PeekScale = 1.25,
             AutoUpdate = false,
+            CloseToTray = false,
+            MinimizeToTray = false,
+            TrayNoticeShown = true,
             TradeSearch = false,
             ComparableExpiryDays = 7,
         };
@@ -71,6 +77,9 @@ public class SettingsTests
         Assert.True(after.PressClick);
         Assert.Equal(1.25, after.PeekScale);
         Assert.False(after.AutoUpdate);
+        Assert.False(after.CloseToTray);
+        Assert.False(after.MinimizeToTray);
+        Assert.True(after.TrayNoticeShown);
         Assert.False(after.TradeSearch);
         Assert.Equal(7, after.ComparableExpiryDays);
         Assert.Equal("exalted", after.DisplayCurrency(ProfileKind.Live));

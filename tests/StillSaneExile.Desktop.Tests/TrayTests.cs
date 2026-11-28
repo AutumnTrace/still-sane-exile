@@ -35,68 +35,219 @@ public class TrayTests
     private const int WM_COMMAND = 0x0111;
     private const int NIN_SELECT = 0x0400;
     private const int NIN_KEYSELECT = 0x0401;
+    private const int NIN_BALLOONUSERCLICK = 0x0405;
     private const uint NIM_MODIFY = 0x1;
     private const uint NIM_DELETE = 0x2;
 
     [Fact]
     public void Starting_puts_the_icon_in_the_notification_area() => Sta.Run(() =>
     {
-        var icon = new FakeTrayIcon();
-        using var tray = new Tray(icon, new FakeShellWindow(), () => { });
+        using var rig = new TrayRig();
 
-        tray.Start();
-
-        Assert.True(icon.IsShown);
+        Assert.True(rig.Icon.IsShown);
     });
 
     [Fact]
     public void A_double_click_brings_the_main_window_back() => Sta.Run(() =>
     {
-        var icon = new FakeTrayIcon();
-        var main = new FakeShellWindow();
-        var quits = 0;
-        using var tray = new Tray(icon, main, () => quits++);
-        tray.Start();
+        using var rig = new TrayRig();
 
-        icon.DoubleClick();
+        rig.Icon.DoubleClick();
 
-        Assert.Equal(1, main.BroughtToFront);
-        Assert.Equal(0, quits);
+        Assert.Equal(1, rig.Window.BroughtToFront);
+        Assert.False(rig.Window.IsClosed);
     });
 
     [Fact]
-    public void Quit_leaves_the_way_closing_the_main_window_does() => Sta.Run(() =>
+    public void Closing_the_window_hides_it_and_SSE_keeps_running() => Sta.Run(() =>
     {
-        var icon = new FakeTrayIcon();
-        var main = new FakeShellWindow();
-        var quits = 0;
-        using var tray = new Tray(icon, main, () => quits++);
-        tray.Start();
+        using var rig = new TrayRig();
 
-        icon.ChooseQuit();
+        rig.Window.ClickClose();
 
-        Assert.Equal(1, quits);
-        Assert.Equal(0, main.BroughtToFront);
+        Assert.False(rig.Window.IsVisible);
+        Assert.False(rig.Window.IsClosed);
+        Assert.True(rig.Icon.IsShown);
+        Assert.Equal(0, rig.Icon.Disposals);
+
+        rig.Icon.DoubleClick();
+
+        Assert.True(rig.Window.IsVisible);
+    });
+
+    [Fact]
+    public void Minimizing_hides_the_window_to_the_notification_area() => Sta.Run(() =>
+    {
+        using var rig = new TrayRig();
+
+        rig.Window.Minimize();
+
+        Assert.False(rig.Window.IsVisible); // hidden: no taskbar button
+        Assert.False(rig.Window.IsClosed);
+
+        rig.Icon.DoubleClick();
+
+        Assert.True(rig.Window.IsVisible);
+        Assert.Equal(WindowState.Normal, rig.Window.WindowState);
+    });
+
+    [Fact]
+    public void With_both_switches_off_the_window_closes_and_minimizes_as_it_used_to() => Sta.Run(() =>
+    {
+        using var rig = new TrayRig(s =>
+        {
+            s.CloseToTray = false;
+            s.MinimizeToTray = false;
+        });
+
+        rig.Window.Minimize();
+
+        Assert.True(rig.Window.IsVisible);
+        Assert.Equal(WindowState.Minimized, rig.Window.WindowState);
+
+        rig.Window.ClickClose();
+
+        Assert.True(rig.Window.IsClosed); // and in the app, closing it ends SSE
+        Assert.Empty(rig.Icon.Notices);
+        Assert.True(rig.Tray.InstallUpdateOnExit);
+    });
+
+    [Fact]
+    public void Quit_really_closes_the_window_and_the_update_installs_on_exit() => Sta.Run(() =>
+    {
+        using var rig = new TrayRig();
+        rig.Window.ClickClose();
+
+        rig.Icon.ChooseQuit();
+
+        Assert.True(rig.Window.IsClosed);
+        Assert.True(rig.Tray.InstallUpdateOnExit);
+        Assert.Equal(0, rig.Window.BroughtToFront);
+    });
+
+    [Fact]
+    public void When_Windows_ends_the_session_the_window_closes_and_the_update_waits_for_the_next_start() => Sta.Run(() =>
+    {
+        using var rig = new TrayRig();
+
+        rig.Tray.SessionEnding();
+        rig.Window.ClickClose(); // the app's shutdown closes its windows
+
+        Assert.True(rig.Window.IsClosed);
+        Assert.False(rig.Tray.InstallUpdateOnExit);
+        Assert.Empty(rig.Icon.Notices);
+    });
+
+    [Fact]
+    public void The_player_is_told_once_where_the_window_went_and_never_over_the_game() => Sta.Run(() =>
+    {
+        using var rig = new TrayRig();
+        rig.GameInFront = true;
+
+        rig.Window.Minimize();
+
+        Assert.Empty(rig.Icon.Notices);
+        Assert.False(rig.Settings.TrayNoticeShown);
+
+        rig.Icon.DoubleClick();
+        rig.GameInFront = false;
+        rig.Window.ClickClose();
+
+        var notice = Assert.Single(rig.Icon.Notices);
+        Assert.Equal(("Still Sane, Exile? is still running", "It's here by the clock, and its keys still work. Double-click to open it; right-click for Quit."), notice);
+        Assert.True(rig.Settings.TrayNoticeShown);
+
+        rig.Icon.DoubleClick();
+        rig.Window.Minimize();
+        rig.Icon.DoubleClick();
+        rig.Window.ClickClose();
+
+        Assert.Single(rig.Icon.Notices);
+    });
+
+    [Fact]
+    public void Without_the_icon_in_the_notification_area_the_notice_waits() => Sta.Run(() =>
+    {
+        using var rig = new TrayRig(start: false);
+
+        rig.Window.ClickClose();
+
+        Assert.Empty(rig.Icon.Notices);
+        Assert.False(rig.Settings.TrayNoticeShown);
     });
 
     [Fact]
     public void Exit_removes_the_icon_and_nothing_answers_it_after() => Sta.Run(() =>
     {
+        using var rig = new TrayRig();
+
+        rig.Tray.Dispose();
+        rig.Tray.Dispose();
+        rig.Icon.DoubleClick();
+        rig.Icon.ChooseQuit();
+
+        Assert.False(rig.Icon.IsShown);
+        Assert.Equal(1, rig.Icon.Disposals);
+        Assert.Equal(0, rig.Window.BroughtToFront);
+        Assert.False(rig.Window.IsClosed);
+    });
+
+    [Fact]
+    public void A_real_main_window_closes_and_minimizes_to_the_tray_and_Quit_closes_it() => UiThread.Run(() =>
+    {
+        using var app = new TestApp();
+        var window = new MainWindow
+        {
+            DataContext = app.Shell,
+            WindowStartupLocation = WindowStartupLocation.Manual,
+            Left = -20000,
+            Top = 0,
+            Width = 1440,
+            Height = 1000,
+            ShowInTaskbar = false,
+            ShowActivated = false,
+        };
+        var closed = false;
+        window.Closed += (_, _) => closed = true;
         var icon = new FakeTrayIcon();
-        var main = new FakeShellWindow();
-        var quits = 0;
-        var tray = new Tray(icon, main, () => quits++);
+        using var tray = new Tray(icon, window, app.Settings, () => false);
         tray.Start();
+        try
+        {
+            window.Show();
 
-        tray.Dispose();
-        tray.Dispose();
-        icon.DoubleClick();
-        icon.ChooseQuit();
+            window.Close();
+            Sta.Drain();
 
-        Assert.False(icon.IsShown);
-        Assert.Equal(1, icon.Disposals);
-        Assert.Equal(0, main.BroughtToFront);
-        Assert.Equal(0, quits);
+            Assert.False(closed);
+            Assert.False(window.IsVisible);
+            Assert.Single(icon.Notices);
+
+            icon.DoubleClick();
+
+            Assert.True(window.IsVisible);
+
+            window.WindowState = WindowState.Minimized;
+            Sta.Drain();
+
+            Assert.False(window.IsVisible);
+
+            icon.DoubleClick();
+
+            Sta.Until(() => window.WindowState == WindowState.Normal, "the window to be restored");
+            Assert.True(window.IsVisible);
+
+            icon.ChooseQuit();
+
+            Assert.True(closed);
+        }
+        finally
+        {
+            if (!closed)
+            {
+                tray.Quit();
+            }
+        }
     });
 
     [Fact]
@@ -138,7 +289,7 @@ public class TrayTests
     });
 
     [Fact]
-    public void The_icon_window_opens_on_a_double_click_or_Enter_but_not_a_single_click() => Sta.Run(() =>
+    public void The_icon_window_opens_on_a_double_click_Enter_or_its_notification_but_not_a_single_click() => Sta.Run(() =>
     {
         using var icon = new TrayIcon(); // never shown: its window only, nothing in the notification area
         var opened = 0;
@@ -162,8 +313,14 @@ public class TrayTests
         Sta.Drain();
 
         Assert.Equal(2, opened);
+
+        Shell(icon, NIN_BALLOONUSERCLICK); // a click on its notification
+        Sta.Drain();
+
+        Assert.Equal(3, opened);
         Assert.Equal(0, quits);
         Assert.False(icon.IsShown);
+        Assert.False(icon.Notify(Tray.NoticeTitle, Tray.NoticeText)); // nothing to show it from
     });
 
     [Fact]
@@ -269,6 +426,39 @@ public class TrayTests
         Assert.False(lastLook!() ?? true);
         Assert.False(icon!.IsShown);
         Assert.False(IsWindow(icon.Handle));
+    }
+
+    /// <summary>A started <see cref="Tray"/> on a fake icon and main window, with real settings in a temp folder.</summary>
+    private sealed class TrayRig : IDisposable
+    {
+        private readonly TempDir _dir = new();
+
+        public TrayRig(Action<Settings>? configure = null, bool start = true)
+        {
+            Settings = new Settings(new Store(_dir.Sub("sse.db")));
+            configure?.Invoke(Settings);
+            Tray = new Tray(Icon, Window, Settings, () => GameInFront);
+            if (start)
+            {
+                Tray.Start();
+            }
+        }
+
+        public FakeTrayIcon Icon { get; } = new();
+
+        public FakeMainWindow Window { get; } = new();
+
+        public Settings Settings { get; }
+
+        public Tray Tray { get; }
+
+        public bool GameInFront { get; set; }
+
+        public void Dispose()
+        {
+            Tray.Dispose();
+            _dir.Dispose();
+        }
     }
 
     /// <summary>What the notification area sends about the icon (version 4: the event in the low word,

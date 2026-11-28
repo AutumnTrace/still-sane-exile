@@ -17,7 +17,7 @@ Doom Thirst in the demo profile: items like it ask about 1.8–2.6 div, with 29 
 
 ## Try it on a crossbow
 
-You don't need the game running. Run `StillSaneExile-win-Setup.exe` from the [latest release](https://github.com/AutumnTrace/still-sane-exile/releases/latest) (it installs for your user, no admin rights) or unzip `StillSaneExile-win-Portable.zip` anywhere. The build isn't code-signed yet, so SmartScreen may warn you: choose **More info → Run anyway**. Installed copies apply downloaded updates when you close the app. While SSE runs, its icon sits in the notification area by the clock (or under the ^ arrow next to it): double-click it to bring the window back, or right-click it for **Quit**.
+You don't need the game running. Run `StillSaneExile-win-Setup.exe` from the [latest release](https://github.com/AutumnTrace/still-sane-exile/releases/latest) (it installs for your user, no admin rights) or unzip `StillSaneExile-win-Portable.zip` anywhere. The build isn't code-signed yet, so SmartScreen may warn you: choose **More info → Run anyway**. While SSE runs, its icon sits in the notification area by the clock (or under the ^ arrow next to it). Closing or minimizing the window only hides it there, and the keys keep working: double-click the icon to bring the window back, and right-click it for **Quit** to end SSE. **Settings → Updates and privacy** can make closing and minimizing work as usual. Installed copies apply downloaded updates when you quit SSE.
 
 On first start, pick **Practice with demo data**, then **Done — try a price check**. SSE opens Doom Thirst, a made-up crossbow.
 

@@ -1,3 +1,4 @@
+using System.ComponentModel;
 using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Controls;
@@ -26,7 +27,23 @@ public interface IShellWindow
     void BringToFront();
 }
 
-public partial class MainWindow : Window, IShellWindow
+/// <summary>What the notification area needs from the main window on top of the HUD's, so closing and
+/// minimizing to it can be tested with a fake: its × and minimize, and hiding or really closing it.
+/// <see cref="Window"/> has all of these already.</summary>
+public interface ITrayWindow : IShellWindow
+{
+    event CancelEventHandler? Closing;
+
+    event EventHandler? StateChanged;
+
+    WindowState WindowState { get; }
+
+    void Hide();
+
+    void Close();
+}
+
+public partial class MainWindow : Window, ITrayWindow
 {
     private readonly Size _designMinimum;
     private TextScale? _textScale;

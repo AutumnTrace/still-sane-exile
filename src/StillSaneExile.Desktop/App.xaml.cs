@@ -76,9 +76,11 @@ public partial class App : Application
         main.Closed += (_, _) => Shutdown();
         MainWindow = main;
 
-        // The icon in the notification area: double-click brings the main window back, and Quit closes it
-        // as its × does, so the app exits the usual way. Never created for --render-snapshots (returned above).
-        _tray = new Tray(new TrayIcon(), main, main.Close);
+        // The icon in the notification area. With close and minimize to tray on (the defaults), the window's
+        // × and minimize only hide it and the keys keep working; Quit in the icon's menu, Windows ending the
+        // session and "Restart now" end SSE. Never created for --render-snapshots (returned above).
+        _tray = new Tray(new TrayIcon(), main, settings, () => foreground.Current == ForegroundKind.Game);
+        SessionEnding += (_, _) => _tray?.SessionEnding();
 
         // After an update: the notes wait in the main window, never on the HUD.
         shell.WhatsNew.CheckOnStart();
@@ -114,7 +116,10 @@ public partial class App : Application
         _textScale?.Dispose();
         _peek?.Close();
         _priceCheck?.Close();
-        _updates?.ApplyOnExit();
+        if (_tray?.InstallUpdateOnExit != false)
+        {
+            _updates?.ApplyOnExit();
+        }
         base.OnExit(e);
     }
 

@@ -269,4 +269,24 @@ public class SettingsViewModelTests
         Assert.Contains("Ctrl+C: reads the clipboard once, right after the game copies the hovered item.", page.ReadsExplanation);
         Assert.StartsWith("Hover an item", page.PeekHowTo);
     });
+
+    [Fact]
+    public void The_close_and_minimize_switches_are_saved_as_they_change() => Sta.Run(() =>
+    {
+        using var app = new TestApp();
+        var settings = app.Shell.SettingsPage;
+        Assert.True(settings.CloseToTray);
+        Assert.True(settings.MinimizeToTray);
+
+        settings.CloseToTray = false;
+        settings.MinimizeToTray = false;
+
+        var reopened = new Services.Settings(app.Store);
+        Assert.False(reopened.CloseToTray);
+        Assert.False(reopened.MinimizeToTray);
+
+        settings.CloseToTray = true;
+
+        Assert.True(new Services.Settings(app.Store).CloseToTray);
+    });
 }

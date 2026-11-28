@@ -44,7 +44,8 @@ The CI workflow's `pack` job runs steps 4 and 5 on every push to `main` (and on 
 
 - At startup (after 5 s) and every 6 hours, SSE checks the latest **non-prerelease** GitHub release (`UpdateService`, Velopack `GithubSource`).
 - A newer version downloads in the background (a delta when possible). The header then shows "Update X ready · Restart".
-- The update installs when SSE closes, without restarting it, so a game session is never interrupted. "Restart now" installs it immediately. If SSE is killed instead of closed, Velopack installs the pending update on the next start.
+- The update installs when SSE exits, without restarting it, so a game session is never interrupted. Closing the window does not exit SSE by default: it goes to the notification area (Settings → Updates and privacy, "Closing the window keeps SSE running in the notification area"), and **Quit** in the icon's menu is what exits it and hands the update to Velopack's updater. With that switch off, closing the window exits as before. "Restart now" installs it immediately.
+- When Windows logs off, restarts or shuts down with SSE running, SSE does not start the updater (the logoff could stop it halfway); Velopack installs the downloaded update when SSE next starts (`VelopackApp` applies a downloaded update on startup by default), and so it does if SSE is killed.
 - Players can turn automatic checks off in Settings and use "Check now". Development builds (run from source) never update.
 - The check is an unauthenticated GitHub API request (60 per hour per IP address), so a 6-hour interval is far inside the limit.
 
