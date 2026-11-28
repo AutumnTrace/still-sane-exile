@@ -10,6 +10,7 @@ using StillSaneExile.Desktop.Services;
 using StillSaneExile.Domain.Capture;
 using StillSaneExile.Domain.Items;
 using StillSaneExile.Domain.Market;
+using StillSaneExile.Domain.Placement;
 using StillSaneExile.Domain.Pricing;
 
 namespace StillSaneExile.Desktop.ViewModels;
@@ -115,8 +116,10 @@ public sealed partial class SettingsViewModel : ObservableObject
     [ObservableProperty]
     public partial bool ToggleMode { get; set; }
 
+    /// <summary>Price card → Place the card.</summary>
     [ObservableProperty]
-    public partial PeekAnchor Anchor { get; set; }
+    [NotifyPropertyChangedFor(nameof(PositionNote))]
+    public partial CardPosition Position { get; set; }
 
     [ObservableProperty]
     public partial double PeekScale { get; set; }
@@ -125,6 +128,31 @@ public sealed partial class SettingsViewModel : ObservableObject
     /// rather than used by clicking it.</summary>
     [ObservableProperty]
     public partial bool CraftPickUp { get; set; }
+
+    /// <summary>Price card → Less motion: no ring, slide or line, the card only fades.</summary>
+    [ObservableProperty]
+    public partial bool LessMotion { get; set; }
+
+    /// <summary>Price card → a soft click when the key is heard.</summary>
+    [ObservableProperty]
+    public partial bool PressClick { get; set; }
+
+    /// <summary>What the chosen placement does, under the three choices. The tooltip's size is SSE's own
+    /// guess, not yet checked in the game, and says so.</summary>
+    public string PositionNote => Position switch
+    {
+        CardPosition.Edge => "On the half of the screen away from the cursor, clear of the skill bar and the top-right map.",
+        CardPosition.Fixed => (S.CardSpot is null
+                ? "Hold the key over an item, move onto the card, and drag it by its text to where it should go. Until then it shows at the screen edge."
+                : "Where you last dragged it. To move it, keep a card open and drag it by its text.")
+            + (ToggleMode ? " Dragging needs a card you kept open: hold the key for that, rather than Press again to hide." : ""),
+        _ => "Beside the game's tooltip, on the side towards the middle of the screen; below or above it when there's no room, at the screen edge when nothing fits. SSE guesses where the tooltip is from the item's text: the guess isn't checked in the game yet.",
+    };
+
+    /// <summary>Under Less motion, when Windows has already turned animation effects off.</summary>
+    public string? MotionNote => System.Windows.SystemParameters.ClientAreaAnimation
+        ? null
+        : "Animation effects are off in Windows (Accessibility, Visual effects), so the card already uses less motion.";
 
     [ObservableProperty]
     public partial string ExpiryDays { get; set; } = "3";
@@ -283,8 +311,8 @@ public sealed partial class SettingsViewModel : ObservableObject
             ? $"{PeekKey}: reads the clipboard once, right after the game copies the hovered item. If the game copied nothing, nothing is read.\n"
             : $"{PeekKey}: reads the clipboard once per press, straight away. It is not the game's copy key, so the game copies nothing: it shows the last item you copied with Ctrl+C (or Ctrl+Alt+C), which may not be the one under your cursor.\n") +
         (ToggleMode
-            ? ""
-            : "While you hold it, the app checks where the mouse cursor is (its position, not the screen) to notice you moving onto the card. Ticking stats on the card reads nothing and searches nothing; its Search button does, when you click it.\n") +
+            ? "When you press it, the app checks where the mouse cursor is (its position, not the screen), to put the ring there and place the card.\n"
+            : "When you press it and while you hold it, the app checks where the mouse cursor is (its position, not the screen): to put the ring there, place the card, and notice you moving onto the card. Ticking stats on the card reads nothing and searches nothing; its Search button does, when you click it.\n") +
         $"{OpenLastKey}: reads nothing; opens the price check for your last item over the game (Esc closes it).\n" +
         (Pictures.IsCollecting
             ? $"{StashKey}: \"Collect stash pictures\" is on, so each press with the game in front takes one picture of the game window and saves it in your data folder. Holding the key takes no more. Stash and Aldur labels come later (Milestone 2)."
@@ -312,9 +340,11 @@ public sealed partial class SettingsViewModel : ObservableObject
         OpenLastKey = _openLast.Label;
         StashKey = _stash.Label;
         ToggleMode = S.PeekMode == HoldMode.Toggle;
-        Anchor = S.Anchor;
+        Position = S.CardPosition;
         PeekScale = S.PeekScale;
         CraftPickUp = S.CraftPickUp;
+        LessMotion = S.LessMotion;
+        PressClick = S.PressClick;
         ExpiryDays = S.ComparableExpiryDays.ToString(CultureInfo.InvariantCulture);
         AutoUpdate = S.AutoUpdate;
         LivePricesOn = S.LivePrices;
@@ -342,6 +372,7 @@ public sealed partial class SettingsViewModel : ObservableObject
         OnPropertyChanged(nameof(PeekHowTo));
         OnPropertyChanged(nameof(GuideSteps));
         OnPropertyChanged(nameof(SamplePeek));
+        OnPropertyChanged(nameof(PositionNote));
     }
 
     /// <summary>Settings → Quick price card: "hold" (hide on release, unless the player moved onto the
@@ -349,7 +380,23 @@ public sealed partial class SettingsViewModel : ObservableObject
     [RelayCommand]
     private void SetPeekMode(string mode) => ToggleMode = mode == "toggle";
 
-    partial void OnAnchorChanged(PeekAnchor value) => S.Anchor = value;
+    partial void OnPositionChanged(CardPosition value) => S.CardPosition = value;
+
+    partial void OnLessMotionChanged(bool value) => S.LessMotion = value;
+
+    partial void OnPressClickChanged(bool value) => S.PressClick = value;
+
+    /// <summary>Price card → Place the card: "tooltip", "edge" or "fixed".</summary>
+    [RelayCommand]
+    private void SetPosition(string position) => Position = position switch
+    {
+        "edge" => CardPosition.Edge,
+        "fixed" => CardPosition.Fixed,
+        _ => CardPosition.Tooltip,
+    };
+
+    /// <summary>The player dragged the card to a new fixed spot over the game.</summary>
+    public void OnSpotChanged() => OnPropertyChanged(nameof(PositionNote));
 
     partial void OnAutoUpdateChanged(bool value)
     {
@@ -424,6 +471,8 @@ public sealed partial class SettingsViewModel : ObservableObject
     /// leagues to pick from without asking. Anyone else asks with the button.</summary>
     public void OnShown()
     {
+        OnPropertyChanged(nameof(PositionNote)); // a spot dragged over the game since
+        OnPropertyChanged(nameof(MotionNote)); // Windows' animation effects switched since
         if (LeagueChoices.Count == 0 && !LoadingLeagues && _shell.Prices is not null && _shell.Session is { IsDemo: false, LivePricesOn: true })
         {
             LoadLeaguesCommand.Execute(null);
@@ -535,15 +584,6 @@ public sealed partial class SettingsViewModel : ObservableObject
     {
         S.SetDisplayCurrency(_shell.Session.Kind, currency);
         _shell.ReloadSession();
-    }
-
-    [RelayCommand]
-    private void SetAnchor(string anchor)
-    {
-        if (Enum.TryParse<PeekAnchor>(anchor, out var a))
-        {
-            Anchor = a;
-        }
     }
 
     [RelayCommand]

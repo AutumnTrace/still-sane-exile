@@ -5,6 +5,7 @@ using StillSaneExile.Desktop.Infrastructure;
 using StillSaneExile.Desktop.Services;
 using StillSaneExile.Desktop.ViewModels;
 using StillSaneExile.Desktop.Views;
+using StillSaneExile.Domain.Placement;
 
 namespace StillSaneExile.Desktop.Tests;
 
@@ -126,7 +127,8 @@ internal sealed class FakeCursor : ICursorSource
 
 /// <summary>Hands out <see cref="Text"/> and counts every read. With <see cref="HoldResults"/> on, a
 /// wait-for-the-game's-copy read only happens when the test calls <see cref="CompleteRead"/>, like
-/// a copy that lands late.</summary>
+/// a copy that lands late. With <see cref="NothingCopied"/> on, the game copies nothing (no item under
+/// the cursor): the wait ends without a read, as the real reader's does.</summary>
 internal sealed class FakeClipboard : IClipboardSource
 {
     private TaskCompletionSource<ClipboardRead>? _pending;
@@ -137,11 +139,13 @@ internal sealed class FakeClipboard : IClipboardSource
 
     public bool HoldResults { get; set; }
 
+    public bool NothingCopied { get; set; }
+
     public Task<ClipboardRead> ReadAfterChangeAsync(uint sequenceAtPress, TimeSpan timeout)
     {
         if (!HoldResults)
         {
-            return Task.FromResult(ReadNow());
+            return Task.FromResult(AfterTheCopy());
         }
 
         _pending = new TaskCompletionSource<ClipboardRead>(TaskCreationOptions.RunContinuationsAsynchronously);
@@ -152,8 +156,11 @@ internal sealed class FakeClipboard : IClipboardSource
     {
         var pending = _pending ?? throw new InvalidOperationException("No read is waiting.");
         _pending = null;
-        pending.SetResult(ReadNow());
+        pending.SetResult(AfterTheCopy());
     }
+
+    private ClipboardRead AfterTheCopy() =>
+        NothingCopied ? new ClipboardRead(null, "The game did not copy anything.", NothingCopied: true) : ReadNow();
 
     public ClipboardRead ReadNow()
     {
@@ -163,7 +170,8 @@ internal sealed class FakeClipboard : IClipboardSource
 }
 
 /// <summary>The card's window. A click lands on it only while it takes clicks (pinned), and gives it the
-/// focus, as on Windows; Esc reaches it only while it has the focus.</summary>
+/// focus, as on Windows; Esc reaches it only while it has the focus. It keeps what it was asked to show:
+/// every card with its request, every ring and miss, and how the card was hidden.</summary>
 internal sealed class FakePeek : IPeekSurface
 {
     public const nint CardWindow = 0x7777;
@@ -172,7 +180,22 @@ internal sealed class FakePeek : IPeekSurface
 
     public event Action? MoreRequested;
 
+    public event Action<FixedSpot>? SpotChosen;
+
     public List<PeekViewModel> Shown { get; } = [];
+
+    public List<CardRequest> Requests { get; } = [];
+
+    /// <summary>Every press answered with a ring, in order.</summary>
+    public List<PressCue> Heard { get; } = [];
+
+    /// <summary>Every miss shown, with its note.</summary>
+    public List<(PressCue Cue, string Note)> Misses { get; } = [];
+
+    /// <summary>How the card went each time it was hidden: faded (let go) or at once.</summary>
+    public List<bool> HiddenFading { get; } = [];
+
+    public int CuesCleared { get; private set; }
 
     public nint ShownOver { get; private set; }
 
@@ -191,10 +214,17 @@ internal sealed class FakePeek : IPeekSurface
     /// <summary>Where the card and its reach are on the screen.</summary>
     public Rect Area { get; set; } = new(60, 200, 400, 520);
 
-    public void ShowCard(PeekViewModel card, PeekAnchor anchor, double scale, nint referenceWindow)
+    public void KeyHeard(PressCue cue) => Heard.Add(cue);
+
+    public void Missed(PressCue cue, string note) => Misses.Add((cue, note));
+
+    public void ClearCues() => CuesCleared++;
+
+    public void ShowCard(PeekViewModel card, CardRequest request)
     {
         Shown.Add(card);
-        ShownOver = referenceWindow;
+        Requests.Add(request);
+        ShownOver = request.Over;
         IsVisible = true;
         TakesClicks = false;
     }
@@ -203,16 +233,30 @@ internal sealed class FakePeek : IPeekSurface
 
     public void SetPinned(bool pinned) => TakesClicks = pinned;
 
-    public void HideCard(bool returnFocus = false)
+    public void HideCard(bool returnFocus = false, bool fade = false)
     {
         if (returnFocus && HasFocus && IsVisible)
         {
             FocusReturnedTo = ShownOver;
         }
 
+        if (IsVisible)
+        {
+            HiddenFading.Add(fade);
+        }
+
         HasFocus = false;
         IsVisible = false;
         TakesClicks = false;
+    }
+
+    /// <summary>The player drags the card they kept open and lets go of it there.</summary>
+    public void DragTo(FixedSpot spot)
+    {
+        if (IsVisible && TakesClicks)
+        {
+            SpotChosen?.Invoke(spot);
+        }
     }
 
     /// <summary>A click on the card: true if it landed (and gave the card the focus).</summary>

@@ -3,7 +3,9 @@ using System.Windows;
 
 namespace StillSaneExile.Desktop.Infrastructure;
 
-public sealed record ClipboardRead(string? Text, string? Error);
+/// <param name="NothingCopied">The game copied nothing after the press, so nothing was read: there was no
+/// item under the cursor.</param>
+public sealed record ClipboardRead(string? Text, string? Error, bool NothingCopied = false);
 
 /// <summary>The two ways the app reads the clipboard, so the HUD and the paste button can be tested
 /// with a fake. Each call is at most one read.</summary>
@@ -32,7 +34,7 @@ public sealed class ClipboardReader : IClipboardSource
         {
             if (DateTime.UtcNow >= until)
             {
-                return new ClipboardRead(null, "The game did not copy anything. Hover an item, then press again.");
+                return new ClipboardRead(null, "The game did not copy anything. Hover an item, then press again.", NothingCopied: true);
             }
 
             await Task.Delay(10).ConfigureAwait(true);

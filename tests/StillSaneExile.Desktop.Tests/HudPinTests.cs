@@ -85,7 +85,7 @@ public class HudPinTests
     {
         using var rig = new HudRig();
         rig.Clipboard.Text = rig.App.ItemText(Crossbow);
-        rig.Cursor.Position = FakeCursor.OnCard; // a card placed by "Always left" over a left-hand item
+        rig.Cursor.Position = FakeCursor.OnCard; // a card at a fixed spot over the item
 
         rig.Keys.Press(CtrlC);
         Sta.Drain();

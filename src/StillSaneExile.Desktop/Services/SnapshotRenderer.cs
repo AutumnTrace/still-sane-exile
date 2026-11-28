@@ -120,7 +120,24 @@ public static class SnapshotRenderer
         speed.IsOn = false;
         Save(peek, Path.Combine(dir, "peek-pinned-changed.png"));
         speed.IsOn = true;
+
+        // The bronze flash at its brightest, as a new card lands or the same item is checked again.
+        peek.DataContext = PeekViewModel.From(crossbow, true, PeekViewModel.ReleaseHintFor(shell.Settings.PeekMode), shell.Settings.OpenLastKey.Label);
+        peek.Flash.Opacity = 1;
+        Save(peek, Path.Combine(dir, "peek-flash.png"));
         peek.Close();
+
+        // The cues around a press, still and unpositioned: the ring as the key is heard, the miss with its
+        // note, and the line from the cursor to the card. The click-through windows never activate.
+        var cue = new CueWindow { Left = -20000, Top = 0 };
+        cue.PoseRing();
+        cue.Show();
+        Save(cue, Path.Combine(dir, "cue-ring.png"));
+        cue.PoseMiss(HudController.MissNote);
+        Save(cue, Path.Combine(dir, "cue-miss.png"));
+        cue.PoseLine(new Vector(240, 96));
+        Save(cue, Path.Combine(dir, "cue-line.png"));
+        cue.Close();
 
         // The pinned guide lines, unpositioned; the click-through window never activates.
         var guideHud = new GuideHudWindow { Left = -20000, Top = 0, DataContext = shell.Guide };

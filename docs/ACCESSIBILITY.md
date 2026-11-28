@@ -11,6 +11,7 @@ What SSE does for keyboard use, screen readers, contrast and text size, and what
 - A corrupted item's **Corrupted** tag, by the item level in the price check and on the kept-open card, is a button: `Enter` or `Space` switches the search between corrupted items only (on, red) and corrupted or not (off, grey and struck through). On the card held under the key it only shows which.
 - `Esc` closes the price check over the game (`F3`). The quick price card never takes the keyboard from the game: while you hold the key it is click-through, and kept open it takes clicks only, so its close button, a corrupted item's **Corrupted** tag, its stats with their − and + buttons, **Search** and **All filters** (in that order, if a window does give it focus) are used with the mouse. `F3` opens the same search in the price check, which works from the keyboard, **Search** included.
 - Keeping the card open means moving the mouse onto it while holding the key. **Press again to hide** (Settings → Price card) needs no held key: one press shows the card, the next hides it, and `F3` changes the search.
+- **Fixed spot (drag once)** is set by dragging a card you kept open, so it needs the mouse and holding the key once. **Next to the game tooltip** and **Screen edge** need neither.
 - Settings is a rail of sections (League and prices, Keys, Price card, Price colours, Crafting, Live prices and trade, Stash pictures, Updates and privacy) and one section at a time. In Price colours each colour is a row read in order: where it starts, then Divine or Exalted (the chosen one reports "Selected"); **Apply**, **Undo changes** and **Default steps** are only stops once there is something for them to do. The fine print under a setting is folded into **Details** links: `Space` or `Enter` opens and closes them, and screen readers hear them expand and collapse.
 - Scroll bars page up or down when you click above or below the thumb.
 - In Crafting, an orb picked up with `Enter` or `Space` stays in hand; `Tab` reaches the item, which is a button only while an orb is in hand ("Use Chaos Orb on the item"), and `Esc` puts the orb back. Orbs that can't be used now stay reachable and say why. Essence stats (#B8DAF2), fractured stats (#C2B07A) and "Corrupted" (#E05050) are at 5:1 or more on the item's panel.
@@ -49,7 +50,13 @@ The numbers of an unticked stat are drawn at 55 % opacity, about 5.2:1, because 
 
 Keyboard focus is a 2 px ring in the text colour over a button's or a box's border, and around a tick box: a change of border colour alone was too faint on gold.
 
+The cues around a press of the quick price key repeat what the card or the note says, so none carries meaning of its own. The ring, the line to the card and the card's flash are a bright bronze (`#E8C882`, 12.0:1 on the dark panel colour), the miss ring red (`#D2553A`, 4.7:1 on it, 4.1:1 on white). Over the game's bright ground they would fade into it, so each ring and line has a dark shade under its stroke, 3.4:1 against white. The miss note's words are in the warning colour on the card's panel: 10.6:1 over a dark scene, 10.1:1 over a white one.
+
 The roll bar under a stat is drawn with the empty tick box's colour for its rail (3:1 or more on every surface the card uses), the bar colour for its fill and the text colour for the marker, which stands taller than the rail so it reads on the fill too. Its lowest and highest numbers are in TextFaint. Screen readers hear the line as words, "Tier 8, rolls 170 to 179", and a stat's row reads its text, then that line.
+
+## Motion
+
+A press of the quick price key is answered with movement: a ring grows out of the cursor, the card slides 18 pixels in from the cursor's side, a line is drawn to it when it is further away, and the card flashes once. A miss shakes a red ring once. **Less motion** (Settings → Price card) drops the ring, the slide, the line and the shake, and the card and the miss note only fade in and out. SSE does the same when Windows' **Animation effects** (Settings → Accessibility → Visual effects) are off. Pressing again over the item a card shows still flashes the card with less motion: it is a fade, and the only sign the press was heard. Nothing moves for longer than about half a second, and nothing blinks.
 
 ## Text size
 
@@ -64,4 +71,4 @@ To check the layout without changing Windows' setting, render the screens at a t
 ## Not done yet
 
 - Windows contrast themes (high contrast) are not followed: SSE keeps its own dark colours.
-- Changes such as a new price or "Copied" are not announced to screen readers as they happen; they are read when you move to them.
+- Changes such as a new price or "Copied" are not announced to screen readers as they happen; they are read when you move to them. The note over the game when nothing was under the cursor is a polite live region, so a screen reader that follows those can say it, but that is not yet tried with Narrator or NVDA. The soft click (off by default) answers a press without sight.

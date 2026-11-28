@@ -1,17 +1,10 @@
 using System.Globalization;
 using StillSaneExile.Desktop.Infrastructure;
 using StillSaneExile.Domain.Capture;
+using StillSaneExile.Domain.Placement;
 using StillSaneExile.Domain.Pricing;
 
 namespace StillSaneExile.Desktop.Services;
-
-public enum PeekAnchor
-{
-    /// <summary>Opposite half of the screen from the cursor, where the game draws its own tooltip.</summary>
-    Auto,
-    Left,
-    Right,
-}
 
 /// <summary>Typed view over the settings table. Defaults are the product defaults from the spec.</summary>
 public sealed class Settings(Store store)
@@ -79,10 +72,47 @@ public sealed class Settings(Store store)
         set => store.Set("peek.mode", value == HoldMode.Toggle ? "toggle" : "hold");
     }
 
-    public PeekAnchor Anchor
+    /// <summary>Where the card goes: next to the game's tooltip by default. Earlier versions offered
+    /// "Opposite the cursor" (the default then), "Always left" and "Always right" ("peek.anchor"): a player
+    /// who picked a side keeps the screen edge, everyone else gets the new default.</summary>
+    public CardPosition CardPosition
     {
-        get => Enum.TryParse<PeekAnchor>(store.Get("peek.anchor"), out var a) ? a : PeekAnchor.Auto;
-        set => store.Set("peek.anchor", value.ToString());
+        get => store.Get("peek.position") switch
+        {
+            "tooltip" => CardPosition.Tooltip,
+            "edge" => CardPosition.Edge,
+            "fixed" => CardPosition.Fixed,
+            _ => store.Get("peek.anchor") is "Left" or "Right" ? CardPosition.Edge : CardPosition.Tooltip,
+        };
+        set => store.Set("peek.position", value switch
+        {
+            CardPosition.Edge => "edge",
+            CardPosition.Fixed => "fixed",
+            _ => "tooltip",
+        });
+    }
+
+    /// <summary>Where the player last dragged the card with "Fixed spot", as shares of the game window;
+    /// null until they have.</summary>
+    public FixedSpot? CardSpot
+    {
+        get => FixedSpot.Parse(store.Get("peek.spot"));
+        set => store.Set("peek.spot", value?.Format() ?? "");
+    }
+
+    /// <summary>"Less motion": no ring, slide or line, the card only fades. Off by default; Windows'
+    /// animation effects switched off have the same effect.</summary>
+    public bool LessMotion
+    {
+        get => store.Get("peek.lessMotion") == "1";
+        set => store.Set("peek.lessMotion", value ? "1" : "0");
+    }
+
+    /// <summary>A soft click when the quick price key is heard. Off by default.</summary>
+    public bool PressClick
+    {
+        get => store.Get("peek.click") == "1";
+        set => store.Set("peek.click", value ? "1" : "0");
     }
 
     public const double MinPeekScale = 0.5;

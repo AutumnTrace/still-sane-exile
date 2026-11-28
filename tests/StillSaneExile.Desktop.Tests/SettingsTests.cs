@@ -1,6 +1,7 @@
 using StillSaneExile.Desktop.Infrastructure;
 using StillSaneExile.Desktop.Services;
 using StillSaneExile.Domain.Capture;
+using StillSaneExile.Domain.Placement;
 using StillSaneExile.Domain.Pricing;
 
 namespace StillSaneExile.Desktop.Tests;
@@ -24,7 +25,10 @@ public class SettingsTests
         Assert.Equal("F3", s.OpenLastKey.ToString());
         Assert.Equal("RightAlt", s.StashKey.ToString());
         Assert.Equal(HoldMode.Hold, s.PeekMode);
-        Assert.Equal(PeekAnchor.Auto, s.Anchor);
+        Assert.Equal(CardPosition.Tooltip, s.CardPosition);
+        Assert.Null(s.CardSpot);
+        Assert.False(s.LessMotion);
+        Assert.False(s.PressClick);
         Assert.Equal(0.85, s.PeekScale);
         Assert.True(s.AutoUpdate);
         Assert.True(s.LivePrices);
@@ -43,7 +47,10 @@ public class SettingsTests
             Profile = ProfileKind.Live,
             PeekKey = Hotkey.Parse("Ctrl+Shift+D")!,
             PeekMode = HoldMode.Toggle,
-            Anchor = PeekAnchor.Left,
+            CardPosition = CardPosition.Fixed,
+            CardSpot = new FixedSpot(0.4123, 0.25),
+            LessMotion = true,
+            PressClick = true,
             PeekScale = 1.25,
             AutoUpdate = false,
             TradeSearch = false,
@@ -58,7 +65,10 @@ public class SettingsTests
         Assert.Equal(ProfileKind.Live, after.Profile);
         Assert.Equal(Hotkey.Parse("Ctrl+Shift+D"), after.PeekKey);
         Assert.Equal(HoldMode.Toggle, after.PeekMode);
-        Assert.Equal(PeekAnchor.Left, after.Anchor);
+        Assert.Equal(CardPosition.Fixed, after.CardPosition);
+        Assert.Equal(new FixedSpot(0.4123, 0.25), after.CardSpot);
+        Assert.True(after.LessMotion);
+        Assert.True(after.PressClick);
         Assert.Equal(1.25, after.PeekScale);
         Assert.False(after.AutoUpdate);
         Assert.False(after.TradeSearch);
@@ -84,19 +94,46 @@ public class SettingsTests
         Assert.Equal(expected, new Settings(store).PeekMode);
     }
 
+    [Theory]
+    [InlineData(null, null, CardPosition.Tooltip)]
+    [InlineData(null, "Auto", CardPosition.Tooltip)] // "Opposite the cursor", the old default: the new default
+    [InlineData(null, "Left", CardPosition.Edge)] // "Always left" or "Always right": a side was picked, the edge stays
+    [InlineData(null, "Right", CardPosition.Edge)]
+    [InlineData("fixed", "Left", CardPosition.Fixed)]
+    [InlineData("tooltip", "Right", CardPosition.Tooltip)]
+    [InlineData("edge", null, CardPosition.Edge)]
+    public void A_card_placement_from_an_earlier_version_still_loads(string? position, string? anchor, CardPosition expected)
+    {
+        using var dir = new TempDir();
+        var store = new Store(dir.Sub("sse.db"));
+        if (position is not null)
+        {
+            store.Set("peek.position", position);
+        }
+
+        if (anchor is not null)
+        {
+            store.Set("peek.anchor", anchor);
+        }
+
+        Assert.Equal(expected, new Settings(store).CardPosition);
+    }
+
     [Fact]
     public void Unreadable_or_out_of_range_values_fall_back_safely()
     {
         using var dir = new TempDir();
         var store = new Store(dir.Sub("sse.db"));
         store.Set("keys.peek", "Nonsense");
-        store.Set("peek.anchor", "Upside down");
+        store.Set("peek.position", "Upside down");
+        store.Set("peek.spot", "1.5,0.2");
         store.Set("peek.scale", "9");
         store.Set("comparables.expiryDays", "0");
         var s = new Settings(store);
 
         Assert.Equal("Ctrl+C", s.PeekKey.ToString());
-        Assert.Equal(PeekAnchor.Auto, s.Anchor);
+        Assert.Equal(CardPosition.Tooltip, s.CardPosition);
+        Assert.Null(s.CardSpot);
         Assert.Equal(1.6, s.PeekScale);
         Assert.Equal(1, s.ComparableExpiryDays);
 

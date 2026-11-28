@@ -6,6 +6,7 @@ using StillSaneExile.Desktop.Infrastructure;
 using StillSaneExile.Desktop.ViewModels;
 using StillSaneExile.Desktop.Views;
 using StillSaneExile.Domain.Capture;
+using StillSaneExile.Domain.Placement;
 
 namespace StillSaneExile.Desktop.Services;
 
@@ -14,10 +15,16 @@ namespace StillSaneExile.Desktop.Services;
 /// <remarks>Hold mode: the card shows while the key is held and hides on release, unless the cursor
 /// moved onto it meanwhile. Then it is pinned: it takes clicks, its stats can be ticked, and it stays
 /// until the player closes it, presses again over another item, or the game loses the foreground to
-/// another program. Toggle mode is unchanged: one press shows, the next hides.</remarks>
+/// another program. Toggle mode is unchanged: one press shows, the next hides.
+/// Every press that may read is answered at once, before the read: a ring at the cursor. If the game
+/// copied nothing, there is no card, only a red ring and a note. Pressing again over the item a card
+/// already shows keeps that card (and its search) and flashes it.</remarks>
 public sealed class HudController : IDisposable
 {
     public const string PeekCommand = "item-peek";
+
+    /// <summary>The note when the game copied nothing: there was no item under the cursor.</summary>
+    public const string MissNote = "No item under the cursor — hover one and press again";
 
     private readonly ShellViewModel _shell;
     private readonly IKeySource _keys;
@@ -40,6 +47,11 @@ public sealed class HudController : IDisposable
     private nint _cardOver;
     private bool _cardOverGame;
     private bool _cursorWasNear;
+
+    /// <summary>The press whose "the game copied nothing" may still show the miss. A newer press and
+    /// anything that hides the HUD (another program in front, lock, settings) clear it; letting go does
+    /// not, so a quick tap over nothing still gets its note.</summary>
+    private long _missPress;
 
     public HudController(ShellViewModel shell, IKeySource keys, IForegroundSource foreground, IClipboardSource clipboard, IPeekSurface peek, IPriceCheckSurface priceCheck, IShellWindow main, ICursorSource cursor)
     {
@@ -67,6 +79,7 @@ public sealed class HudController : IDisposable
         _cursor.Tick += OnCursorTick;
         _peek.CloseRequested += OnCloseRequested;
         _peek.MoreRequested += OnMoreRequested;
+        _peek.SpotChosen += OnSpotChosen;
         _shell.PropertyChanged += OnShellChanged;
         SystemEvents.SessionSwitch += OnSessionSwitch;
         SystemEvents.DisplaySettingsChanged += OnDisplayChanged;
@@ -92,6 +105,7 @@ public sealed class HudController : IDisposable
         _cursor.Stop();
         _peek.CloseRequested -= OnCloseRequested;
         _peek.MoreRequested -= OnMoreRequested;
+        _peek.SpotChosen -= OnSpotChosen;
         _shell.PropertyChanged -= OnShellChanged;
         SystemEvents.SessionSwitch -= OnSessionSwitch;
         SystemEvents.DisplaySettingsChanged -= OnDisplayChanged;
@@ -152,7 +166,12 @@ public sealed class HudController : IDisposable
                     // A card still up (pinned) is replaced: click-through again until the new one lands.
                     StopWatching();
                     _peek.SetPinned(false);
-                    _ = ReadAndShowAsync(decision.Generation, practice, e.ClipboardSequence, gameWindow);
+
+                    // The press is answered now, before the game's copy lands: under 100 ms feels instant.
+                    var cursor = _cursor.Position;
+                    _missPress = decision.Generation;
+                    _peek.KeyHeard(Cue(cursor, gameWindow != 0 ? gameWindow : _main.Handle));
+                    _ = ReadAndShowAsync(decision.Generation, practice, e.ClipboardSequence, gameWindow, cursor);
                 });
             }
             else if (decision.Action == GateAction.Hide)
@@ -196,15 +215,21 @@ public sealed class HudController : IDisposable
         _dispatcher.BeginInvoke(PublishDiagnostics);
     }
 
-    private async Task ReadAndShowAsync(long generation, bool practice, uint clipboardSequence, nint gameWindow)
+    private async Task ReadAndShowAsync(long generation, bool practice, uint clipboardSequence, nint gameWindow, ScreenPoint? cursor)
     {
-        var mode = _shell.Settings.PeekMode;
+        var settings = _shell.Settings;
+        var mode = settings.PeekMode;
         var release = PeekViewModel.ReleaseHintFor(mode);
+        var note = _peekKey.IsNativeCopy ? null : PeekViewModel.LastCopiedNote;
         PeekViewModel card;
+        string? itemText = null;
+        var same = false;
 
         if (practice)
         {
             var selected = _shell.Inspect.Selected;
+            same = selected is not null && Showing() == selected;
+            itemText = selected?.Item.RawText;
             card = selected is null
                 ? PeekViewModel.Message("Load a practice item first, then hold the key again.", true, release)
                 : PeekViewModel.From(selected, true, release, _openLastKey.Label);
@@ -216,26 +241,43 @@ public sealed class HudController : IDisposable
             var read = _peekKey.IsNativeCopy
                 ? await _clipboard.ReadAfterChangeAsync(clipboardSequence, TimeSpan.FromMilliseconds(250))
                 : _clipboard.ReadNow();
+            if (read.NothingCopied)
+            {
+                Missed(generation, cursor, gameWindow != 0 ? gameWindow : _main.Handle);
+                PublishDiagnostics();
+                return;
+            }
+
             if (read.Text is null)
             {
                 card = PeekViewModel.Message(read.Error ?? "Nothing to read.", _shell.Session.IsDemo, release);
             }
+            else if (Showing() is { } shown && SameText(shown.Item.RawText, read.Text))
+            {
+                // The item the card already shows: the same card, its ticks and its search kept.
+                same = true;
+                itemText = read.Text;
+                _shell.Inspect.Selected = shown;
+                card = PeekViewModel.From(shown, _shell.Session.IsDemo, release, _openLastKey.Label, note: note);
+            }
             else
             {
                 var vm = _shell.Inspect.AddFromText(read.Text, "hud");
+                itemText = vm is null ? null : read.Text;
                 card = vm is null
                     ? PeekViewModel.Message(_shell.Inspect.Message ?? "Not an item.", _shell.Session.IsDemo, release)
-                    : PeekViewModel.From(vm, _shell.Session.IsDemo, release, _openLastKey.Label, note: _peekKey.IsNativeCopy ? null : PeekViewModel.LastCopiedNote);
+                    : PeekViewModel.From(vm, _shell.Session.IsDemo, release, _openLastKey.Label, note: note);
             }
         }
 
         // Released, focus lost or a newer press while we were reading: never paint late.
         if (_gate.TryAccept(PeekCommand, generation))
         {
+            _missPress = 0;
             _card = card;
             _cardOverGame = gameWindow != 0;
             _cardOver = _cardOverGame ? gameWindow : _main.Handle;
-            _peek.ShowCard(card, _shell.Settings.Anchor, _shell.Settings.PeekScale, _cardOver);
+            _peek.ShowCard(card, new CardRequest(settings.CardPosition, settings.PeekScale, _cardOver, cursor, itemText, settings.CardSpot, settings.LessMotion, same));
             if (mode == HoldMode.Hold && _gate.IsHeld(PeekCommand))
             {
                 StartWatching();
@@ -243,6 +285,48 @@ public sealed class HudController : IDisposable
         }
 
         PublishDiagnostics();
+    }
+
+    /// <summary>The item of the card on screen, if one is (pinned, as a rule) and still in the recent list.</summary>
+    private ItemViewModel? Showing() =>
+        _card?.Item is { } item && _peek.IsVisible && _shell.Inspect.Recent.Contains(item) ? item : null;
+
+    /// <summary>The same copy of the same item: line endings and the trailing newline aside, the same text.</summary>
+    private static bool SameText(string a, string b) =>
+        string.Equals(a.ReplaceLineEndings("\n").Trim(), b.ReplaceLineEndings("\n").Trim(), StringComparison.Ordinal);
+
+    /// <summary>The game copied nothing for this press: there was no item under the cursor. Nothing was
+    /// read, so the press shows nothing either, and the next press reads again (with "Press again to hide"
+    /// too). The red ring and the note show even if the key was let go meanwhile, but not after a newer
+    /// press or with something else in front.</summary>
+    private void Missed(long generation, ScreenPoint? cursor, nint over)
+    {
+        if (generation == _gate.CurrentGeneration && _gate.IsShowing(PeekCommand))
+        {
+            _gate.Dismiss(PeekCommand, "nothing under the cursor");
+        }
+
+        if (_missPress != generation)
+        {
+            return;
+        }
+
+        _missPress = 0;
+        if (_card is not null || _peek.IsVisible)
+        {
+            HideCard(); // a card kept open from before: this press was about something else
+        }
+
+        _peek.Missed(Cue(cursor, over), MissNote);
+    }
+
+    private PressCue Cue(ScreenPoint? cursor, nint over) => new(cursor, over, _shell.Settings.LessMotion, _shell.Settings.PressClick);
+
+    /// <summary>Fixed spot: the player dragged the card they kept open to where it goes from now on.</summary>
+    private void OnSpotChosen(FixedSpot spot)
+    {
+        _shell.Settings.CardSpot = spot;
+        _shell.SettingsPage.OnSpotChanged();
     }
 
     /// <summary>While the key is held and the card shows: sample the cursor, to notice the player moving
@@ -347,10 +431,11 @@ public sealed class HudController : IDisposable
         _main.BringToFront();
     }
 
+    /// <summary>Let go (or pressed again to hide): the card fades out, faster than it came in.</summary>
     private void HideCard()
     {
         StopWatching();
-        _peek.HideCard();
+        _peek.HideCard(fade: true);
         _card = null;
     }
 
@@ -375,9 +460,13 @@ public sealed class HudController : IDisposable
 
     private void OnDisplayChanged(object? sender, EventArgs e) => _dispatcher.BeginInvoke(DisplayChanged);
 
+    /// <summary>Another program in front, minimize, lock, a display or settings change: the card and the
+    /// cues go at once, and a miss still on its way never shows.</summary>
     private void Invalidate(string reason)
     {
         StopWatching();
+        _missPress = 0;
+        _peek.ClearCues();
         if (_gate.Invalidate(reason).Action == GateAction.Hide || _peek.IsVisible)
         {
             _peek.HideCard();

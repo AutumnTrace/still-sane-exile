@@ -1,0 +1,12 @@
+<Window x:Class="StillSaneExile.Desktop.Views.CueWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Still Sane, Exile? cue"
+        WindowStyle="None" AllowsTransparency="True" Background="Transparent"
+        Topmost="True" ShowInTaskbar="False" ShowActivated="False" Focusable="False" IsHitTestVisible="False"
+        ResizeMode="NoResize" SizeToContent="WidthAndHeight"
+        Foreground="{StaticResource Text}" FontFamily="{StaticResource BodyFont}" FontSize="15" Typography.NumeralStyle="Lining"
+        UseLayoutRounding="True" TextOptions.TextFormattingMode="Display">
+  <!-- The ring, its note or the line, placed in code-behind around the cursor. -->
+  <Canvas x:Name="Stage" />
+</Window>

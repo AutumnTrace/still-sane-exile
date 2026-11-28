@@ -14,18 +14,32 @@
         Foreground="{StaticResource Text}" FontFamily="{StaticResource BodyFont}" FontSize="15"
         Typography.NumeralAlignment="Tabular" Typography.NumeralStyle="Lining"
         UseLayoutRounding="True" TextOptions.TextFormattingMode="Display">
-  <Border Padding="10,4,10,14">
-    <Border.LayoutTransform>
-      <ScaleTransform x:Name="Scale" ScaleX="1" ScaleY="1" />
-    </Border.LayoutTransform>
-    <Grid>
-      <!-- Only the shadow: the card draws its own panel. -->
-      <Border Background="{StaticResource Panel}" Margin="1">
-        <Border.Effect>
-          <DropShadowEffect Color="Black" BlurRadius="36" ShadowDepth="14" Direction="270" Opacity="0.55" />
-        </Border.Effect>
-      </Border>
-      <v:PeekCard x:Name="CardView" />
+  <!-- Room around the card at any scale, for its slide in, its flash and its shadow. Transparent, so it
+       never takes a click from the game. -->
+  <Border x:Name="Room" Padding="22,20,22,28">
+    <Grid x:Name="Motion">
+      <Grid.RenderTransform>
+        <TranslateTransform x:Name="Slide" />
+      </Grid.RenderTransform>
+      <Grid>
+        <Grid.LayoutTransform>
+          <ScaleTransform x:Name="Scale" ScaleX="1" ScaleY="1" />
+        </Grid.LayoutTransform>
+        <!-- Only the shadow: the card draws its own panel. -->
+        <Border Background="{StaticResource Panel}" Margin="1">
+          <Border.Effect>
+            <DropShadowEffect Color="Black" BlurRadius="36" ShadowDepth="14" Direction="270" Opacity="0.55" />
+          </Border.Effect>
+        </Border>
+        <v:PeekCard x:Name="CardView" />
+        <!-- The bronze flash: a ring just outside the card with a soft glow, once the card has landed, and
+             when the item it shows is checked again. It fades out by itself. -->
+        <Border x:Name="Flash" Margin="-3" BorderThickness="3" BorderBrush="{StaticResource Signal}" Opacity="0" IsHitTestVisible="False">
+          <Border.Effect>
+            <DropShadowEffect Color="{StaticResource SignalColor}" BlurRadius="24" ShadowDepth="0" Opacity="0.55" />
+          </Border.Effect>
+        </Border>
+      </Grid>
     </Grid>
   </Border>
 </Window>
