@@ -327,6 +327,11 @@ public class AccessibilityTests
         Assert.Contains("Hide when I let go, unless I move onto the card", card);
         Assert.Contains("Press again to hide (accessibility)", card);
         Assert.Contains("Quick price card scale", card);
+        Assert.Contains("Less motion: no ring, slide or line, the card only fades", card);
+        Assert.Contains("A soft click when the key is heard", card);
+        Assert.Contains("Next to the game tooltip", card);
+        Assert.True(card.IndexOf("Next to the game tooltip") < card.IndexOf("Screen edge"));
+        Assert.True(card.IndexOf("Screen edge") < card.IndexOf("Fixed spot (drag once)"));
 
         var colours = Section("colours");
         Assert.Equal("Where white and red starts", colours[0]);

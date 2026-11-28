@@ -1,6 +1,7 @@
 using System.Windows.Input;
 using StillSaneExile.Desktop.Infrastructure;
 using StillSaneExile.Domain.Capture;
+using StillSaneExile.Domain.Placement;
 using StillSaneExile.Domain.Pricing;
 
 namespace StillSaneExile.Desktop.Tests;
@@ -110,7 +111,8 @@ public class SettingsViewModelTests
 
         Assert.Equal(HoldMode.Toggle, app.Settings.PeekMode);
         Assert.Contains("Press again to hide", page.PeekHowTo);
-        Assert.DoesNotContain("cursor", page.ReadsExplanation);
+        Assert.Contains("When you press it, the app checks where the mouse cursor is", page.ReadsExplanation); // for the ring and the card's place
+        Assert.DoesNotContain("moving onto the card", page.ReadsExplanation); // never watched while held
         Assert.Equal("Press again to hide", page.SamplePeek.ReleaseHint);
         Assert.Contains(page.GuideSteps, s => s.Title == "Press again to hide");
 
@@ -118,6 +120,49 @@ public class SettingsViewModelTests
 
         Assert.Equal(HoldMode.Hold, app.Settings.PeekMode);
         Assert.Contains(page.GuideSteps, s => s.Title == "Move onto it to keep it");
+    });
+
+    [Fact]
+    public void The_card_placement_saves_and_says_what_it_does() => Sta.Run(() =>
+    {
+        using var app = new TestApp();
+        var page = app.Shell.SettingsPage;
+        Assert.Equal(CardPosition.Tooltip, page.Position); // the default
+        Assert.Contains("Beside the game's tooltip", page.PositionNote);
+        Assert.Contains("isn't checked in the game yet", page.PositionNote); // a guess, and it says so
+
+        page.SetPositionCommand.Execute("edge");
+        Assert.Equal(CardPosition.Edge, app.Settings.CardPosition);
+        Assert.Contains("away from the cursor", page.PositionNote);
+
+        page.SetPositionCommand.Execute("fixed");
+        Assert.Equal(CardPosition.Fixed, app.Settings.CardPosition);
+        Assert.Contains("drag it by its text", page.PositionNote);
+        Assert.DoesNotContain("Press again to hide", page.PositionNote);
+
+        page.SetPeekModeCommand.Execute("toggle");
+        Assert.Contains("Dragging needs a card you kept open", page.PositionNote);
+
+        page.SetPositionCommand.Execute("tooltip");
+        Assert.Equal(CardPosition.Tooltip, app.Settings.CardPosition);
+    });
+
+    [Fact]
+    public void Less_motion_and_the_click_are_off_until_switched_on() => Sta.Run(() =>
+    {
+        using var app = new TestApp();
+        var page = app.Shell.SettingsPage;
+        Assert.False(page.LessMotion);
+        Assert.False(page.PressClick);
+
+        page.LessMotion = true;
+        page.PressClick = true;
+
+        Assert.True(app.Settings.LessMotion);
+        Assert.True(app.Settings.PressClick);
+        page.Load();
+        Assert.True(page.LessMotion);
+        Assert.True(page.PressClick);
     });
 
     [Fact]

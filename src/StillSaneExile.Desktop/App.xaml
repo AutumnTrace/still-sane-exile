@@ -56,6 +56,14 @@
       <SolidColorBrush x:Key="PanelEdge" Color="#6B5638" />
       <SolidColorBrush x:Key="PanelInner" Color="#2E2619" />
       <SolidColorBrush x:Key="Strip" Color="#1A150E" />
+      <!-- The cues that answer the quick price key over the game: the ring, the line to the card and the
+           card's flash in a bright bronze (never the search's gold), the miss in red. The shade goes under
+           a ring or line so it shows on bright ground too. The miss note's words are in Warn. -->
+      <Color x:Key="SignalColor">#E8C882</Color>
+      <SolidColorBrush x:Key="Signal" Color="{StaticResource SignalColor}" />
+      <SolidColorBrush x:Key="Miss" Color="#D2553A" />
+      <SolidColorBrush x:Key="MissEdge" Color="#7A3A2A" />
+      <SolidColorBrush x:Key="CueShade" Color="#73000000" />
       <SolidColorBrush x:Key="RarityMagic" Color="#9A9AFF" />
       <SolidColorBrush x:Key="RarityRare" Color="#FFFF77" />
       <SolidColorBrush x:Key="RarityUnique" Color="#D2803F" />

@@ -2,16 +2,34 @@ using System.Windows;
 using System.Windows.Input;
 using System.Windows.Interop;
 using System.Windows.Media;
+using System.Windows.Media.Animation;
 using CommunityToolkit.Mvvm.Input;
 using StillSaneExile.Desktop.Infrastructure;
-using StillSaneExile.Desktop.Services;
 using StillSaneExile.Desktop.ViewModels;
+using StillSaneExile.Domain.Placement;
 
 namespace StillSaneExile.Desktop.Views;
 
-/// <summary>What the HUD needs from the peek card's window, so its decisions can be tested with a fake.</summary>
+/// <summary>What the HUD knows when the key is heard, for the cues that answer the press.</summary>
+/// <param name="Cursor">Where the cursor was, in physical pixels, if Windows could say.</param>
+/// <param name="Over">The window the cues go over: the game, or SSE's own window for practice.</param>
+/// <param name="LessMotion">Settings → Price card → Less motion.</param>
+/// <param name="Click">Settings → Price card → a soft click when the key is heard.</param>
+public sealed record PressCue(ScreenPoint? Cursor, nint Over, bool LessMotion, bool Click);
+
+/// <summary>How to show a card: where (the player's choice, and what it needs), how big and how it moves.</summary>
+/// <param name="Over">The window it goes over: the game, or SSE's own window for practice.</param>
+/// <param name="Cursor">Where the cursor was when the key was heard, in physical pixels.</param>
+/// <param name="ItemText">The copied text, to guess the game's tooltip from; null on a message card.</param>
+/// <param name="Spot">Where the player dragged the card to with Fixed spot, if they have.</param>
+/// <param name="SameItem">The card showing is for this same item: it stays where it is and only flashes.</param>
+public sealed record CardRequest(CardPosition Position, double Scale, nint Over, ScreenPoint? Cursor, string? ItemText, FixedSpot? Spot, bool LessMotion, bool SameItem = false);
+
+/// <summary>What the HUD needs from the peek card's window and the cues around it, so its decisions can be
+/// tested with a fake.</summary>
 public interface IPeekSurface
 {
+    /// <summary>A card shows, or is coming in. One fading out after the key was let go no longer counts.</summary>
     bool IsVisible { get; }
 
     /// <summary>The card's own window, to tell it apart when it comes to the front (the player clicked it).</summary>
@@ -23,8 +41,17 @@ public interface IPeekSurface
     /// <summary>The pinned card's "All filters".</summary>
     event Action? MoreRequested;
 
+    /// <summary>With Fixed spot, the player dragged a card they kept open to where it should go from now on.</summary>
+    event Action<FixedSpot>? SpotChosen;
+
+    /// <summary>The key was heard, before anything is read: a ring at the cursor, and the soft click if it is on.</summary>
+    void KeyHeard(PressCue cue);
+
+    /// <summary>The game copied nothing (no item under the cursor): a red ring and a one-line note, no card.</summary>
+    void Missed(PressCue cue, string note);
+
     /// <summary>Shows the card click-through and never activated, as while the key is held.</summary>
-    void ShowCard(PeekViewModel card, PeekAnchor anchor, double scale, nint referenceWindow);
+    void ShowCard(PeekViewModel card, CardRequest request);
 
     /// <summary>True when <paramref name="point"/> (physical pixels) is on the visible card or within a
     /// short reach of it, so moving towards the card catches it.</summary>
@@ -35,14 +62,19 @@ public interface IPeekSurface
     void SetPinned(bool pinned);
 
     /// <summary>Hides the card. With <paramref name="returnFocus"/>, and only if the card has the focus,
-    /// the window it was shown over (the game) gets the focus back.</summary>
-    void HideCard(bool returnFocus = false);
+    /// the window it was shown over (the game) gets the focus back. With <paramref name="fade"/> (the key was
+    /// let go) it fades out quickly; it is click-through and counts as hidden from the start.</summary>
+    void HideCard(bool returnFocus = false, bool fade = false);
+
+    /// <summary>Takes the ring, the note and the line away now: something else came to the front.</summary>
+    void ClearCues();
 }
 
 /// <summary>The HUD card: topmost, never in the taskbar and never activated. While the key is held it is
 /// click-through; pinned, it takes clicks but still never becomes the active window, the way an on-screen
 /// keyboard does. Activating it would take the foreground from the game, and a game in fullscreen drops out
-/// as if alt-tabbed (which then hides the card). So the game keeps the keyboard the whole time.</summary>
+/// as if alt-tabbed (which then hides the card). So the game keeps the keyboard the whole time.
+/// It also owns the cues around a press (<see cref="CueWindow"/>): the ring, the miss note and the line.</summary>
 public partial class PeekWindow : Window, IPeekSurface
 {
     /// <summary>How far around the card, in device-independent pixels, the cursor counts as on it.</summary>
@@ -51,12 +83,26 @@ public partial class PeekWindow : Window, IPeekSurface
     /// <summary>Only click-through comes off when pinned; WS_EX_NOACTIVATE stays on at all times.</summary>
     private const long Passive = NativeMethods.WS_EX_TRANSPARENT;
 
+    /// <summary>Close to the design's cubic-bezier(0.2, 0.8, 0.2, 1): quick to start, soft to land.</summary>
+    private static readonly IEasingFunction SlideEase = Frozen(new QuarticEase { EasingMode = EasingMode.EaseOut });
+    private static readonly IEasingFunction FadeOutEase = Frozen(new QuadraticEase { EasingMode = EasingMode.EaseIn });
+    private static readonly IEasingFunction FlashEase = Frozen(new QuadraticEase { EasingMode = EasingMode.EaseOut });
+
+    private CueWindow? _ring;
+    private CueWindow? _line;
     private nint _over;
     private bool _pinned;
 
-    /// <summary>The side the card was placed on, so a card that grows (Search adds its listings) stays on
-    /// that side and keeps clear of the skill bar.</summary>
-    private PeekAnchor? _side;
+    /// <summary>Let go: the card is fading out, and already hidden as far as the HUD is concerned.</summary>
+    private bool _fading;
+
+    private CardRequest? _request;
+
+    /// <summary>Where the visible card is, in physical pixels, so a card that grows (Search adds its
+    /// listings) stays where it is and keeps clear of the skill bar.</summary>
+    private Box? _placed;
+
+    private Drag? _drag;
 
     public PeekWindow()
     {
@@ -65,10 +111,18 @@ public partial class PeekWindow : Window, IPeekSurface
         CardView.MoreCommand = new RelayCommand(() => MoreRequested?.Invoke());
         SizeChanged += (_, e) =>
         {
-            if (e.HeightChanged && IsVisible && _side is { } side)
+            if (e.HeightChanged && IsVisible && !_fading && _placed is { } placed && _request is { } request)
             {
-                Place(side, _over);
+                var f = Overlay.Factor(_over, Handle);
+                var (width, height) = CardSize(f);
+                var resized = CardPlacement.Resized(placed, width, height, Overlay.AreaOf(_over, Handle), keepClearOfSkillBar: request.Position != CardPosition.Fixed);
+                MoveCardTo(resized, f);
             }
+        };
+        Closed += (_, _) =>
+        {
+            _ring?.Close();
+            _line?.Close();
         };
     }
 
@@ -76,33 +130,106 @@ public partial class PeekWindow : Window, IPeekSurface
 
     public event Action? MoreRequested;
 
+    public event Action<FixedSpot>? SpotChosen;
+
     public nint Handle => new WindowInteropHelper(this).Handle;
+
+    bool IPeekSurface.IsVisible => IsVisible && !_fading;
+
+    private CueWindow RingCue => _ring ??= new CueWindow();
+
+    private CueWindow LineCue => _line ??= new CueWindow();
 
     protected override void OnSourceInitialized(EventArgs e)
     {
         base.OnSourceInitialized(e);
-        var hwnd = new WindowInteropHelper(this).Handle;
-        var ex = NativeMethods.GetWindowLongPtr(hwnd, NativeMethods.GWL_EXSTYLE);
-        var style = ex | (nint)(NativeMethods.WS_EX_TRANSPARENT | NativeMethods.WS_EX_LAYERED | NativeMethods.WS_EX_NOACTIVATE | NativeMethods.WS_EX_TOOLWINDOW);
-        NativeMethods.SetWindowLongPtr(hwnd, NativeMethods.GWL_EXSTYLE, style);
+        Overlay.MakePassive(new WindowInteropHelper(this).Handle);
     }
 
-    public void ShowCard(PeekViewModel card, PeekAnchor anchor, double scale, nint referenceWindow)
+    public void KeyHeard(PressCue cue)
+    {
+        if (cue.Click)
+        {
+            SoftClick.Play();
+        }
+
+        _line?.Clear(); // the last card's line, if it is still fading
+        if (MotionFor(cue.LessMotion).Ring && cue.Cursor is { } cursor)
+        {
+            RingCue.ShowRing(cursor, cue.Over);
+        }
+        else
+        {
+            _ring?.Clear();
+        }
+    }
+
+    public void Missed(PressCue cue, string note) => RingCue.ShowMiss(cue.Cursor, cue.Over, note, MotionFor(cue.LessMotion).Ring);
+
+    public void ClearCues()
+    {
+        _ring?.Clear();
+        _line?.Clear();
+    }
+
+    public void ShowCard(PeekViewModel card, CardRequest request)
     {
         SetPinned(false);
-        _over = referenceWindow;
-        _side = null;
+        EndDrag(save: false);
+        var showing = IsVisible && !_fading;
+        _fading = false;
+        StopMotion();
+        _over = request.Over;
+        _request = request;
         DataContext = card;
-        Scale.ScaleX = Scale.ScaleY = scale;
+        Scale.ScaleX = Scale.ScaleY = request.Scale;
+
+        if (request.SameItem && showing && _placed is not null)
+        {
+            // Pressed again over the item it shows: no new card, it stays put and flashes.
+            UpdateLayout();
+            FlashCard(TimeSpan.Zero);
+            return;
+        }
+
+        _placed = null;
         Opacity = 0;
         Show();
         UpdateLayout();
-        Place(anchor, referenceWindow);
+        var f = Overlay.Factor(request.Over, Handle);
+        var area = Overlay.AreaOf(request.Over, Handle);
+        var cursor = request.Cursor is { } c ? new Pos(c.X, c.Y) : area.Centre;
+        var (width, height) = CardSize(f);
+        var placed = CardPlacement.Place(request.Position, area, cursor, width, height, request.ItemText, request.Spot).Card;
+        MoveCardTo(placed, f);
         Opacity = 1;
+
+        var motion = MotionFor(request.LessMotion);
+        if (motion.Slide)
+        {
+            var (dx, dy) = PressMotion.SlideFrom(placed, cursor, PressMotion.SlideDistance);
+            Slide.BeginAnimation(TranslateTransform.XProperty, new DoubleAnimation(dx, 0, PressMotion.SlideFor) { EasingFunction = SlideEase });
+            Slide.BeginAnimation(TranslateTransform.YProperty, new DoubleAnimation(dy, 0, PressMotion.SlideFor) { EasingFunction = SlideEase });
+            Motion.BeginAnimation(OpacityProperty, new DoubleAnimation(0, 1, PressMotion.SlideFor) { EasingFunction = SlideEase });
+        }
+        else
+        {
+            Motion.BeginAnimation(OpacityProperty, new DoubleAnimation(0, 1, PressMotion.FadeInFor));
+        }
+
+        if (motion.FlashOnShow)
+        {
+            FlashCard(motion.CardInFor);
+        }
+
+        if (motion.Line && request.Cursor is { } from && PressMotion.LineEnd(placed, cursor, PressMotion.MinLineLength * f) is { } end)
+        {
+            LineCue.ShowLine(from, end, request.Over);
+        }
     }
 
     public bool IsNear(ScreenPoint point) =>
-        IsVisible && CardView.ScreenBounds() is { } card && Within(card, point, Reach * VisualTreeHelper.GetDpi(this).DpiScaleX);
+        IsVisible && !_fading && CardView.ScreenBounds() is { } card && Within(card, point, Reach * VisualTreeHelper.GetDpi(this).DpiScaleX);
 
     /// <summary>Whether <paramref name="point"/> lies on <paramref name="card"/> grown by <paramref name="reach"/> on every side.</summary>
     public static bool Within(Rect card, ScreenPoint point, double reach)
@@ -129,7 +256,7 @@ public partial class PeekWindow : Window, IPeekSurface
         }
     }
 
-    public void HideCard(bool returnFocus = false)
+    public void HideCard(bool returnFocus = false, bool fade = false)
     {
         // The game first: hiding the active card would otherwise hand the focus to some other window.
         if (returnFocus && IsVisible && IsActive && CanFocus(_over))
@@ -137,9 +264,35 @@ public partial class PeekWindow : Window, IPeekSurface
             NativeMethods.SetForegroundWindow(_over);
         }
 
-        Hide();
-        DataContext = null;
+        EndDrag(save: false);
         SetPinned(false);
+        _line?.Clear();
+        if (fade && IsVisible && !_fading)
+        {
+            _fading = true;
+            var fadeOut = new DoubleAnimation(0, PressMotion.FadeOutFor) { EasingFunction = FadeOutEase };
+            fadeOut.Completed += (_, _) =>
+            {
+                if (_fading)
+                {
+                    HideNow();
+                }
+            };
+            Motion.BeginAnimation(OpacityProperty, fadeOut);
+            return;
+        }
+
+        HideNow();
+    }
+
+    private void HideNow()
+    {
+        _fading = false;
+        Hide();
+        StopMotion();
+        DataContext = null;
+        _placed = null;
+        _request = null;
     }
 
     /// <summary>Activated by a click with nothing focusable under it: the card itself takes the keys, so
@@ -165,41 +318,113 @@ public partial class PeekWindow : Window, IPeekSurface
         base.OnPreviewKeyDown(e);
     }
 
-    private static bool CanFocus(nint window) => window != 0 && NativeMethods.IsWindow(window) && !NativeMethods.IsIconic(window);
-
-    /// <summary>Opposite half from the cursor (where the game draws its tooltip), clear of the screen
-    /// centre, the bottom skill bar and the top-right map. Positions are physical pixels.</summary>
-    private void Place(PeekAnchor anchor, nint referenceWindow)
+    /// <summary>Fixed spot: a card the player kept open can be dragged by any part that is not a control.
+    /// The card's window moves (never activated); the game sees none of it.</summary>
+    protected override void OnMouseLeftButtonDown(MouseButtonEventArgs e)
     {
-        var hwnd = new WindowInteropHelper(this).Handle;
-        if (referenceWindow == 0 || !NativeMethods.GetWindowRect(referenceWindow, out var area) || area.Width <= 0 || NativeMethods.IsIconic(referenceWindow))
+        base.OnMouseLeftButtonDown(e);
+        if (e.Handled || !_pinned || _fading || _request?.Position != CardPosition.Fixed || _placed is null
+            || !NativeMethods.GetCursorPos(out var start) || !NativeMethods.GetWindowRect(Handle, out var at))
         {
-            var monitor = NativeMethods.MonitorFromWindow(hwnd, NativeMethods.MONITOR_DEFAULTTONEAREST);
-            var info = new NativeMethods.MONITORINFO { cbSize = System.Runtime.InteropServices.Marshal.SizeOf<NativeMethods.MONITORINFO>() };
-            NativeMethods.GetMonitorInfo(monitor, ref info);
-            area = info.rcWork;
+            return;
         }
 
-        var dpi = referenceWindow != 0 ? NativeMethods.GetDpiForWindow(referenceWindow) : NativeMethods.GetDpiForWindow(hwnd);
-        var factor = dpi > 0 ? dpi / 96.0 : 1.0;
-        var w = (int)Math.Ceiling(ActualWidth * factor);
-        var h = (int)Math.Ceiling(ActualHeight * factor);
-
-        NativeMethods.GetCursorPos(out var cursor);
-        var left = anchor switch
-        {
-            PeekAnchor.Left => true,
-            PeekAnchor.Right => false,
-            _ => cursor.X > area.Left + area.Width / 2,
-        };
-
-        _side = left ? PeekAnchor.Left : PeekAnchor.Right;
-        var margin = (int)(area.Width * 0.03);
-        var x = left ? area.Left + margin : area.Right - margin - w;
-        var top = area.Top + (int)(area.Height * (left ? 0.16 : 0.27)); // right side starts below the map
-        var bottomLimit = area.Bottom - (int)(area.Height * 0.17);       // keep the skill bar clear
-        var y = Math.Max(area.Top + margin, Math.Min(top, bottomLimit - h));
-
-        NativeMethods.SetWindowPos(hwnd, NativeMethods.HWND_TOPMOST, x, y, 0, 0, NativeMethods.SWP_NOSIZE | NativeMethods.SWP_NOACTIVATE);
+        _drag = new Drag(start.X, start.Y, at.Left, at.Top, Moved: false);
+        CaptureMouse();
+        e.Handled = true;
     }
+
+    protected override void OnMouseMove(MouseEventArgs e)
+    {
+        base.OnMouseMove(e);
+        if (_drag is not { } drag || !NativeMethods.GetCursorPos(out var now))
+        {
+            return;
+        }
+
+        var dx = now.X - drag.StartX;
+        var dy = now.Y - drag.StartY;
+        if (!drag.Moved && Math.Abs(dx) + Math.Abs(dy) < 4)
+        {
+            return;
+        }
+
+        _drag = drag with { Moved = true };
+        Overlay.MoveTo(Handle, drag.Left + dx, drag.Top + dy);
+    }
+
+    protected override void OnMouseLeftButtonUp(MouseButtonEventArgs e)
+    {
+        base.OnMouseLeftButtonUp(e);
+        EndDrag(save: true);
+    }
+
+    protected override void OnLostMouseCapture(MouseEventArgs e)
+    {
+        base.OnLostMouseCapture(e);
+        EndDrag(save: true);
+    }
+
+    /// <summary>Where the card was dropped, kept on the game window, becomes its fixed spot.</summary>
+    private void EndDrag(bool save)
+    {
+        if (_drag is not { } drag)
+        {
+            return;
+        }
+
+        _drag = null;
+        if (IsMouseCaptured)
+        {
+            ReleaseMouseCapture();
+        }
+
+        if (!save || !drag.Moved || !NativeMethods.GetWindowRect(Handle, out var at))
+        {
+            return;
+        }
+
+        var f = Overlay.Factor(_over, Handle);
+        var area = Overlay.AreaOf(_over, Handle);
+        var (width, height) = CardSize(f);
+        var card = new Box(at.Left + (Room.Padding.Left * f), at.Top + (Room.Padding.Top * f), width, height).KeptWithin(area).Rounded();
+        MoveCardTo(card, f);
+        SpotChosen?.Invoke(FixedSpot.Of(card, area));
+    }
+
+    /// <summary>The visible card's size in physical pixels: the card at its scale, without the room around it.</summary>
+    private (double Width, double Height) CardSize(double factor) =>
+        (CardView.ActualWidth * Scale.ScaleX * factor, CardView.ActualHeight * Scale.ScaleY * factor);
+
+    /// <summary>Puts the visible card (not the room around it) at <paramref name="card"/>.</summary>
+    private void MoveCardTo(Box card, double factor)
+    {
+        _placed = card;
+        Overlay.MoveTo(Handle, card.X - (Room.Padding.Left * factor), card.Y - (Room.Padding.Top * factor));
+    }
+
+    private void FlashCard(TimeSpan after) =>
+        Flash.BeginAnimation(OpacityProperty, new DoubleAnimation(1, 0, PressMotion.FlashFor) { BeginTime = after, EasingFunction = FlashEase });
+
+    private void StopMotion()
+    {
+        Slide.BeginAnimation(TranslateTransform.XProperty, null);
+        Slide.BeginAnimation(TranslateTransform.YProperty, null);
+        Motion.BeginAnimation(OpacityProperty, null);
+        Flash.BeginAnimation(OpacityProperty, null);
+    }
+
+    /// <summary>The player's Less motion, or Windows' animation effects switched off.</summary>
+    private static PressMotion MotionFor(bool lessMotion) => PressMotion.For(lessMotion, SystemParameters.ClientAreaAnimation);
+
+    private static bool CanFocus(nint window) => window != 0 && NativeMethods.IsWindow(window) && !NativeMethods.IsIconic(window);
+
+    private static T Frozen<T>(T freezable) where T : Freezable
+    {
+        freezable.Freeze();
+        return freezable;
+    }
+
+    /// <summary>A drag in progress: where the cursor and the window started, in physical pixels.</summary>
+    private sealed record Drag(int StartX, int StartY, int Left, int Top, bool Moved);
 }
