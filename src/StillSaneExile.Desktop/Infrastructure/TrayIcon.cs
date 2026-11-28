@@ -10,7 +10,8 @@ namespace StillSaneExile.Desktop.Infrastructure;
 /// fake: the player asks for the main window, or to quit.</summary>
 public interface ITrayIcon : IDisposable
 {
-    /// <summary>A double-click on the icon, <c>Enter</c> on it, or "Open Still Sane, Exile?" in its menu.</summary>
+    /// <summary>A double-click on the icon, <c>Enter</c> on it, "Open Still Sane, Exile?" in its menu, or a
+    /// click on its notification.</summary>
     event Action? OpenRequested;
 
     /// <summary>"Quit" in the icon's menu.</summary>
@@ -18,6 +19,10 @@ public interface ITrayIcon : IDisposable
 
     /// <summary>Puts the icon in the notification area, and back after Explorer restarts.</summary>
     void Show();
+
+    /// <summary>A quiet notification from the icon (no sound; Windows shows it without taking the focus).
+    /// False when the notification area does not hold the icon, so nothing was shown.</summary>
+    bool Notify(string title, string text);
 }
 
 /// <summary>
@@ -97,6 +102,21 @@ public sealed class TrayIcon : ITrayIcon
         ObjectDisposedException.ThrowIf(_disposed, this);
         _wanted = true;
         Add();
+    }
+
+    /// <summary>Windows 10 and 11 show it as a notification in the corner, which never takes the focus, and
+    /// keep it in the notification centre; with "Do not disturb" on (Windows turns it on for full-screen
+    /// games by default) it only goes there.</summary>
+    public bool Notify(string title, string text)
+    {
+        if (_disposed || !IsShown)
+        {
+            return false;
+        }
+
+        var data = Data(NativeMethods.NIF_INFO, title, text);
+        data.dwInfoFlags = NativeMethods.NIIF_INFO | NativeMethods.NIIF_NOSOUND;
+        return NativeMethods.Shell_NotifyIcon(NativeMethods.NIM_MODIFY, ref data);
     }
 
     public void Dispose()
@@ -202,7 +222,7 @@ public sealed class TrayIcon : ITrayIcon
         }
     }
 
-    private NativeMethods.NOTIFYICONDATA Data(uint flags) => new()
+    private NativeMethods.NOTIFYICONDATA Data(uint flags, string infoTitle = "", string info = "") => new()
     {
         cbSize = Marshal.SizeOf<NativeMethods.NOTIFYICONDATA>(),
         hWnd = _hwnd,
@@ -211,8 +231,8 @@ public sealed class TrayIcon : ITrayIcon
         uCallbackMessage = CallbackMessage,
         hIcon = _icon,
         szTip = Tip,
-        szInfo = "",
-        szInfoTitle = "",
+        szInfo = info.Length > 255 ? info[..255] : info,
+        szInfoTitle = infoTitle.Length > 63 ? infoTitle[..63] : infoTitle,
     };
 
     private nint WndProc(nint hwnd, int msg, nint wParam, nint lParam, ref bool handled)
@@ -224,6 +244,7 @@ public sealed class TrayIcon : ITrayIcon
             {
                 case NativeMethods.WM_LBUTTONDBLCLK:
                 case NativeMethods.NIN_KEYSELECT:
+                case NativeMethods.NIN_BALLOONUSERCLICK:
                     Raise(open: true);
                     break;
                 case NativeMethods.WM_CONTEXTMENU:

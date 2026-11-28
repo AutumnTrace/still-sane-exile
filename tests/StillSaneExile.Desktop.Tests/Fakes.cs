@@ -1,3 +1,4 @@
+using System.ComponentModel;
 using System.Diagnostics;
 using System.Windows;
 using System.Windows.Threading;
@@ -349,9 +350,75 @@ internal sealed class FakeTrayIcon : ITrayIcon
         IsShown = false;
     }
 
+    /// <summary>The notifications shown from the icon; one shows only while the icon is in the notification area.</summary>
+    public List<(string Title, string Text)> Notices { get; } = [];
+
+    public bool Notify(string title, string text)
+    {
+        if (!IsShown)
+        {
+            return false;
+        }
+
+        Notices.Add((title, text));
+        return true;
+    }
+
     public void DoubleClick() => OpenRequested?.Invoke();
 
     public void ChooseQuit() => QuitRequested?.Invoke();
+}
+
+/// <summary>Stands in for the main window as the notification area sees it: <see cref="ClickClose"/> and
+/// <see cref="Minimize"/> are the player's × and minimize. A close nothing cancels really closes it, which in
+/// the app ends it.</summary>
+internal sealed class FakeMainWindow : ITrayWindow
+{
+    public event CancelEventHandler? Closing;
+
+    public event EventHandler? StateChanged;
+
+    public Dispatcher Dispatcher { get; } = Dispatcher.CurrentDispatcher;
+
+    public nint Handle => FakeShellWindow.MainWindow;
+
+    public bool IsTyping => false;
+
+    public WindowState WindowState { get; private set; } = WindowState.Normal;
+
+    public bool IsVisible { get; private set; } = true;
+
+    public bool IsClosed { get; private set; }
+
+    public int BroughtToFront { get; private set; }
+
+    public void BringToFront()
+    {
+        BroughtToFront++;
+        IsVisible = true;
+        WindowState = WindowState.Normal;
+    }
+
+    public void Hide() => IsVisible = false;
+
+    public void Close()
+    {
+        var e = new CancelEventArgs();
+        Closing?.Invoke(this, e);
+        if (!e.Cancel)
+        {
+            IsClosed = true;
+            IsVisible = false;
+        }
+    }
+
+    public void ClickClose() => Close();
+
+    public void Minimize()
+    {
+        WindowState = WindowState.Minimized;
+        StateChanged?.Invoke(this, EventArgs.Empty);
+    }
 }
 
 /// <summary>A started <see cref="HudController"/> wired to fakes, on the current STA thread.</summary>

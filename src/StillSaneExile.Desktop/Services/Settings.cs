@@ -167,6 +167,29 @@ public sealed class Settings(Store store)
         set => store.Set("updates.auto", value ? "1" : "0");
     }
 
+    /// <summary>The main window's × hides it to the notification area, and SSE keeps running with its keys;
+    /// Quit in the icon's menu ends it. On by default: the owner wants SSE to stay up next to the game.</summary>
+    public bool CloseToTray
+    {
+        get => store.Get("window.closeToTray") != "0";
+        set => store.Set("window.closeToTray", value ? "1" : "0");
+    }
+
+    /// <summary>Minimizing the main window hides it to the notification area, without a taskbar button.
+    /// On by default.</summary>
+    public bool MinimizeToTray
+    {
+        get => store.Get("window.minimizeToTray") != "0";
+        set => store.Set("window.minimizeToTray", value ? "1" : "0");
+    }
+
+    /// <summary>The player has been told once, with a notification from the icon, where the window went.</summary>
+    public bool TrayNoticeShown
+    {
+        get => store.Get("window.trayNoticeShown") == "1";
+        set => store.Set("window.trayNoticeShown", value ? "1" : "0");
+    }
+
     /// <summary>The newest version that has run with this data, so the first start after an update can
     /// show "What's new". A downgrade leaves it alone. Builds up to 0.2.0 did not store it.</summary>
     public string? LastRunVersion

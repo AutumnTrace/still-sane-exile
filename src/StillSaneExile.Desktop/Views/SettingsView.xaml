@@ -561,6 +561,14 @@
           <TextBlock Text="Updates and privacy" Style="{StaticResource PageTitle}" />
           <Border Style="{StaticResource Card}">
             <StackPanel>
+              <TextBlock Text="Closing and minimizing" Style="{StaticResource CardTitle}" Margin="0,0,0,10" />
+              <CheckBox IsChecked="{Binding CloseToTray}" Content="Closing the window keeps SSE running in the notification area" />
+              <CheckBox IsChecked="{Binding MinimizeToTray}" Content="Minimizing hides the window there too, without a taskbar button" Margin="0,10,0,0" />
+              <TextBlock Style="{StaticResource Gist}" Text="Its keys keep working. To quit, right-click its icon by the clock and choose Quit." />
+            </StackPanel>
+          </Border>
+          <Border Style="{StaticResource Card}">
+            <StackPanel>
               <WrapPanel>
                 <TextBlock VerticalAlignment="Center">
                   <Run Text="Still Sane, Exile? " Foreground="{StaticResource TextDim}" /><Run Text="{Binding Updates.CurrentVersion, Mode=OneWay}" FontWeight="SemiBold" />
@@ -577,7 +585,7 @@
                 <Button Content="Restart now to update" Command="{Binding RestartToUpdateCommand}"
                         Visibility="{Binding Updates.IsReady, Converter={StaticResource Vis}}" />
               </WrapPanel>
-              <TextBlock Style="{StaticResource Gist}" Text="Updates come from the project's GitHub releases and install when you close SSE, never in the middle of a game unless you ask." />
+              <TextBlock Style="{StaticResource Gist}" Text="Updates come from the project's GitHub releases. A downloaded one installs when you quit SSE, or when SSE next starts if Windows shut down first; never in the middle of a game unless you ask." />
             </StackPanel>
           </Border>
           <Border Style="{StaticResource Card}">

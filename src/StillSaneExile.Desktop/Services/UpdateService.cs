@@ -10,9 +10,10 @@ using Velopack.Sources;
 namespace StillSaneExile.Desktop.Services;
 
 /// <summary>Keeps an installed copy up to date from GitHub Releases. Checks at startup and every few
-/// hours, downloads in the background, and installs when the app closes, so it never restarts in
-/// the middle of a game unless the player presses "Restart now". This check (to github.com) and the
-/// hourly poe.ninja prices (<see cref="LivePrices"/>) are the app's only network requests; each can be
+/// hours, downloads in the background, and installs when the app exits (Quit in its tray menu, or closing
+/// the window with close to tray switched off), so it never restarts in the middle of a game unless the
+/// player presses "Restart now". When Windows ends the session first, Velopack installs it on the next
+/// start. This check (to github.com) and the hourly poe.ninja prices (<see cref="LivePrices"/>) are the app's only network requests; each can be
 /// turned off.</summary>
 public sealed partial class UpdateService : ObservableObject
 {
@@ -45,7 +46,7 @@ public sealed partial class UpdateService : ObservableObject
         Status = !IsInstalled
             ? "Development build: updates apply to installed copies only."
             : _manager.UpdatePendingRestart is { } pending
-                ? $"Update {pending.Version} is downloaded and installs when you close SSE."
+                ? $"Update {pending.Version} is downloaded and installs when you quit SSE."
                 : $"Version {CurrentVersion}.";
         ReadyVersion = _manager?.UpdatePendingRestart?.Version.ToString();
     }
@@ -114,7 +115,7 @@ public sealed partial class UpdateService : ObservableObject
             await _manager.DownloadUpdatesAsync(info, p => Status = $"Downloading {version}… {p}%");
             _ready = info;
             ReadyVersion = version;
-            Status = $"Update {version} is ready and installs when you close SSE.";
+            Status = $"Update {version} is ready and installs when you quit SSE.";
         }
         catch (Exception ex)
         {
@@ -127,7 +128,8 @@ public sealed partial class UpdateService : ObservableObject
     }
 
     /// <summary>Called on a normal exit: hands the downloaded update to Velopack's updater, which
-    /// installs it after this process ends. Silent, no restart.</summary>
+    /// installs it after this process ends. Silent, no restart. Not called when Windows ends the session
+    /// (<see cref="Tray.InstallUpdateOnExit"/>).</summary>
     public void ApplyOnExit()
     {
         if (!IsInstalled || !IsReady)

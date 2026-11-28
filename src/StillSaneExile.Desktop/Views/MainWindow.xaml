@@ -36,7 +36,7 @@
         <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
           <Button Margin="0,0,8,0" Padding="12,0" AutomationProperties.Name="{Binding Updates.ReadyVersion, StringFormat='Restart to install update {0}'}"
                   Command="{Binding RestartToUpdateCommand}" Visibility="{Binding Updates.IsReady, Converter={StaticResource Vis}}"
-                  ToolTip="The update is downloaded. It also installs by itself when you close the app.">
+                  ToolTip="The update is downloaded. It also installs by itself when you quit SSE (right-click its icon by the clock, Quit).">
             <TextBlock><Run Text="Update " /><Run Text="{Binding Updates.ReadyVersion, Mode=OneWay}" /><Run Text=" ready · Restart" /></TextBlock>
           </Button>
           <Border Style="{StaticResource DemoBadge}" Visibility="{Binding IsDemo, Converter={StaticResource Vis}}">

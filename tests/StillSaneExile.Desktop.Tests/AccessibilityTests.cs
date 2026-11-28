@@ -339,6 +339,8 @@ public class AccessibilityTests
         Assert.Contains("Open the pictures folder", pictures);
 
         var about = Section("about");
+        Assert.Equal("Closing the window keeps SSE running in the notification area", about[0]);
+        Assert.Equal("Minimizing hides the window there too, without a taskbar button", about[1]);
         Assert.Contains("Everything SSE keeps and sends", about);
     });
 

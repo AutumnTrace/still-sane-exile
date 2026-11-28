@@ -54,14 +54,19 @@ internal static class NativeMethods
     public const int WM_APP = 0x8000;
 
     public const uint NIM_ADD = 0x0;
+    public const uint NIM_MODIFY = 0x1;
     public const uint NIM_DELETE = 0x2;
     public const uint NIM_SETVERSION = 0x4;
     public const uint NIF_MESSAGE = 0x01;
     public const uint NIF_ICON = 0x02;
     public const uint NIF_TIP = 0x04;
+    public const uint NIF_INFO = 0x10;
     public const uint NIF_SHOWTIP = 0x80;
+    public const uint NIIF_INFO = 0x01;
+    public const uint NIIF_NOSOUND = 0x10;
     public const uint NOTIFYICON_VERSION_4 = 4;
     public const int NIN_KEYSELECT = 0x0401;
+    public const int NIN_BALLOONUSERCLICK = 0x0405;
 
     public const uint MF_STRING = 0x0000;
     public const uint MF_SEPARATOR = 0x0800;
@@ -122,8 +127,8 @@ internal static class NativeMethods
         public uint dwFlags;
     }
 
-    /// <summary>One notification-area icon: the window that hears its clicks, its picture and its tooltip.
-    /// The balloon fields are part of the layout; SSE never shows a balloon.</summary>
+    /// <summary>One notification-area icon: the window that hears its clicks, its picture and its tooltip,
+    /// and the one notification SSE shows, the first time its window goes to the notification area.</summary>
     [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
     public struct NOTIFYICONDATA
     {
@@ -229,7 +234,8 @@ internal static class NativeMethods
     [return: MarshalAs(UnmanagedType.Bool)]
     public static extern bool UnhookWinEvent(nint hWinEventHook);
 
-    /// <summary>Adds, sets up or removes SSE's own notification-area icon; Explorer draws it.</summary>
+    /// <summary>Adds, sets up or removes SSE's own notification-area icon, or shows its one notification;
+    /// Explorer draws them.</summary>
     [DllImport("shell32.dll", EntryPoint = "Shell_NotifyIconW", CharSet = CharSet.Unicode)]
     [return: MarshalAs(UnmanagedType.Bool)]
     public static extern bool Shell_NotifyIcon(uint message, ref NOTIFYICONDATA data);

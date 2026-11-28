@@ -160,6 +160,14 @@ public sealed partial class SettingsViewModel : ObservableObject
     [ObservableProperty]
     public partial bool AutoUpdate { get; set; }
 
+    /// <summary>Updates and privacy → the window's × keeps SSE running in the notification area.</summary>
+    [ObservableProperty]
+    public partial bool CloseToTray { get; set; }
+
+    /// <summary>Updates and privacy → minimizing hides the window to the notification area.</summary>
+    [ObservableProperty]
+    public partial bool MinimizeToTray { get; set; }
+
     /// <summary>"Live prices from poe.ninja". On by default; only ever fetches for a confirmed live league.</summary>
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(LiveStatus), nameof(LiveHold), nameof(LiveProblem))]
@@ -347,6 +355,8 @@ public sealed partial class SettingsViewModel : ObservableObject
         PressClick = S.PressClick;
         ExpiryDays = S.ComparableExpiryDays.ToString(CultureInfo.InvariantCulture);
         AutoUpdate = S.AutoUpdate;
+        CloseToTray = S.CloseToTray;
+        MinimizeToTray = S.MinimizeToTray;
         LivePricesOn = S.LivePrices;
         TradeSearchOn = S.TradeSearch;
         OnPricesChanged();
@@ -406,6 +416,10 @@ public sealed partial class SettingsViewModel : ObservableObject
             Updates.Start(value);
         }
     }
+
+    partial void OnCloseToTrayChanged(bool value) => S.CloseToTray = value;
+
+    partial void OnMinimizeToTrayChanged(bool value) => S.MinimizeToTray = value;
 
     partial void OnLivePricesOnChanged(bool value)
     {
