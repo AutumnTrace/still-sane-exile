@@ -158,14 +158,17 @@ public class CraftViewModelTests
     });
 
     [Fact]
-    public void A_live_profile_has_no_made_up_stats_to_craft_with() => Sta.Run(() =>
+    public void A_live_league_practises_on_the_same_made_up_stats_priced_at_its_own_prices() => Sta.Run(() =>
     {
-        using var app = new TestApp(TradeRig.Live);
-
+        using var app = new TestApp(TradeRig.Live); // no prices fetched yet
+        app.Shell.SettingsPage.SetCraftUseCommand.Execute("click");
         var craft = app.Shell.Craft;
 
-        Assert.True(craft.NoData);
-        Assert.Empty(craft.Groups);
-        Assert.Contains("Only the demo has some yet, and it is made up", craft.NoDataText, StringComparison.Ordinal);
+        Assert.True(craft.HasData);
+        Assert.Equal("Expert Bombard Crossbow", craft.BaseName);
+        Orb(craft, "transmute").ClickCommand.Execute(null);
+
+        Assert.Equal(1, craft.Clicks);
+        Assert.Equal("1 click · 1 not priced", craft.SpentNote); // the league's book has no prices yet, and none are made up
     });
 }

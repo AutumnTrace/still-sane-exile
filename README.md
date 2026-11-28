@@ -87,7 +87,7 @@ GGG doesn't approve or guarantee any third-party tool, and its rules can change,
 
 ## Also in the app
 
-**Crafting** is a practice bench: a crossbow base, every orb, both essences and eight omens, the odds of rolling the stats you mark, each stat's chance in the pool, and a history of clicks with what they cost at the session's prices. Like in game, you pick an orb up, it follows the cursor, and you click the item to use it; `Shift` keeps it in hand, right-click or `Esc` puts it back (Settings → **Crafting** switches to clicking the orb itself). It runs on the demo's made-up stats, tiers and weights only, so it is practice for how orbs behave, not a forecast for a real item; a live league shows no simulator until a verified data pack exists.
+**Crafting** is a practice bench: a crossbow base, every orb, both essences and eight omens, the odds of rolling the stats you mark, each stat's chance in the pool, and a history of clicks with what they cost at the session's prices. Like in game, you pick an orb up, it follows the cursor, and you click the item to use it; `Shift` keeps it in hand, right-click or `Esc` puts it back (Settings → **Crafting** switches to clicking the orb itself). Its stats, tiers and weights are made up (no real stat data exists yet), in the demo and in a live league alike, so it is practice for how orbs behave, not a forecast for a real item; in a live league the clicks are priced at that league's poe.ninja prices.
 
 <img src="docs/screenshots/craft.png" width="720" alt="The craft simulator: orbs and omens with the game's pictures on the left, a rare crossbow with its prefixes and suffixes in the middle, a Chaos Orb in hand, and the odds of the wanted stats on the right">
 
