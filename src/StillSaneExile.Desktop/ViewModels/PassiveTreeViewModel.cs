@@ -1,6 +1,7 @@
 using System.Globalization;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using StillSaneExile.Desktop.Services;
 using StillSaneExile.Domain.Guide;
 
 namespace StillSaneExile.Desktop.ViewModels;
@@ -26,20 +27,26 @@ public sealed record TreePickViewModel(string Name, string Kind, string Stats, s
         stats.Replace(":\n", ": ", StringComparison.Ordinal).Replace("\n", separator, StringComparison.Ordinal);
 }
 
-/// <summary>The build's passive tree drawn on Path of Exile 2's tree from GGG's export, which ships with
-/// the app: the points it takes, its keystones and notables by name, and its ascendancy. The build's
-/// trees come from the pasted code; nothing is fetched.</summary>
+/// <summary>The build's passive tree drawn on Path of Exile 2's tree with the art of GGG's export, which
+/// ships with the app: the points it takes, its keystones and notables by name, its ascendancy, and the
+/// node the player picked out by clicking or with the keyboard. The build's trees come from the pasted
+/// code; nothing is fetched.</summary>
 public sealed partial class PassiveTreeViewModel : ObservableObject
 {
     private readonly Func<PassiveTree> _tree;
+    private readonly Func<PassiveTreeArt?> _art;
     private PobBuild? _build;
     private int? _picked;
     private int? _shown;
 
-    public PassiveTreeViewModel(Func<PassiveTree> tree)
+    public PassiveTreeViewModel(Func<PassiveTree> tree, Func<PassiveTreeArt?> art)
     {
         _tree = tree;
+        _art = art;
     }
+
+    /// <summary>The export's pictures, read the first time a tree is drawn. Null draws plain shapes.</summary>
+    public PassiveTreeArt? Art => CanDraw ? _art() : null;
 
     public bool HasSpecs => _build?.Trees.Count > 0;
 
@@ -62,7 +69,7 @@ public sealed partial class PassiveTreeViewModel : ObservableObject
     public bool HasWarning => Warning is not null;
 
     public string Source => _tree() is { IsEmpty: false } t
-        ? $"Drawn on the Path of Exile 2 tree from Grinding Gear Games' own export, game version {t.Version}. Wheel or the buttons to zoom, drag to move."
+        ? $"Path of Exile 2's tree and its art from Grinding Gear Games' own export, game version {t.Version}.{(_art() is null ? " Its pictures are missing, so plain shapes stand in." : "")} Wheel or + and − to zoom, drag to move, click a node to read it."
         : "";
 
     public bool HasAscendancy => Allocation?.Ascendancy is not null;
@@ -91,9 +98,33 @@ public sealed partial class PassiveTreeViewModel : ObservableObject
 
     public string HoveredText => Hovered is { } n
         ? $"{(n.Name.Length > 0 ? n.Name : KindName(n.Kind))} ({KindName(n.Kind).ToLowerInvariant()}{(Allocation?.Nodes.Contains(n.Id) == true ? ", taken" : "")}){(n.Stats.Count > 0 ? ": " + TreePickViewModel.OneLine(string.Join("\n", n.Stats), "; ") : "")}"
-        : "Point at a node to read it.";
+        : "";
 
     public bool HasHovered => Hovered is not null;
+
+    /// <summary>The node the player clicked or stepped to with the keyboard, in either drawing.</summary>
+    [ObservableProperty]
+    public partial TreeNode? Selected { get; set; }
+
+    partial void OnSelectedChanged(TreeNode? value) => OnPropertyChanged(string.Empty);
+
+    public bool HasSelected => Selected is not null;
+
+    public string SelectedName => Selected is { } n ? (n.Name.Length > 0 ? n.Name : KindName(n.Kind)) : "";
+
+    public string SelectedFacts => Selected is { } n
+        ? $"{KindName(n.Kind)}{(n.Ascendancy is not null && Allocation?.Ascendancy is { } a ? $" · {a.Name}" : "")} · {(Allocation?.Nodes.Contains(n.Id) == true ? "the build takes it" : "not taken in this tree")}"
+        : "";
+
+    public string SelectedStats => Selected is { } n ? string.Join('\n', n.Stats) : "";
+
+    public bool HasSelectedStats => SelectedStats.Length > 0;
+
+    public string SelectedNote => Selected is { } n && Allocation?.Notes.TryGetValue(n.Id, out var note) == true ? note : "";
+
+    public bool HasSelectedNote => SelectedNote.Length > 0;
+
+    public string SelectHint => "Click a node, or Tab to the tree and use the arrow keys, to read it here. Esc or a click on empty ground clears it.";
 
     [RelayCommand]
     private void ShowSpec(TreeSpecChoice? choice)
@@ -181,6 +212,7 @@ public sealed partial class PassiveTreeViewModel : ObservableObject
         Picks = a.Picks.Select(n => Pick(n, a)).ToList();
         AscendancyPicks = a.AscendancyPicks.Select(n => Pick(n, a)).ToList();
         Hovered = null;
+        Selected = null;
         OnPropertyChanged(string.Empty);
     }
 

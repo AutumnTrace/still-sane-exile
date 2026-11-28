@@ -12,14 +12,15 @@ public class PassiveTreeTests
           "classes": [ { "name": "Witch", "ascendancies": [ { "id": "Witch2", "name": "Blood Mage" } ] } ],
           "nodes": [
             { "id": 1, "name": "WITCH", "kind": "start", "x": 0, "y": 0 },
-            { "id": 2, "name": "Intelligence", "kind": "attribute", "x": 100, "y": 0, "stats": ["+5 to Intelligence"] },
+            { "id": 2, "name": "Intelligence", "kind": "attribute", "x": 100, "y": 0, "icon": "Art/Practice/Int.png", "stats": ["+5 to Intelligence"] },
             { "id": 3, "name": "Practice Notable", "kind": "notable", "x": 200, "y": 0, "stats": ["10% increased Spell Damage"] },
             { "id": 4, "name": "Practice Keystone", "kind": "keystone", "x": 300, "y": 100 },
-            { "id": 5, "name": "Something new", "kind": "brand new kind", "x": 0, "y": 300 },
+            { "id": 5, "name": "Something new", "kind": "brand new kind", "x": 0, "y": 300, "blighted": true },
+            { "id": 6, "name": "Practice Mastery", "kind": "mastery", "x": 0, "y": 600, "pattern": "Art/Practice/Pattern.png" },
             { "id": 10, "name": "Blood Mage", "kind": "ascendancyStart", "x": 0, "y": -5000, "ascendancy": "Witch2" },
             { "id": 11, "name": "Practice Ascendancy Notable", "kind": "notable", "x": 0, "y": -5200, "ascendancy": "Witch2" }
           ],
-          "edges": [ [1, 2], [2, 3], [3, 4, 200, 100], [10, 11], [4, 99] ]
+          "edges": [ [1, 2], [2, 3], [3, 4, 200, 100, 2], [10, 11], [4, 99], [5, 6, 0, 450] ]
         }
         """;
 
@@ -32,14 +33,20 @@ public class PassiveTreeTests
     public void Reads_nodes_their_kinds_and_stats_the_edges_and_the_ascendancies()
     {
         Assert.Equal("0.5.5", Tree.Version);
-        Assert.Equal(7, Tree.Nodes.Count);
+        Assert.Equal(8, Tree.Nodes.Count);
         Assert.Equal(TreeNodeKind.Attribute, Tree.Nodes[2].Kind);
         Assert.Equal(TreeNodeKind.Normal, Tree.Nodes[5].Kind); // an unknown kind is drawn as a plain node
         Assert.Equal(["10% increased Spell Damage"], Tree.Nodes[3].Stats);
         Assert.Equal("Witch2", Tree.Nodes[11].Ascendancy);
 
-        Assert.Equal(4, Tree.Edges.Count); // the edge to a node the tree does not have is dropped
+        Assert.Equal(5, Tree.Edges.Count); // the edge to a node the tree does not have is dropped
         Assert.True(Tree.Edges.Single(e => e.From == 3).IsArc);
+        Assert.Equal(2, Tree.Edges.Single(e => e.From == 3).Orbit);
+        Assert.Null(Tree.Edges.Single(e => e.From == 5).Orbit); // a curve without its orbit index (an older file)
+        Assert.Equal("Art/Practice/Int.png", Tree.Nodes[2].Icon);
+        Assert.Equal("Art/Practice/Pattern.png", Tree.Nodes[6].Pattern);
+        Assert.True(Tree.Nodes[5].Blighted);
+        Assert.False(Tree.Nodes[3].Blighted);
         Assert.False(Tree.Edges.Single(e => e.From == 1).IsArc);
         Assert.Equal(new TreeAscendancy("Witch2", "Blood Mage", "Witch"), Assert.Single(Tree.Ascendancies));
     }

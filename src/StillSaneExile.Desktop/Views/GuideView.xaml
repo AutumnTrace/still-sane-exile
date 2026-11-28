@@ -269,12 +269,17 @@
             <TextBlock Text="{Binding NoDataText}" FontSize="14" Foreground="{StaticResource Warn}" TextWrapping="Wrap" Margin="0,8,0,0" Visibility="{Binding HasData, Converter={StaticResource Vis}, ConverterParameter=invert}" />
 
             <StackPanel Visibility="{Binding CanDraw, Converter={StaticResource Vis}}">
-              <Grid Height="440" Margin="0,12,0,0">
+              <Grid Height="460" Margin="0,12,0,0">
                 <Border BorderBrush="{StaticResource Line}" BorderThickness="1">
-                  <v:PassiveTreeView x:Name="BuildTree" Allocation="{Binding Allocation}" Hovered="{Binding Hovered}" />
+                  <v:PassiveTreeView x:Name="BuildTree" Allocation="{Binding Allocation}" Art="{Binding Art}" Hovered="{Binding Hovered}" Selected="{Binding Selected}"
+                                     AutomationProperties.Name="Passive tree" ToolTip="{Binding HoveredText}" ToolTipService.IsEnabled="{Binding HasHovered}" ToolTipService.InitialShowDelay="150" />
                 </Border>
                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,8,8,0">
-                  <Button Style="{StaticResource StepButton}" Content="−" ToolTip="Zoom out" AutomationProperties.Name="Zoom out of the passive tree"
+                  <Button Style="{StaticResource StepButton}" Content="‹" ToolTip="Previous point of the build" AutomationProperties.Name="Select the previous point of the build"
+                          Command="{x:Static v:PassiveTreeView.PreviousPointCommand}" CommandTarget="{Binding ElementName=BuildTree}" />
+                  <Button Style="{StaticResource StepButton}" Content="›" ToolTip="Next point of the build" AutomationProperties.Name="Select the next point of the build" Margin="4,0,0,0"
+                          Command="{x:Static v:PassiveTreeView.NextPointCommand}" CommandTarget="{Binding ElementName=BuildTree}" />
+                  <Button Style="{StaticResource StepButton}" Content="−" ToolTip="Zoom out" AutomationProperties.Name="Zoom out of the passive tree" Margin="12,0,0,0"
                           Command="{x:Static v:PassiveTreeView.ZoomOutCommand}" CommandTarget="{Binding ElementName=BuildTree}" />
                   <Button Style="{StaticResource StepButton}" Content="+" ToolTip="Zoom in" AutomationProperties.Name="Zoom in on the passive tree" Margin="4,0,0,0"
                           Command="{x:Static v:PassiveTreeView.ZoomInCommand}" CommandTarget="{Binding ElementName=BuildTree}" />
@@ -284,19 +289,22 @@
                           Command="{x:Static v:PassiveTreeView.ShowAllCommand}" CommandTarget="{Binding ElementName=BuildTree}" />
                 </StackPanel>
               </Grid>
-              <TextBlock Text="{Binding HoveredText}" FontSize="14" TextWrapping="Wrap" Margin="0,8,0,0">
-                <TextBlock.Style>
-                  <Style TargetType="TextBlock">
-                    <Setter Property="Foreground" Value="{StaticResource TextFaint}" />
-                    <Style.Triggers>
-                      <DataTrigger Binding="{Binding HasHovered}" Value="True">
-                        <Setter Property="Foreground" Value="{StaticResource TextSoft}" />
-                      </DataTrigger>
-                    </Style.Triggers>
-                  </Style>
-                </TextBlock.Style>
-              </TextBlock>
-              <TextBlock Text="{Binding Source}" FontSize="13" Foreground="{StaticResource TextFaint}" TextWrapping="Wrap" Margin="0,4,0,0" />
+              <!-- The selected node: what the game's tooltip says, plus whether the build takes it and the author's note. -->
+              <Border Background="{StaticResource Surface3}" CornerRadius="2" Padding="14,10" Margin="0,8,0,0">
+                <StackPanel>
+                  <TextBlock Text="{Binding SelectHint}" FontSize="14" Foreground="{StaticResource TextFaint}" TextWrapping="Wrap"
+                             Visibility="{Binding HasSelected, Converter={StaticResource Vis}, ConverterParameter=invert}" />
+                  <StackPanel Visibility="{Binding HasSelected, Converter={StaticResource Vis}}">
+                    <TextBlock Text="{Binding SelectedName}" FontSize="16" FontWeight="Bold" TextWrapping="Wrap" />
+                    <TextBlock Text="{Binding SelectedFacts}" FontSize="13.5" Foreground="{StaticResource TextDim}" TextWrapping="Wrap" Margin="0,1,0,0" />
+                    <TextBlock Text="{Binding SelectedStats}" FontSize="14" Foreground="{StaticResource TextSoft}" TextWrapping="Wrap" LineHeight="19" Margin="0,6,0,0"
+                               Visibility="{Binding HasSelectedStats, Converter={StaticResource Vis}}" />
+                    <TextBlock Text="{Binding SelectedNote}" FontSize="14" FontStyle="Italic" Foreground="{StaticResource TextSoft}" TextWrapping="Wrap" Margin="0,6,0,0"
+                               Visibility="{Binding HasSelectedNote, Converter={StaticResource Vis}}" />
+                  </StackPanel>
+                </StackPanel>
+              </Border>
+              <TextBlock Text="{Binding Source}" FontSize="13" Foreground="{StaticResource TextFaint}" TextWrapping="Wrap" Margin="0,6,0,0" />
             </StackPanel>
 
             <StackPanel Visibility="{Binding HasPicks, Converter={StaticResource Vis}}">
@@ -318,8 +326,9 @@
 
             <StackPanel x:Name="BuildAscendancy" Visibility="{Binding HasAscendancy, Converter={StaticResource Vis}}">
               <TextBlock Text="{Binding AscendancyTitle}" Style="{StaticResource SectionTitle}" Margin="0,16,0,6" />
-              <Border BorderBrush="{StaticResource Line}" BorderThickness="1" Height="230" Visibility="{Binding CanDraw, Converter={StaticResource Vis}}">
-                <v:PassiveTreeView Allocation="{Binding Allocation}" AscendancyOnly="True" Hovered="{Binding Hovered}" />
+              <Border BorderBrush="{StaticResource Line}" BorderThickness="1" Height="260" Visibility="{Binding CanDraw, Converter={StaticResource Vis}}">
+                <v:PassiveTreeView Allocation="{Binding Allocation}" Art="{Binding Art}" AscendancyOnly="True" Hovered="{Binding Hovered}" Selected="{Binding Selected}"
+                                   AutomationProperties.Name="Ascendancy tree" ToolTip="{Binding HoveredText}" ToolTipService.IsEnabled="{Binding HasHovered}" ToolTipService.InitialShowDelay="150" />
               </Border>
               <ItemsControl ItemsSource="{Binding AscendancyPicks}" Focusable="False" Margin="0,6,0,0" AutomationProperties.Name="Ascendancy notables the build takes">
                 <ItemsControl.ItemTemplate>

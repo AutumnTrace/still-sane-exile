@@ -448,6 +448,15 @@ public class AccessibilityTests
         Assert.Contains("Zoom in on the passive tree", stops);
         Assert.Contains("Fit the passive tree to the build", stops);
         Assert.Contains("Show the whole passive tree", stops);
+        Assert.Contains("Passive tree", stops); // the drawing itself: arrow keys walk the build's points
+        Assert.Contains("Select the previous point of the build", stops);
+        Assert.Contains("Select the next point of the build", stops);
+        Assert.Contains("Ascendancy tree", stops);
+        Assert.True(stops.IndexOf("Show tree Act 2") < stops.IndexOf("Passive tree"));
+        Assert.True(stops.IndexOf("Passive tree") < stops.IndexOf("Select the previous point of the build"));
+        Assert.True(stops.IndexOf("Select the next point of the build") < stops.IndexOf("Zoom out of the passive tree"));
+        Assert.True(stops.IndexOf("Show the whole passive tree") < stops.IndexOf("Ascendancy tree"));
+        Assert.True(stops.IndexOf("Ascendancy tree") < stops.IndexOf("Show skill set Act 1"));
         Assert.True(stops.IndexOf("One more ascendancy") < stops.IndexOf("Show tree Act 1"));
         Assert.True(stops.IndexOf("Show the whole passive tree") < stops.IndexOf("Show skill set Act 1"));
         Assert.Contains("Show skill set Act 1", stops);
@@ -608,7 +617,8 @@ public class AccessibilityTests
                 var name = SpokenName(stop);
                 Assert.True(Sayable(name), $"{Describe(stop)} has no name a screen reader can say: '{name}'");
                 Assert.DoesNotContain("StillSaneExile.", name, StringComparison.Ordinal);
-                Assert.True(stop is ButtonBase or TextBoxBase or Slider or ListBoxItem or Hyperlink, $"{Describe(stop)} is a Tab stop but not a control");
+                // The passive tree drawing is a stop of its own: the arrow keys move through the build's points there.
+                Assert.True(stop is ButtonBase or TextBoxBase or Slider or ListBoxItem or Hyperlink or PassiveTreeView, $"{Describe(stop)} is a Tab stop but not a control");
                 if (stop is UIElement element)
                 {
                     AssertFocusShows(window, element, name);
