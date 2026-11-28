@@ -98,12 +98,15 @@ public class PeekWindowTests
             var item = app.Shell.Inspect.AddFromText(app.ItemText(Crossbow), "test")!;
             IPeekSurface surface = peek;
 
-            surface.ShowCard(PeekViewModel.From(item, true, "Let go to hide", "F3"), new CardRequest(CardPosition.Fixed, 0.85, over, new ScreenPoint((int)origin.X + 10, (int)origin.Y + 10), item.Item.RawText, new FixedSpot(0.5, 0.25), LessMotion: true));
+            surface.ShowCard(PeekViewModel.From(item, true, "Let go to hide", "F3"), new CardRequest(CardPosition.Fixed, 0.85, over, new ScreenPoint((int)origin.X + 10, (int)origin.Y + 10), item.Item.RawText, new FixedSpot(0.5, 0.05), LessMotion: true));
             Sta.Drain();
 
             // The visible card's corner, inside the room the window keeps around it for the slide and the flash.
+            // The spot is near the top so the whole card fits under it even where Windows keeps the stand-in
+            // game window within a small screen (1024 × 768 on CI): a card that would not fit is moved up to
+            // stay on the game window, which is right, but not what this test is about.
             Assert.Equal(game.Left + (game.ActualWidth * 0.5), peek.Left + 22, 0);
-            Assert.Equal(game.Top + (game.ActualHeight * 0.25), peek.Top + 20, 0);
+            Assert.Equal(game.Top + (game.ActualHeight * 0.05), peek.Top + 20, 0);
         }
         finally
         {
