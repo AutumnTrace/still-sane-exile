@@ -29,12 +29,14 @@ against these, and a reviewer will reject anything that bends them:
 6. **Nothing about the player leaves the computer.** No telemetry. Requests carry only what the request
    needs (league, category, the search the player built) and the User-Agent
    `StillSaneExile/<version> (+https://github.com/AutumnTrace/still-sane-exile)`.
-7. **No made-up data that looks real.** The demo profile's prices, listings and data pack are synthetic and
-   cover only the practice items in `fixtures/`; a live profile never sees them (`PriceBookGuard`), and
-   nothing carries across leagues. Game facts that have not been checked in the game (route packs, key
-   defaults, data packs) are labelled unverified in the data and the UI. When unsure, leave it out.
-   One exception, the owner's decision of 28 Nov 2026: the craft simulator runs on the made-up pack in
-   every profile, labelled "practice · made-up stats" on the page, because no real stat data exists yet.
+7. **No made-up data that looks real.** The demo profile's prices and listings are synthetic and cover
+   only the practice items in `fixtures/`; a live profile never sees them (`PriceBookGuard`), and nothing
+   carries across leagues. Listings never show a roll the game can't have. The practice data pack holds the
+   game's own 0.5.5 data for those items (from Path of Building's export) with made-up roll weights, and
+   says so. Game facts that have not been checked in the game (route packs, key defaults, data packs) are
+   labelled unverified in the data and the UI. When unsure, leave it out. One exception, the owner's
+   decision of 28 Nov 2026: the craft simulator runs on the practice pack in every profile, labelled
+   "practice · made-up odds" on the page, because no verified data pack with weights exists yet.
 8. **Overlays never steal focus.** The HUD card is click-through while the key is held and stays
    `WS_EX_NOACTIVATE` even when pinned (activating it makes a fullscreen game drop out). Only the F3 price
    check window takes focus, and it hands it back to the game when it closes.
@@ -51,7 +53,7 @@ If a feature seems to need breaking one of these, stop and ask the owner instead
 | `tests/StillSaneExile.Desktop.Tests` | xunit tests for the app: seams with fakes (`Fakes.cs`), STA helpers (`Sta.Run`, `UiThread.Run`), `TestApp`, and `AccessibilityTests` (tab order, names, visible focus). |
 | `tools/CaptureSpike` (+ `.Tests`) | Developer tool from the #4 spike: one Windows.Graphics.Capture frame per press. Not packed with the app. |
 | `tools/TreeArt` | Developer tool for `scripts/update-passive-tree.ps1`: turns the passive tree export's WebP sheets into the JPEG and PNG sheets and atlas in `data/tree/art/` (SkiaSharp). Not in the solution, not packed. |
-| `fixtures/` | Synthetic test and demo data (items, demo price book, data pack, poe.ninja shapes, wealth CSVs). Copied to the app output; never real market data. |
+| `fixtures/` | Test and demo data: practice items and the practice data pack (the game's 0.5.5 stats for them, made-up weights), and synthetic prices, listings, poe.ninja shapes and wealth CSVs. Copied to the app output; never real market data. |
 | `data/` | Data the app ships: route packs (`routes/`), the trade site's filter ids (`trade/trade-data.json`, refreshed by `scripts/update-trade-data.ps1`), the passive tree and its art from GGG's export (`tree/poe2-tree.json` and `tree/art/`, refreshed by `scripts/update-passive-tree.ps1`), poe.ninja categories (`poe-ninja.json`). |
 | `scripts/` | `pack-local.ps1` (publish + `vpk pack`, used by CI and releases), `smoke-packed.ps1` (starts the packed app once), `release.ps1`, `release-notes.ps1`, `verify-release.ps1`, `update-trade-data.ps1`, `update-passive-tree.ps1`, `update-currency-icons.ps1`, `make-icon.ps1`. |
 | `docs/` | The source of truth for behaviour and decisions; see below. |
