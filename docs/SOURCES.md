@@ -4,6 +4,8 @@ Milestone 0 asks for a source matrix, real-versus-fixture coverage, and proof th
 
 The source ledger below comes from the project handoff spec (reviewed 27 November 2026). **Apart from rows 1, 12 and 17 to 24, it has not been re-verified in this repository.** Row 1 was checked against GGG's live policy page on 27 November 2026: see [GGG's third-party policy](#ggg-third-party-policy-checked-27-november-2026). Rows 17 and 18 were added and checked on the same day. Row 12 was re-read and rows 22 to 24 added on 28 November 2026. Recheck each source before a release and whenever a pack or provider changes.
 
+How the game itself works (affixes and tiers, the copy formats, every crafting currency, gems, campaign, leagues, trade), with the patch notes and data each fact comes from, is in [GAME.md](GAME.md).
+
 ## Providers and references
 
 | # | Source | What it allows / says (per spec) | How SSE uses it | Status |
