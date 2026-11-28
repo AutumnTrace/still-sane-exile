@@ -234,9 +234,11 @@ public static partial class ItemTextParser
 
     private static bool IsStateLine(string line) => StateOf(line) != ItemStates.None;
 
+    // "Twice Corrupted": an item corrupted a second time (the trade site's "doubleCorrupted"), in the game's
+    // English strings; whether the copy prints it rather than "Corrupted" is not checked yet.
     private static ItemStates StateOf(string line) => line.Trim() switch
     {
-        "Corrupted" => ItemStates.Corrupted,
+        "Corrupted" or "Twice Corrupted" => ItemStates.Corrupted,
         "Unidentified" => ItemStates.Unidentified,
         "Mirrored" => ItemStates.Mirrored,
         "Fractured Item" => ItemStates.Fractured,
@@ -424,7 +426,7 @@ public static partial class ItemTextParser
         {
             if (current is not null)
             {
-                b.Mods.Add(new ModGroup(current.Source, current.Side, current.Name, current.Tier, current.Tags, lines.ToList(), FromAdvancedCopy: true));
+                b.Mods.Add(new ModGroup(current.Source, current.Side, current.Name, current.Tier, current.Tags, lines.ToList(), FromAdvancedCopy: true, FromCorruption: current.FromCorruption));
                 if (current.Source == ModSource.Fractured)
                 {
                     b.States |= ItemStates.Fractured;
@@ -461,7 +463,7 @@ public static partial class ItemTextParser
         Flush();
     }
 
-    private sealed record HeaderInfo(ModSource Source, AffixSide Side, string? Name, int? Tier, IReadOnlyList<string> Tags);
+    private sealed record HeaderInfo(ModSource Source, AffixSide Side, string? Name, int? Tier, IReadOnlyList<string> Tags, bool FromCorruption);
 
     private static HeaderInfo ReadHeader(Match header, ItemRarity rarity)
     {
@@ -469,11 +471,13 @@ public static partial class ItemTextParser
         var side = kind.Contains("Prefix", StringComparison.OrdinalIgnoreCase) ? AffixSide.Prefix
             : kind.Contains("Suffix", StringComparison.OrdinalIgnoreCase) ? AffixSide.Suffix
             : AffixSide.None;
+        // Enchantments head their lines "{ Enhancement }" (an anointment) or "{ Corruption Enhancement — Attack }"
+        // (added by corruption, drawn red in game); a normal copy ends both in "(enchant)" instead.
         var source = kind switch
         {
             _ when kind.Contains("Implicit", StringComparison.OrdinalIgnoreCase) => ModSource.Implicit,
             _ when kind.Contains("Rune", StringComparison.OrdinalIgnoreCase) || kind.Contains("Socket", StringComparison.OrdinalIgnoreCase) => ModSource.Rune,
-            _ when kind.Contains("Enchant", StringComparison.OrdinalIgnoreCase) => ModSource.Enchant,
+            _ when kind.Contains("Enchant", StringComparison.OrdinalIgnoreCase) || kind.Contains("Enhancement", StringComparison.OrdinalIgnoreCase) => ModSource.Enchant,
             _ when kind.Contains("Desecrated", StringComparison.OrdinalIgnoreCase) => ModSource.Desecrated,
             _ when kind.Contains("Fractured", StringComparison.OrdinalIgnoreCase) => ModSource.Fractured,
             _ when kind.Contains("Crafted", StringComparison.OrdinalIgnoreCase) || kind.Contains("Master", StringComparison.OrdinalIgnoreCase) => ModSource.Crafted,
@@ -486,7 +490,7 @@ public static partial class ItemTextParser
         var tags = header.Groups["tags"].Success
             ? header.Groups["tags"].Value.Split(',', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries)
             : [];
-        return new HeaderInfo(source, side, name, tier, tags);
+        return new HeaderInfo(source, side, name, tier, tags, FromCorruption: kind.StartsWith("Corruption ", StringComparison.OrdinalIgnoreCase));
     }
 
     private static int? IntOrNull(string s)

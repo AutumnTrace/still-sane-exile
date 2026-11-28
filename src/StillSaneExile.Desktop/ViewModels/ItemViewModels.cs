@@ -24,18 +24,30 @@ public sealed partial class SearchRowViewModel : ObservableObject
 {
     public const string AmbiguousHint = "Can’t tell which stat this is — Ctrl+Alt+C shows it";
 
-    private readonly Action _changed;
+    public const string CorruptionUnknownHint = "Can’t tell if corruption added this — Ctrl+Alt+C shows it";
 
-    public SearchRowViewModel(WorksheetRow row, LineReading? reading, Action changed)
+    private readonly Action _changed;
+    private readonly bool _corruptedItem;
+
+    /// <param name="corruptedItem">The copy says the item is corrupted.</param>
+    public SearchRowViewModel(WorksheetRow row, LineReading? reading, Action changed, bool corruptedItem = false)
     {
         Row = row;
         Reading = reading;
         Roll = RollView.From(reading);
         _changed = changed;
+        _corruptedItem = corruptedItem;
     }
 
     public WorksheetRow Row { get; }
     public LineReading? Reading { get; }
+
+    /// <summary>Corruption added this stat, as the game says in an advanced copy: a red "corrupted" tag
+    /// beside it.</summary>
+    public bool FromCorruption => Reading?.Group.FromCorruption == true;
+
+    /// <summary>The checkbox's name: the stat, and "corrupted" when corruption added it.</summary>
+    public string SpokenText => FromCorruption ? $"{Text}, corrupted" : Text;
 
     /// <summary>The stat's tier and where its roll sits in the tier's range, under its text; null when
     /// neither is known (a normal copy without a data pack, a derived number).</summary>
@@ -62,7 +74,7 @@ public sealed partial class SearchRowViewModel : ObservableObject
     public string RaiseName => $"Raise the {(IsAtMost ? "maximum" : "minimum")} for {Text}";
 
     /// <summary>The row as a screen reader says it (WPF reads a list row through ToString).</summary>
-    public override string ToString() => Roll is { } r ? $"{Text}, {r.Spoken}" : Text;
+    public override string ToString() => Roll is { } r ? $"{SpokenText}, {r.Spoken}" : SpokenText;
 
     /// <summary>Where a stat comes from when that is not an ordinary affix: "Rune", "Implicit", "Enchant",
     /// else nothing. The tier sits under the stat, with its roll.</summary>
@@ -78,6 +90,8 @@ public sealed partial class SearchRowViewModel : ObservableObject
         IsAmbiguous ? AmbiguousHint
         : Row.Id == ComparisonWorksheet.PhysicalDpsId ? "Damage per second from physical hits. Best single number for a weapon."
         : Row.Kind == RowKind.Rune ? "From a rune — buyers rarely care"
+        // A normal copy ends corruption enchants and anointments alike in "(enchant)"; an advanced one tells them apart.
+        : Row.Kind == RowKind.Enchant && _corruptedItem && Reading is { Group.FromAdvancedCopy: false } ? CorruptionUnknownHint
         : !Row.Supported ? "Not in the trade site link: set it by hand there"
         : Reading?.Line.Components.Count > 1 && Row.Actual is { } a ? $"Searched by the average ({RollQuality.Num(Math.Round(a, 1))})"
         : null;
@@ -323,7 +337,7 @@ public sealed class ComparableViewModel(Comparable c, string display, bool seede
 
 /// <summary>Everything the price check shows for one item snapshot. The Inspect page and the in-game
 /// price check window bind to the same object, so a change in one shows in the other.</summary>
-/// <remarks>Changing the search (a tick, a number, strictness, buy-now) never searches: it marks
+/// <remarks>Changing the search (a tick, a number, strictness, buy-now, the Corrupted tag) never searches: it marks
 /// the result shown as old ("Search to update") until the player clicks Search. The demo's practice items
 /// get their first result at once, from synthetic listings; a live item gets nothing from the trade site
 /// until Search is clicked, so opening a card (a key press) never makes a request.</remarks>
@@ -370,7 +384,7 @@ public sealed partial class ItemViewModel : ObservableObject
         _site = site;
         Reading = ItemReader.Read(item, session.Pack);
         Worksheet = NewWorksheet();
-        SearchRows = new ObservableCollection<SearchRowViewModel>(Worksheet.Rows.Select(r => new SearchRowViewModel(r, ReadingFor(r), OnSearchChanged)));
+        SearchRows = new ObservableCollection<SearchRowViewModel>(Worksheet.Rows.Select(r => new SearchRowViewModel(r, ReadingFor(r), OnSearchChanged, IsCorrupted)));
         RollRows = Reading.Lines
             .Where(l => l.Line.Components.Count > 0 && (l.Source is not (ModSource.Implicit or ModSource.Rune or ModSource.Enchant) || l.Rolls.Any(r => r.HasBar)))
             .Select(l => new RollRowViewModel(l, item.Copy == CopyKind.Advanced))
@@ -601,6 +615,37 @@ public sealed partial class ItemViewModel : ObservableObject
         }
     }
 
+    /// <summary>The copy says the item is corrupted.</summary>
+    public bool IsCorrupted => Item.States.HasFlag(ItemStates.Corrupted);
+
+    /// <summary>The "Corrupted" tag by the item level: on a corrupted item with a search to change.</summary>
+    public bool ShowsCorruptedTag => IsCorrupted && ShowsWorksheet;
+
+    /// <summary>A corrupted item's search: corrupted items only (the tag on, as it starts), or corrupted or not
+    /// (off). Like the other search choices it never searches by itself. An item that is not corrupted keeps
+    /// searching for items that are not.</summary>
+    public bool CorruptedOnly
+    {
+        get => Worksheet.Corrupted == true;
+        set
+        {
+            if (IsCorrupted && CorruptedOnly != value)
+            {
+                Worksheet.Corrupted = value ? true : null;
+                OnPropertyChanged();
+                OnPropertyChanged(nameof(CorruptedTip));
+                OnSearchChanged();
+            }
+        }
+    }
+
+    public string CorruptedTip => CorruptedOnly
+        ? "Searching corrupted items only. Click to search corrupted or not."
+        : "Searching corrupted or not. Click to search corrupted items only.";
+
+    [RelayCommand]
+    private void ToggleCorrupted() => CorruptedOnly = !CorruptedOnly;
+
     /// <summary>On the card, when a normal copy left every stat without a tier or range: the game's advanced
     /// copy prints them. Null when there is nothing to add.</summary>
     public string? AdvancedCopyHint =>
@@ -647,6 +692,7 @@ public sealed partial class ItemViewModel : ObservableObject
     private string SearchKey() => string.Join("|",
         Trade?.Json ?? "",
         Worksheet.BuyNowOnly,
+        Worksheet.Corrupted,
         Worksheet.MinItemLevel,
         string.Join(";", Worksheet.Rows.Where(r => r.Selected).Select(r => $"{r.Id}:{r.Min}:{r.Max}:{r.Match}:{r.Group}")));
 
@@ -781,7 +827,7 @@ public sealed partial class ItemViewModel : ObservableObject
             r.Refresh();
         }
 
-        OnPropertyChanged(nameof(BuyNowOnly));
+        OnSearchChoicesChanged();
         OnSearchChanged();
         var searched = old._resultRows.Select(r => r.Row.Id).ToHashSet(StringComparer.Ordinal);
         ApplyPage(page, key, SearchRows.Where(r => searched.Contains(r.Row.Id)).ToList());
@@ -887,8 +933,16 @@ public sealed partial class ItemViewModel : ObservableObject
             r.Refresh();
         }
 
-        OnPropertyChanged(nameof(BuyNowOnly));
+        OnSearchChoicesChanged();
         OnSearchChanged();
+    }
+
+    /// <summary>The worksheet's own choices were replaced at once (reset, carried over): the controls re-read them.</summary>
+    private void OnSearchChoicesChanged()
+    {
+        OnPropertyChanged(nameof(BuyNowOnly));
+        OnPropertyChanged(nameof(CorruptedOnly));
+        OnPropertyChanged(nameof(CorruptedTip));
     }
 
     /// <summary>Opens this search on the official trade site in the default browser, only on a click.

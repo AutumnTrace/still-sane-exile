@@ -147,6 +147,79 @@ public class AccessibilityTests
         }
     });
 
+    private const string Helmet = "rare-helmet-corrupted-advanced.txt";
+    private const string CorruptedTag = "Search corrupted items only";
+
+    [Fact]
+    public void The_Corrupted_tag_of_the_price_check_works_from_the_keyboard_and_says_whether_it_is_on() => UiThread.Run(() =>
+    {
+        using var app = new TestApp();
+        var item = app.Shell.Inspect.AddFromText(app.ItemText(Helmet), "test")!;
+        PriceCheckView View() => new() { DataContext = item, Width = 600, CloseCommand = new CommunityToolkit.Mvvm.Input.RelayCommand(() => { }) };
+
+        var on = Check(new ScrollViewer { Content = View(), VerticalScrollBarVisibility = ScrollBarVisibility.Auto }); // "Selected" while on
+
+        Assert.Equal(["Close the price check", CorruptedTag], on[..2]);
+        Assert.Contains("+74 to Accuracy Rating, corrupted", on);
+
+        var window = Show(View());
+        try
+        {
+            Flush(window);
+            var tag = Descendants<Button>(window).Single(b => SpokenName(b) == CorruptedTag);
+            Assert.Equal("Selected", Peer(tag).GetItemStatus());
+
+            ((System.Windows.Automation.Provider.IInvokeProvider)Peer(tag).GetPattern(PatternInterface.Invoke)).Invoke();
+            Flush(window);
+
+            Assert.False(item.CorruptedOnly);
+            Assert.Equal("", Peer(tag).GetItemStatus());
+            Assert.True(item.IsStale);
+        }
+        finally
+        {
+            window.Close();
+        }
+
+        var off = Check(new ScrollViewer { Content = View(), VerticalScrollBarVisibility = ScrollBarVisibility.Auto });
+        Assert.Equal(CorruptedTag, off[1]);
+    });
+
+    [Fact]
+    public void The_Corrupted_tag_is_clicked_on_the_pinned_card_and_only_shown_on_the_held_one() => UiThread.Run(() =>
+    {
+        using var app = new TestApp();
+        var item = app.Shell.Inspect.AddFromText(app.ItemText(Helmet), "test")!;
+        var card = ViewModels.PeekViewModel.From(item, true, ViewModels.PeekViewModel.ReleaseHintFor(Domain.Capture.HoldMode.Hold), "F3");
+        card.IsPinned = true;
+
+        var stops = Check(new PeekCard
+        {
+            DataContext = card,
+            CloseCommand = new CommunityToolkit.Mvvm.Input.RelayCommand(() => { }),
+            MoreCommand = new CommunityToolkit.Mvvm.Input.RelayCommand(() => { }),
+        });
+
+        Assert.Equal(["Close the price card", CorruptedTag], stops[..2]);
+        Assert.Contains("+74 to Accuracy Rating, corrupted", stops);
+
+        card.IsPinned = false;
+        var held = new PeekCard { DataContext = card };
+        var window = Show(held);
+        try
+        {
+            Flush(window);
+            Assert.DoesNotContain(Descendants<ButtonBase>(window), b => b.IsVisible);
+            var shown = (ContentControl)held.FindName("CorruptedTag");
+            Assert.True(shown.IsVisible);
+            Assert.Equal("active", shown.Tag);
+        }
+        finally
+        {
+            window.Close();
+        }
+    });
+
     [Fact]
     public void Ticking_a_stat_on_the_pinned_card_marks_its_price_old_and_Search_updates_it() => UiThread.Run(() =>
     {

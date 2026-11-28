@@ -136,8 +136,38 @@ public static class SnapshotRenderer
         Save(priceCheck, Path.Combine(dir, "price-check-window.png"));
         priceCheck.DataContext = baseline;
         Save(priceCheck, Path.Combine(dir, "price-check-baseline.png"));
+        RenderCorrupted(shell, priceCheck, dir);
         priceCheck.Close();
         main.Close();
+    }
+
+    /// <summary>A corrupted item (the synthetic helmet in fixtures/items, not one of the practice buttons): the
+    /// Corrupted tag by the item level on, then clicked off before Search; the stat corruption added tagged
+    /// red. Added last, so the screens above keep their session list.</summary>
+    private static void RenderCorrupted(ShellViewModel shell, PriceCheckWindow priceCheck, string dir)
+    {
+        var text = File.ReadAllText(Path.Combine(shell.Paths.Fixtures, "items", "rare-helmet-corrupted-advanced.txt"));
+        if (shell.Inspect.AddFromText(text, "practice") is not { } helmet)
+        {
+            return;
+        }
+
+        priceCheck.DataContext = helmet;
+        Save(priceCheck, Path.Combine(dir, "price-check-corrupted.png"));
+
+        var peek = new PeekWindow { Left = -20000, Top = 0 };
+        var card = PeekViewModel.From(helmet, true, PeekViewModel.ReleaseHintFor(shell.Settings.PeekMode), shell.Settings.OpenLastKey.Label);
+        peek.DataContext = card;
+        peek.Show();
+        Save(peek, Path.Combine(dir, "peek-corrupted.png"));
+        card.IsPinned = true;
+        Save(peek, Path.Combine(dir, "peek-corrupted-pinned.png"));
+
+        helmet.CorruptedOnly = false;
+        Save(peek, Path.Combine(dir, "peek-corrupted-pinned-off.png"));
+        Save(priceCheck, Path.Combine(dir, "price-check-corrupted-off.png"));
+        helmet.CorruptedOnly = true;
+        peek.Close();
     }
 
     /// <summary>A copy of <paramref name="item"/> whose price is its price book baseline, with no listings.</summary>

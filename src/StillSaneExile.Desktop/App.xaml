@@ -10,7 +10,8 @@
            bronze borders, small caps for headings, item names in their rarity colour, stats in the game's blue,
            and prices coloured like a loot filter label (ValueLabel, Tier* below). Corners are square.
            Colour rules: gold (Accent) is only for the search (tick boxes, numbers you can change, the stat
-           count, the search button) and the chosen one of a few. Rarity colours only on item names.
+           count, the search button) and the chosen one of a few. Rarity colours only on item names. Red
+           (Corrupted*) only for corruption.
            Contrast (docs/ACCESSIBILITY.md): every text colour, TextFaint included, reads at 4.5:1 or more on
            every surface up to Surface4 and on a ticked row; the empty tick box (Unchecked) at 3:1 or more on
            Surface3. -->
@@ -60,6 +61,12 @@
       <SolidColorBrush x:Key="RarityUnique" Color="#D2803F" />
       <SolidColorBrush x:Key="RarityCurrency" Color="#C8BFA6" />
       <SolidColorBrush x:Key="RarityGem" Color="#1BA29B" />
+      <!-- Corruption, as the game draws "Corrupted" in red. Its own #D20000 reads at 2.7 to 3.5:1 on these
+           surfaces, too dark for text, so the text is a lighter red (4.9:1 or more, ticked rows included) and
+           the game's red outlines the tag. -->
+      <SolidColorBrush x:Key="Corrupted" Color="#FF5C5C" />
+      <SolidColorBrush x:Key="CorruptedEdge" Color="#D20000" />
+      <SolidColorBrush x:Key="CorruptedTint" Color="#26D20000" />
       <!-- Price labels, loudest first: white and red, red, orange, amber, tan, dark. The orange label takes
            dark text: white on it reads at 3.7:1 only. -->
       <SolidColorBrush x:Key="TierSFill" Color="#FFFFFF" />
@@ -284,6 +291,84 @@
         <Setter Property="Padding" Value="0" />
         <Setter Property="Background" Value="Transparent" />
         <Setter Property="Foreground" Value="{StaticResource TextDim}" />
+      </Style>
+
+      <!-- A small tag in small caps for corruption ("Corrupted" by the item level, "corrupted" beside a stat).
+           Tag = "active" draws it on: red text in the game's red outline. Off it is grey and struck through, so
+           it reads as off without the colour. Focus is a ring around the tag. -->
+      <ControlTemplate x:Key="CorruptedTagTemplate" TargetType="ContentControl">
+        <Grid>
+          <Border Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}"
+                  Padding="{TemplateBinding Padding}" SnapsToDevicePixels="True">
+            <TextBlock x:Name="text" Text="{Binding Content, RelativeSource={RelativeSource TemplatedParent}}" Foreground="{TemplateBinding Foreground}"
+                       TextDecorations="Strikethrough" VerticalAlignment="Center" />
+          </Border>
+          <Border x:Name="ring" Margin="-3" BorderBrush="{StaticResource Text}" BorderThickness="2" Visibility="Hidden" IsHitTestVisible="False" SnapsToDevicePixels="True" />
+        </Grid>
+        <ControlTemplate.Triggers>
+          <Trigger Property="Tag" Value="active">
+            <Setter TargetName="text" Property="TextDecorations" Value="{x:Null}" />
+          </Trigger>
+          <Trigger Property="IsKeyboardFocused" Value="True">
+            <Setter TargetName="ring" Property="Visibility" Value="Visible" />
+          </Trigger>
+        </ControlTemplate.Triggers>
+      </ControlTemplate>
+
+      <!-- The tag that only shows: beside a stat, and by the item level on the held card. -->
+      <Style x:Key="CorruptedTag" TargetType="ContentControl">
+        <Setter Property="Focusable" Value="False" />
+        <Setter Property="IsTabStop" Value="False" />
+        <Setter Property="FontFamily" Value="{StaticResource CapsFont}" />
+        <Setter Property="FontWeight" Value="Bold" />
+        <Setter Property="FontSize" Value="12.5" />
+        <Setter Property="Padding" Value="5,0,5,1" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="VerticalAlignment" Value="Center" />
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="BorderBrush" Value="{StaticResource Unchecked}" />
+        <Setter Property="Foreground" Value="{StaticResource TextFaint}" />
+        <Setter Property="Template" Value="{StaticResource CorruptedTagTemplate}" />
+        <Style.Triggers>
+          <DataTrigger Binding="{Binding Tag, RelativeSource={RelativeSource Self}}" Value="active">
+            <Setter Property="Background" Value="{StaticResource CorruptedTint}" />
+            <Setter Property="BorderBrush" Value="{StaticResource CorruptedEdge}" />
+            <Setter Property="Foreground" Value="{StaticResource Corrupted}" />
+          </DataTrigger>
+        </Style.Triggers>
+      </Style>
+
+      <!-- The same tag as a toggle you click (the price check, the pinned card). Tag = "active" is on, and
+           screen readers hear it as "Selected" (BaseButton). -->
+      <Style x:Key="CorruptedToggle" TargetType="Button" BasedOn="{StaticResource BaseButton}">
+        <Setter Property="FontFamily" Value="{StaticResource CapsFont}" />
+        <Setter Property="FontWeight" Value="Bold" />
+        <Setter Property="FontSize" Value="13" />
+        <Setter Property="MinHeight" Value="0" />
+        <Setter Property="Padding" Value="6,0,6,1" />
+        <Setter Property="VerticalAlignment" Value="Center" />
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="BorderBrush" Value="{StaticResource Unchecked}" />
+        <Setter Property="Foreground" Value="{StaticResource TextFaint}" />
+        <Setter Property="Template" Value="{StaticResource CorruptedTagTemplate}" />
+        <Style.Triggers>
+          <Trigger Property="IsMouseOver" Value="True">
+            <Setter Property="BorderBrush" Value="{StaticResource EdgeStrong}" />
+            <Setter Property="Foreground" Value="{StaticResource TextDim}" />
+          </Trigger>
+          <DataTrigger Binding="{Binding Tag, RelativeSource={RelativeSource Self}}" Value="active">
+            <Setter Property="Background" Value="{StaticResource CorruptedTint}" />
+            <Setter Property="BorderBrush" Value="{StaticResource CorruptedEdge}" />
+            <Setter Property="Foreground" Value="{StaticResource Corrupted}" />
+          </DataTrigger>
+          <MultiDataTrigger>
+            <MultiDataTrigger.Conditions>
+              <Condition Binding="{Binding Tag, RelativeSource={RelativeSource Self}}" Value="active" />
+              <Condition Binding="{Binding IsMouseOver, RelativeSource={RelativeSource Self}}" Value="True" />
+            </MultiDataTrigger.Conditions>
+            <Setter Property="BorderBrush" Value="{StaticResource Corrupted}" />
+          </MultiDataTrigger>
+        </Style.Triggers>
       </Style>
 
       <Style TargetType="TextBox">

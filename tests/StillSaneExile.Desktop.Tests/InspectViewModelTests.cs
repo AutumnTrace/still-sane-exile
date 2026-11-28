@@ -21,6 +21,40 @@ public class InspectViewModelTests
         Assert.Null(inspect.Message);
     });
 
+    [Fact]
+    public void The_stat_corruption_added_is_tagged_on_the_price_check_and_the_card() => Sta.Run(() =>
+    {
+        using var app = new TestApp();
+        var item = app.Shell.Inspect.AddFromText(app.ItemText("rare-helmet-corrupted-advanced.txt"), "test")!;
+
+        var corrupted = Assert.Single(item.SearchRows, r => r.FromCorruption);
+        Assert.Equal("+74 to Accuracy Rating", corrupted.Text);
+        Assert.Equal("Enchant", corrupted.Kind);
+        Assert.True(corrupted.Row.Supported); // the trade site files it under its enchant stats
+        Assert.Equal("+74 to Accuracy Rating, corrupted", corrupted.SpokenText);
+        Assert.Null(corrupted.Hint);
+
+        var card = ViewModels.PeekViewModel.From(item, true, "", "F3");
+        var row = Assert.Single(card.Rows, r => r.FromCorruption);
+        Assert.Equal("+74 to Accuracy Rating", row.Text);
+        Assert.StartsWith("+74 to Accuracy Rating, corrupted, not searched", row.ToString(), StringComparison.Ordinal);
+    });
+
+    [Fact]
+    public void A_normal_copy_says_it_can_t_tell_whether_corruption_added_an_enchant() => Sta.Run(() =>
+    {
+        using var app = new TestApp();
+        const string Enchanted = "Item Class: Helmets\nRarity: Rare\nDusk Vigil\nGladiatorial Helm\n--------\nItem Level: 78\n--------\n+74 to Accuracy Rating (enchant)\n--------\n+79 to maximum Life";
+
+        var corrupted = app.Shell.Inspect.AddFromText(Enchanted + "\n--------\nCorrupted", "hud")!;
+        var clean = app.Shell.Inspect.AddFromText(Enchanted, "hud")!;
+
+        var row = Assert.Single(corrupted.SearchRows, r => r.Row.Kind == Domain.Trade.RowKind.Enchant);
+        Assert.False(row.FromCorruption);
+        Assert.Equal(ViewModels.SearchRowViewModel.CorruptionUnknownHint, row.Hint);
+        Assert.Null(Assert.Single(clean.SearchRows, r => r.Row.Kind == Domain.Trade.RowKind.Enchant).Hint);
+    });
+
     // Hand-written in the shape of a game copy; not one of the practice items.
     private const string GameUnique = "Item Class: Belts\nRarity: Unique\nMageblood\nHeavy Belt\n--------\nItem Level: 84\n--------\n+25 to Strength (implicit)\n--------\n+30 to Dexterity\n--------\nCorrupted";
     private const string GameCurrency = "Item Class: Stackable Currency\nRarity: Currency\nDivine Orb\n--------\nStack Size: 3/20\n--------\nRandomises the numeric values of the random modifiers on an item";

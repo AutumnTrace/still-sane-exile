@@ -250,6 +250,70 @@ public class TradeSearchTests
         Assert.False(item.IsStale);
     });
 
+    private const string Helmet = "rare-helmet-corrupted-advanced.txt";
+    private const string CorruptedFilter = "\"misc_filters\":{\"filters\":{\"corrupted\":{\"option\":\"true\"}}}";
+
+    [Fact]
+    public void A_corrupted_item_searches_corrupted_items_only_until_its_tag_is_clicked_off() => Sta.Run(() =>
+    {
+        Sta.UseDispatcherContext();
+        using var app = new TestApp(TradeRig.Live);
+        TradeRig.WithPrices(app);
+        var site = new FakeTradeSite();
+        using var listings = TradeRig.Listings(site);
+        app.Shell.Listings = listings;
+        var item = app.Shell.Inspect.AddFromText(app.ItemText(Helmet), "hud")!;
+
+        Assert.True(item.ShowsCorruptedTag);
+        Assert.True(item.CorruptedOnly);
+        Assert.Contains(CorruptedFilter, item.Trade!.Json, StringComparison.Ordinal);
+        TradeRig.Search(item);
+        Assert.Contains(CorruptedFilter, site.Requests[0].Body, StringComparison.Ordinal);
+        var answer = item.Answer;
+
+        item.ToggleCorruptedCommand.Execute(null);
+        Sta.Drain();
+
+        Assert.False(item.CorruptedOnly);
+        Assert.DoesNotContain("corrupted", item.Trade!.Json, StringComparison.Ordinal); // corrupted or not
+        Assert.Contains("Corruption: any", item.Instructions, StringComparison.Ordinal);
+        Assert.Same(answer, item.Answer);
+        Assert.True(item.IsStale);
+        Assert.Equal(ItemViewModel.StaleText, item.PeekLine);
+        Assert.Equal(2, site.Requests.Count); // clicking the tag never searches
+
+        item.ToggleCorruptedCommand.Execute(null);
+        Assert.True(item.CorruptedOnly);
+        Assert.False(item.IsStale); // the search the result was found with again
+
+        item.CorruptedOnly = false;
+        TradeRig.Search(item);
+        Assert.Equal(2, site.Searches);
+        Assert.DoesNotContain("corrupted", site.Requests[2].Body, StringComparison.Ordinal);
+
+        item.ResetCommand.Execute(null);
+        Assert.True(item.CorruptedOnly);
+        Assert.Contains(CorruptedFilter, item.Trade!.Json, StringComparison.Ordinal);
+        Assert.True(item.IsStale);
+        Assert.Equal(2, site.Searches);
+    });
+
+    [Fact]
+    public void An_item_that_is_not_corrupted_has_no_tag_and_keeps_searching_items_that_are_not() => Sta.Run(() =>
+    {
+        using var app = new TestApp(TradeRig.Live);
+        var item = app.Shell.Inspect.AddFromText(app.ItemText(Crossbow), "hud")!;
+
+        Assert.False(item.ShowsCorruptedTag);
+        Assert.False(item.CorruptedOnly);
+
+        item.CorruptedOnly = true;
+        item.ToggleCorruptedCommand.Execute(null);
+
+        Assert.False(item.Worksheet.Corrupted);
+        Assert.Contains("\"corrupted\":{\"option\":\"false\"}", item.Trade!.Json, StringComparison.Ordinal);
+    });
+
     [Fact]
     public void An_hourly_price_refresh_keeps_the_search_and_its_listings_without_asking_again() => Sta.Run(() =>
     {
