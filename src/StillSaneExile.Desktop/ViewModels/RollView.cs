@@ -5,9 +5,8 @@ using StillSaneExile.Domain.Rolls;
 namespace StillSaneExile.Desktop.ViewModels;
 
 /// <summary>A stat's tier and where its roll sits in the tier's range, small enough for every row of the
-/// card: "T8  170 ━━━●━━ 179". The tier is the game's own number, drawn the same whatever it is: PoE2 counts
-/// its tiers the other way round from PoE1, and the game prints no tier count, so nothing here calls a tier
-/// good or bad.</summary>
+/// card: "T8  170 ━━━●━━ 179". The tier is the game's own number: Tier 1 is the best a stat rolls on that kind
+/// of item (docs/GAME.md §1.5). The game prints no tier count, so the badge shows the number alone.</summary>
 /// <param name="Tier">"T8", or null for a line without a tier (a unique's stat, an implicit).</param>
 /// <param name="Scored">Which end is better is known: the bar fills from the worse end, and <paramref name="Low"/>
 /// is the worse end. Otherwise it only marks the roll between the lowest and the highest number.</param>

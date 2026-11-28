@@ -43,7 +43,8 @@ public static partial class ItemTextParser
     [GeneratedRegex(@"^\{\s*(?<kind>[^""}—–]+?)\s*(?:""(?<name>[^""]*)"")?\s*(?:\((?:Tier|Rank):\s*(?<tier>\d+)\))?\s*(?:[—–-]\s*(?<tags>[^}]*?))?\s*\}$")]
     private static partial Regex AdvancedHeader();
 
-    [GeneratedRegex(@"(?<lo>\d+(?:\.\d+)?)\s*-\s*(?<hi>\d+(?:\.\d+)?)")]
+    // "414-1,043": the game separates thousands with commas.
+    [GeneratedRegex(@"(?<lo>(?:\d{1,3}(?:,\d{3})+|\d+)(?:\.\d+)?)\s*-\s*(?<hi>(?:\d{1,3}(?:,\d{3})+|\d+)(?:\.\d+)?)")]
     private static partial Regex DamageRange();
 
     [GeneratedRegex(@"\d")]
@@ -240,6 +241,8 @@ public static partial class ItemTextParser
     {
         "Corrupted" or "Twice Corrupted" => ItemStates.Corrupted,
         "Unidentified" => ItemStates.Unidentified,
+        var u when u.StartsWith("Unidentified (Tier ", StringComparison.Ordinal) => ItemStates.Unidentified,
+        "Sanctified" => ItemStates.Sanctified,
         "Mirrored" => ItemStates.Mirrored,
         "Fractured Item" => ItemStates.Fractured,
         _ => ItemStates.None,
@@ -317,27 +320,35 @@ public static partial class ItemTextParser
 
     private static void ParseRequiresLine(string value, Builder b)
     {
-        // "Level 79, 89 Str, 89 Dex" (PoE2 style). Tags such as "(augmented)" were stripped per part.
+        // "Level 79, 89 Str, 89 Dex" (PoE2 style). Tags such as "(augmented)" were stripped per part. An
+        // unidentified item can print "78 (unmet) Intelligence": the marker goes, and full names count too.
         foreach (var raw in value.Split(','))
         {
-            var (part, _) = StatText.StripTags(raw.Trim());
+            var (part, _) = StatText.StripTags(raw.Replace("(unmet)", " ", StringComparison.OrdinalIgnoreCase).Trim());
+            part = string.Join(' ', part.Split(' ', StringSplitOptions.RemoveEmptyEntries));
             if (part.StartsWith("Level", StringComparison.OrdinalIgnoreCase))
             {
                 b.ReqLevel = IntOrNull(part["Level".Length..].Trim());
             }
-            else if (part.EndsWith("Str", StringComparison.OrdinalIgnoreCase))
+            else if (Attribute(part, "Str", "Strength") is { } str)
             {
-                b.ReqStr = IntOrNull(part[..^3].Trim());
+                b.ReqStr = IntOrNull(str);
             }
-            else if (part.EndsWith("Dex", StringComparison.OrdinalIgnoreCase))
+            else if (Attribute(part, "Dex", "Dexterity") is { } dex)
             {
-                b.ReqDex = IntOrNull(part[..^3].Trim());
+                b.ReqDex = IntOrNull(dex);
             }
-            else if (part.EndsWith("Int", StringComparison.OrdinalIgnoreCase))
+            else if (Attribute(part, "Int", "Intelligence") is { } intel)
             {
-                b.ReqInt = IntOrNull(part[..^3].Trim());
+                b.ReqInt = IntOrNull(intel);
             }
         }
+
+        // "89 Str" or "78 Intelligence" → the number before the name.
+        static string? Attribute(string part, string shortName, string longName) =>
+            part.EndsWith(" " + longName, StringComparison.OrdinalIgnoreCase) ? part[..^longName.Length].Trim()
+            : part.EndsWith(shortName, StringComparison.OrdinalIgnoreCase) ? part[..^shortName.Length].Trim()
+            : null;
     }
 
     private static void ParseRequirementsBlock(IEnumerable<string> lines, Builder b)

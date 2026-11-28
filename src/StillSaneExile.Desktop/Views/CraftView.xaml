@@ -387,6 +387,13 @@
                 <TextBlock TextAlignment="Center" FontSize="15.5" Foreground="{StaticResource TextDim}" TextWrapping="Wrap" Margin="12,0,12,14" Visibility="{Binding IsEmpty, Converter={StaticResource Vis}}">
                   <Run Text="No stats yet. Start with a " /><Run Text="Transmutation" FontWeight="Bold" Foreground="{StaticResource Text}" /><Run Text=", an " /><Run Text="Alchemy" FontWeight="Bold" Foreground="{StaticResource Text}" /><Run Text=" or an " /><Run Text="Essence" FontWeight="Bold" Foreground="{StaticResource Text}" /><Run Text="." />
                 </TextBlock>
+                <ItemsControl ItemsSource="{Binding CorruptionLines}" Focusable="False" Margin="0,0,0,4">
+                  <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                      <TextBlock Text="{Binding}" FontSize="15.5" Foreground="{StaticResource Corrupted}" TextAlignment="Center" />
+                    </DataTemplate>
+                  </ItemsControl.ItemTemplate>
+                </ItemsControl>
                 <TextBlock Text="Corrupted" Style="{StaticResource Heading}" FontSize="17" Foreground="{StaticResource Corrupted}" TextAlignment="Center" Margin="0,0,0,12"
                            Visibility="{Binding IsCorrupted, Converter={StaticResource Vis}}" />
               </StackPanel>

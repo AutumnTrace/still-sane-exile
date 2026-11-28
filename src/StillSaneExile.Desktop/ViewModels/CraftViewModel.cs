@@ -205,8 +205,8 @@ public sealed partial class CraftViewModel : ObservableObject
     public IReadOnlyList<GradeViewModel> Grades =>
     [
         new(OrbGrade.Regular, "Regular", "Any stat level", Grade == OrbGrade.Regular, PickGradeCommand),
-        new(OrbGrade.Greater, "Greater", $"Only rolls stats of level {CraftEngine.MinLevel(OrbGrade.Greater)} and up", Grade == OrbGrade.Greater, PickGradeCommand),
-        new(OrbGrade.Perfect, "Perfect", $"Only rolls stats of level {CraftEngine.MinLevel(OrbGrade.Perfect)} and up", Grade == OrbGrade.Perfect, PickGradeCommand),
+        new(OrbGrade.Greater, "Greater", GradeTip(OrbGrade.Greater), Grade == OrbGrade.Greater, PickGradeCommand),
+        new(OrbGrade.Perfect, "Perfect", GradeTip(OrbGrade.Perfect), Grade == OrbGrade.Perfect, PickGradeCommand),
     ];
 
     /// <summary>The orb in hand (Settings, Crafting: like in game), or null.</summary>
@@ -256,6 +256,14 @@ public sealed partial class CraftViewModel : ObservableObject
     public bool IsEmpty => _item.Rarity == CraftRarity.Normal;
 
     public bool IsCorrupted => _item.Corrupted;
+
+    /// <summary>What a Vaal Orb added besides the word Corrupted: "Corruption enchantment (not simulated)", "Extra socket".</summary>
+    public IReadOnlyList<string> CorruptionLines => new[] { _item.Enchanted ? "Corruption enchantment (not simulated)" : null, _item.ExtraSocket ? "Extra socket" : null }
+        .OfType<string>().ToList();
+
+    /// <summary>"Transmutation and Augmentation roll stats of level 44 and up; Regal, Exalted and Chaos 35 and up."</summary>
+    private static string GradeTip(OrbGrade grade) =>
+        $"Transmutation and Augmentation roll stats of level {CraftEngine.MinLevel("transmute", grade)} and up; Regal, Exalted and Chaos {CraftEngine.MinLevel("exalted", grade)} and up. A stat whose best tier is lower still rolls.";
 
     // What I want.
     public IReadOnlyList<WantViewModel> Wants => _engine is null ? [] : _wants.Select(w => Want(w.Key, w.Value)).ToList();
@@ -604,7 +612,7 @@ public sealed partial class CraftViewModel : ObservableObject
         foreach (var name in new[]
         {
             nameof(HasData), nameof(NoData), nameof(BaseName), nameof(Implicit), nameof(ItemLevelNote), nameof(Grades), nameof(Rarity), nameof(ItemName),
-            nameof(HasItemName), nameof(BaseLine), nameof(Weapon), nameof(Sides), nameof(IsEmpty), nameof(IsCorrupted), nameof(Wants), nameof(NoWants),
+            nameof(HasItemName), nameof(BaseLine), nameof(Weapon), nameof(Sides), nameof(IsEmpty), nameof(IsCorrupted), nameof(CorruptionLines), nameof(Wants), nameof(NoWants),
             nameof(Odds), nameof(NoOdds), nameof(NoOddsText), nameof(PoolNote), nameof(Pool), nameof(History), nameof(NoHistory), nameof(Clicks),
             nameof(Spent), nameof(SpentTier), nameof(SpentNote), nameof(CanUndo),
         })
@@ -676,7 +684,8 @@ public sealed partial class CraftViewModel : ObservableObject
     private PoolSideViewModel PoolSide(AffixSide side, string title)
     {
         var e = _engine!;
-        var minLevel = CraftEngine.MinLevel(Grade);
+        // The orb that adds the next stat: Transmutation on a Normal item, Augmentation on a Magic one, Exalted on a Rare.
+        var minLevel = CraftEngine.MinLevel(_item.Rarity switch { CraftRarity.Normal => "transmute", CraftRarity.Magic => "aug", _ => "exalted" }, Grade);
         var asRarity = _item.Rarity == CraftRarity.Normal ? CraftRarity.Magic : _item.Rarity;
         var pool = e.Pool(_item, PoolSides(), ItemLevel, minLevel, asRarity);
         var total = pool.Sum(p => (double)p.Weight);

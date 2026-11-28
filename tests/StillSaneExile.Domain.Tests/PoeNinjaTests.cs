@@ -280,8 +280,8 @@ public class PoeNinjaTests
 
         Assert.Equal(PoeNinjaCatalog.Default.Categories, shipped.Categories);
         Assert.Equal(CurrencyType, shipped.Categories[0]);
-        Assert.Equal(12, shipped.Categories.Count(c => c.Overview == PoeNinjaOverview.Exchange));
-        Assert.Equal(8, shipped.Categories.Count(c => c.Overview == PoeNinjaOverview.Items));
+        Assert.Equal(14, shipped.Categories.Count(c => c.Overview == PoeNinjaOverview.Exchange));
+        Assert.Equal(9, shipped.Categories.Count(c => c.Overview == PoeNinjaOverview.Items));
     }
 
     [Fact]

@@ -70,11 +70,14 @@ public sealed class CraftEngine
     /// <summary>The orbs, with this pack's essences among them.</summary>
     public IReadOnlyList<CraftCurrency> Currencies { get; }
 
-    /// <summary>The lowest stat level a graded orb of this grade rolls.</summary>
-    public static int MinLevel(OrbGrade grade) => grade switch
+    /// <summary>The lowest stat level a graded orb rolls, the game's "Minimum Modifier Level" (0.5.0): Greater and
+    /// Perfect Transmutation and Augmentation 44 and 70, Regal, Exalted and Chaos 35 and 50 (docs/GAME.md §3.2).</summary>
+    public static int MinLevel(string currency, OrbGrade grade) => (currency, grade) switch
     {
-        OrbGrade.Greater => 35,
-        OrbGrade.Perfect => 50,
+        ("transmute" or "aug", OrbGrade.Greater) => 44,
+        ("transmute" or "aug", OrbGrade.Perfect) => 70,
+        ("regal" or "exalted" or "chaos", OrbGrade.Greater) => 35,
+        ("regal" or "exalted" or "chaos", OrbGrade.Perfect) => 50,
         _ => 0,
     };
 
@@ -126,7 +129,9 @@ public sealed class CraftEngine
     }
 
     /// <summary>What every tier that can roll next weighs: families not on the item, on a side with room
-    /// (as an item of <paramref name="asRarity"/>), from <paramref name="minLevel"/> up to the item level.</summary>
+    /// (as an item of <paramref name="asRarity"/>), from <paramref name="minLevel"/> up to the item level. A family
+    /// the minimum would shut out entirely keeps its tiers, as in the game ("except if a specific Modifier type
+    /// would be excluded entirely").</summary>
     public IReadOnlyList<PoolEntry> Pool(CraftItem item, IReadOnlyCollection<AffixSide> sides, int itemLevel, int minLevel, CraftRarity? asRarity = null)
     {
         var max = MaxPerSide(asRarity ?? item.Rarity);
@@ -139,7 +144,9 @@ public sealed class CraftEngine
                 continue;
             }
 
-            pool.AddRange(f.Tiers.Where(t => t.Level <= itemLevel && t.Level >= minLevel && t.Weight > 0).Select(t => new PoolEntry(f, t, t.Weight!.Value)));
+            var tiers = f.Tiers.Where(t => t.Level <= itemLevel && t.Weight > 0).ToList();
+            var above = tiers.Where(t => t.Level >= minLevel).ToList();
+            pool.AddRange((above.Count > 0 ? above : tiers).Select(t => new PoolEntry(f, t, t.Weight!.Value)));
         }
 
         return pool;
@@ -156,10 +163,10 @@ public sealed class CraftEngine
 
         if (item.Corrupted)
         {
-            return "This item is corrupted: nothing can change it now. Undo or start over.";
+            return "Corrupted: no orb on this bench can change it now. Undo or start over.";
         }
 
-        var ml = c.Graded ? MinLevel(setup.Grade) : 0;
+        var ml = MinLevel(currency, setup.Grade);
         if (c.Graded && ml > setup.ItemLevel)
         {
             return $"Item level {setup.ItemLevel} is too low for {setup.Grade.ToString().ToLowerInvariant()} orbs: they only roll stats of level {ml} and up.";
@@ -185,8 +192,8 @@ public sealed class CraftEngine
                 : NoRoll(Pool(item, BothSides, setup.ItemLevel, ml)),
             "regal" => item.Rarity != CraftRarity.Magic ? "Regal only works on a Magic (blue) item. Use Transmutation first."
                 : NoRoll(Pool(item, BothSides, setup.ItemLevel, ml, CraftRarity.Rare)),
-            "alch" => item.Rarity != CraftRarity.Normal ? "Alchemy only works on a Normal (white) item."
-                : NoRoll(Pool(item, BothSides, setup.ItemLevel, 0, CraftRarity.Rare)),
+            "alch" => item.Rarity is not (CraftRarity.Normal or CraftRarity.Magic) ? "Alchemy works on a Normal or Magic item."
+                : NoRoll(Pool(item with { Mods = [] }, BothSides, setup.ItemLevel, 0, CraftRarity.Rare)),
             "exalted" => item.Rarity != CraftRarity.Rare ? "Exalted only works on a Rare (yellow) item."
                 : Opposite(setup, Omen.SinistralExaltation, Omen.DextralExaltation)
                 ?? (Pool(item, ExaltSides(setup), setup.ItemLevel, ml).Count == 0
@@ -202,7 +209,6 @@ public sealed class CraftEngine
             "fracturing-orb" => item.Rarity != CraftRarity.Rare ? "Fracturing needs a Rare item."
                 : item.Mods.Count < 4 ? "Fracturing needs at least 4 stats on the item."
                 : item.Mods.Any(m => m.Fractured) ? "This item already has a fractured stat."
-                : item.Mods.All(m => m.Essence) ? "Only an essence stat is left, and it can't be fractured."
                 : null,
             "vaal" => null,
             _ => "Unknown orb.",
@@ -218,7 +224,7 @@ public sealed class CraftEngine
         }
 
         var c = Currencies.First(x => x.Id == currency);
-        var ml = c.Graded ? MinLevel(setup.Grade) : 0;
+        var ml = MinLevel(currency, setup.Grade);
         var mods = item.Mods.ToList();
         var fresh = new HashSet<int>();
         var used = new List<Omen>();
@@ -272,12 +278,14 @@ public sealed class CraftEngine
 
             case "alch":
             {
+                var wasMagic = item.Rarity == CraftRarity.Magic;
+                mods.Clear(); // a Magic item's stats are not kept
                 for (var i = 0; i < 4; i++)
                 {
                     Add(BothSides, 0, CraftRarity.Rare);
                 }
 
-                return Done(CraftRarity.Rare, RareName(), $"Now Rare with {fresh.Count} stats");
+                return Done(CraftRarity.Rare, RareName(), $"Now Rare with {fresh.Count} stats" + (wasMagic ? "; the Magic stats are gone" : ""));
             }
 
             case "exalted":
@@ -335,7 +343,7 @@ public sealed class CraftEngine
 
             case "fracturing-orb":
             {
-                var lockable = mods.Where(m => !m.Essence).ToList();
+                var lockable = mods.Where(m => !m.Fractured).ToList(); // essence stats too: real copies show fractured crafted stats
                 var m = lockable[_random.Next(lockable.Count)];
                 mods[mods.IndexOf(m)] = m with { Fractured = true };
                 fresh.Add(m.Id);
@@ -374,24 +382,23 @@ public sealed class CraftEngine
             }
         }
 
-        var ml = MinLevel(setup.Grade);
         switch (item.Rarity)
         {
             case CraftRarity.Normal:
-                Row("transmute", "Next Transmutation", Hit(item, BothSides, setup.ItemLevel, ml, open, CraftRarity.Magic));
+                Row("transmute", "Next Transmutation", Hit(item, BothSides, setup.ItemLevel, MinLevel("transmute", setup.Grade), open, CraftRarity.Magic));
                 break;
 
             case CraftRarity.Magic:
                 if (item.Mods.Count < 2)
                 {
-                    Row("aug", "Next Augmentation", Hit(item, BothSides, setup.ItemLevel, ml, open));
+                    Row("aug", "Next Augmentation", Hit(item, BothSides, setup.ItemLevel, MinLevel("aug", setup.Grade), open));
                 }
 
-                Row("regal", "Next Regal", Hit(item, BothSides, setup.ItemLevel, ml, open, CraftRarity.Rare));
+                Row("regal", "Next Regal", Hit(item, BothSides, setup.ItemLevel, MinLevel("regal", setup.Grade), open, CraftRarity.Rare));
                 break;
 
             case CraftRarity.Rare:
-                var p = Hit(item, ExaltSides(setup), setup.ItemLevel, ml, open);
+                var p = Hit(item, ExaltSides(setup), setup.ItemLevel, MinLevel("exalted", setup.Grade), open);
                 if (setup.Omens.Contains(Omen.GreaterExaltation))
                 {
                     Row("exalted", "Next Exalted (adds 2)", p is { } q ? 1 - Math.Pow(1 - q, 2) : null, estimate: true);
@@ -407,7 +414,7 @@ public sealed class CraftEngine
                     candidates = Lowest(candidates);
                 }
 
-                var chances = candidates.Select(c => Hit(item with { Mods = item.Mods.Where(m => m.Id != c.Id).ToList() }, BothSides, setup.ItemLevel, ml, open))
+                var chances = candidates.Select(c => Hit(item with { Mods = item.Mods.Where(m => m.Id != c.Id).ToList() }, BothSides, setup.ItemLevel, MinLevel("chaos", setup.Grade), open))
                     .OfType<double>().ToList();
                 Row("chaos", "Next Chaos", chances.Count > 0 ? chances.Average() : null);
                 break;
@@ -552,48 +559,55 @@ public sealed class CraftEngine
         }
     }
 
-    /// <summary>Corrupts the item, then one of four results: nothing else, every number rerolled, one stat a
-    /// tier up, or one stat gone.</summary>
+    /// <summary>Corrupts the item, then one of the game's four results for rare equipment, about equally likely
+    /// (the odds are not published): nothing else; up to three stats rerolled into new ones; a corruption
+    /// enchantment (which one is not simulated); or an extra socket, as a weapon (docs/GAME.md §3.4).</summary>
     private CraftOutcome Vaal(CraftItem item, List<CraftMod> mods, HashSet<int> fresh, int itemLevel)
     {
+        var enchanted = item.Enchanted;
+        var socket = item.ExtraSocket;
         var message = "Corrupted: no other change";
         switch (_random.Next(4))
         {
-            case 1 when mods.Count > 0:
-                Reroll(mods, fresh);
-                message = "Corrupted: every number rerolled";
-                break;
-            case 2 when mods.Count > 0:
-            {
-                var i = _random.Next(mods.Count);
-                var f = Family(mods[i].Family);
-                var better = f.Tiers.Where(t => AtLeast(f, t.Tier, mods[i].Tier) && t.Tier != mods[i].Tier && t.Level <= itemLevel)
-                    .OrderBy(t => Math.Abs(t.Tier - mods[i].Tier)).FirstOrDefault();
-                if (better is not null && !mods[i].Fractured)
-                {
-                    mods[i] = mods[i] with { Tier = better.Tier, Values = Roll(better) };
-                    fresh.Add(mods[i].Id);
-                    message = "Corrupted: one stat went up a tier";
-                }
-
-                break;
-            }
-
-            case 3 when mods.Count > 0:
+            case 1:
             {
                 var removable = mods.Where(m => !m.Fractured).ToList();
-                if (removable.Count > 0)
+                if (removable.Count == 0)
                 {
-                    var gone = removable[_random.Next(removable.Count)];
-                    mods.Remove(gone);
-                    message = $"Corrupted: lost {OneLine(gone)}";
+                    break;
                 }
 
+                var count = _random.Next(1, Math.Min(3, removable.Count) + 1);
+                var gone = removable.OrderBy(_ => _random.Next()).Take(count).ToList();
+                mods.RemoveAll(m => gone.Contains(m));
+                var added = new List<string>();
+                foreach (var _ in gone)
+                {
+                    if (Pick(Pool(item with { Mods = mods }, BothSides, itemLevel, 0)) is { } p)
+                    {
+                        var m = Make(p.Family, p.Tier);
+                        mods.Add(m);
+                        fresh.Add(m.Id);
+                        added.Add($"{OneLine(m)} (T{m.Tier})");
+                    }
+                }
+
+                message = $"Corrupted: {string.Join(", ", gone.Select(OneLine))} rerolled into {(added.Count > 0 ? string.Join(", ", added) : "nothing")}";
                 break;
             }
+
+            case 2:
+                enchanted = true;
+                message = "Corrupted: a corruption enchantment added (which one is not simulated)";
+                break;
+
+            case 3:
+                socket = true;
+                message = "Corrupted: an extra socket";
+                break;
         }
 
-        return new CraftOutcome(new CraftItem(item.Rarity, item.Name, true, mods), message, fresh, []);
+        return new CraftOutcome(new CraftItem(item.Rarity, item.Name, true, mods, enchanted, socket), message, fresh, []);
     }
 
     private string RareName() => $"{FirstNames[_random.Next(FirstNames.Length)]} {LastNames[_random.Next(LastNames.Length)]}";
