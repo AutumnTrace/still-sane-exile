@@ -2,6 +2,18 @@
 
 Every release is a tag `vX.Y.Z` on `main` that matches `<Version>` in `Directory.Build.props`. See [docs/RELEASING.md](docs/RELEASING.md).
 
+## [0.7.0] - 2026-11-28
+
+- **Crafting is open:** a practice bench with every orb, both essences, eight omens and regular, greater and perfect grades, drawn with the game's own pictures. Like in game, click an orb to pick it up and click the item to use it; hold `Shift` to keep it in hand, right-click or `Esc` to put it back. Mark the stats you want to see the odds of the next orb, check each stat's chance in the pool, and go back to any step in the history, with what the clicks cost. Its stats are made up for practice; in a live league the clicks are priced at that league's prices. Settings → **Crafting** switches to one-click orbs.
+- **Your build in the Campaign guide:** paste a Path of Building code (Generate in Path of Building, or a guide's Path of Building export). Its notes and skill sets become gem steps for the act you're in, and its passive tree is drawn on the game's own tree. Nothing is downloaded: the code is read on your computer. The saved guide link and typed notes are gone; steps you typed before stay until you paste a build.
+- **The price card answers at the cursor:** a ring the moment the key is heard, then the card beside the game's tooltip. Over nothing, a red ring says there's no item. Settings → **Price card** can put the card at the screen edge or a spot you drag it to, and has **Less motion** and an optional soft click.
+- **Tiers and rolls under every stat:** each stat on the card and in the price check shows its tier and a bar from the tier's lowest to highest number, with your roll marked. A plain `Ctrl+C` copy has no tiers; the card says `Ctrl+Alt+C` shows them.
+- **Cleaner prices:** the price tag shows the price alone, with one short line under it. Prices under 1 div show in Exalted everywhere now, uniques and currency stacks too.
+- **Price colours are yours:** Settings → **Price colours** sets where each colour starts, so on a league's first day 1 div can already be white and red. A preview shows the colours before you apply them.
+- **Corrupted items:** a red Corrupted tag next to the item level. Click it to search corrupted items only (the default) or any. Stats that came from corruption are marked red in a `Ctrl+Alt+C` copy.
+- **SSE sits in the notification area:** double-click its icon to bring the window back; right-click for Open and Quit.
+- The "Item level or higher" choice is gone from the price check for now; searches no longer filter on item level.
+
 ## [0.6.0] - 2026-11-27
 
 - **A new look that reads like the game:** dark panels in thin bronze borders, the item's name in its rarity colour, stats in the game's blue, small caps for headings, and gold for everything that belongs to your search.
