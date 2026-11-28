@@ -8,7 +8,8 @@ What SSE does for keyboard use, screen readers, contrast and text size, and what
 - Every control shows when it has keyboard focus. Buttons, tick boxes, list rows and the slider get a ring in the text colour, text boxes a gold ring, and links in release notes a ring. The number boxes of an unticked stat are dimmed, but come up to full strength while one of them has focus.
 - `Enter` or `Space` presses a button, `Space` ticks a box, and the arrow keys move through a list or change the slider.
 - **Show prices in** in the header opens its menu with `Enter` or `Space`. Focus lands on the current currency: the arrow keys or `Tab` move, `Enter` picks one, `Esc` closes the menu and returns to the button.
-- `Esc` closes the price check over the game (`F3`). The quick price card never takes the keyboard from the game: while you hold the key it is click-through, and kept open it takes clicks only, so its close button, its stats with their − and + buttons, **Search** and **All filters** (in that order, if a window does give it focus) are used with the mouse. `F3` opens the same search in the price check, which works from the keyboard, **Search** included.
+- A corrupted item's **Corrupted** tag, by the item level in the price check and on the kept-open card, is a button: `Enter` or `Space` switches the search between corrupted items only (on, red) and corrupted or not (off, grey and struck through). On the card held under the key it only shows which.
+- `Esc` closes the price check over the game (`F3`). The quick price card never takes the keyboard from the game: while you hold the key it is click-through, and kept open it takes clicks only, so its close button, a corrupted item's **Corrupted** tag, its stats with their − and + buttons, **Search** and **All filters** (in that order, if a window does give it focus) are used with the mouse. `F3` opens the same search in the price check, which works from the keyboard, **Search** included.
 - Keeping the card open means moving the mouse onto it while holding the key. **Press again to hide** (Settings → Price card) needs no held key: one press shows the card, the next hides it, and `F3` changes the search.
 - Settings is a rail of sections (League and prices, Keys, Price card, Price colours, Crafting, Live prices and trade, Stash pictures, Updates and privacy) and one section at a time. In Price colours each colour is a row read in order: where it starts, then Divine or Exalted (the chosen one reports "Selected"); **Apply**, **Undo changes** and **Default steps** are only stops once there is something for them to do. The fine print under a setting is folded into **Details** links: `Space` or `Enter` opens and closes them, and screen readers hear them expand and collapse.
 - Scroll bars page up or down when you click above or below the thumb.
@@ -16,7 +17,7 @@ What SSE does for keyboard use, screen readers, contrast and text size, and what
 
 ## Screen readers
 
-Every control has a name that says what it does and what it acts on, such as "Raise the minimum for 17% increased Attack Speed", "Remove the price 2.5 div", "Skip Defeat the Devourer" or "Change the quick price key". Rows of lists and tables read their contents ("Doom Thirst, Rare crossbow, checked at 13:30"), never the name of a program type. Buttons that pick one of a few (the page, the currency, the card position, how strict the search starts) report the chosen one with the item status "Selected".
+Every control has a name that says what it does and what it acts on, such as "Raise the minimum for 17% increased Attack Speed", "Remove the price 2.5 div", "Skip Defeat the Devourer" or "Change the quick price key". Rows of lists and tables read their contents ("Doom Thirst, Rare crossbow, checked at 13:30"), never the name of a program type. Buttons that pick one of a few (the page, the currency, the card position, how strict the search starts) report the chosen one with the item status "Selected". The **Corrupted** tag is named "Search corrupted items only" and reports "Selected" while it is on. A stat that corruption added reads with "corrupted" after it ("+74 to Accuracy Rating, corrupted").
 
 This is checked with WPF's UI Automation peers and a UI Automation client, not yet with Narrator or NVDA in daily use. Reports are welcome.
 
@@ -35,8 +36,11 @@ Text meets WCAG AA (4.5:1) on every surface it appears on, including the selecte
 | Stat, not searched |  (**3.97** on Surface4) |  | 5.91 | 5.64 | 5.33 | 4.67 | 4.56 | 5.60 |
 | Gold (accent) as text |  | same | 8.58 | 8.20 | 7.74 | 6.79 | 6.63 | 8.14 |
 | Unchecked (empty tick box) |  (**2.23** on Surface2) |  | 3.70 | 3.54 | 3.34 | 2.93 | 2.86 | 3.51 |
+| Corrupted (red, corruption only) | the game's `#D20000` (**2.66** to **3.46** everywhere) | `#FF5C5C` | 6.42 | 6.13 | 5.79 | 5.08 | 4.94 | 6.10 |
 
 Bold values were below the minimum. A ticked row is the gold at 13 % over Surface2 (); the card over a white scene is the card's 97 % Surface over white. No empty tick box sits on Surface4 or a ticked row. Links (, 8.2:1 or more), warnings and hints (8.2:1 or more), the rarity colours on item names (4.9:1 or more on Surface4), the gold on the chosen button (12.7:1) and the dark tick on gold (8.0:1) pass everywhere.
+
+Corruption is drawn in red, as the game draws "Corrupted", but the game's own red is too dark for text on these panels, so the text is a lighter red and the game's red only outlines the tag. On the tag's faint red fill the text still reads at 5.6:1 on the header strip and 4.7:1 on a ticked row; the outline stands at 3.2:1 on the header strip. Off, the **Corrupted** tag turns grey (TextFaint, 5.5:1 on the strip) in the empty tick box's outline (3.5:1) and is struck through, so on and off differ in more than colour.
 
 Price labels are solid tags in loot-filter colours. Their text reads at: white and red 5.9:1 (10 Divine or more), red 5.9:1 (1 to 10 Divine), orange 4.9:1, amber 9.1:1, tan 10.6:1 and dark 10.2:1 (under 1 Exalted). The design's orange label had white text at 3.7:1; it takes dark text instead.
 

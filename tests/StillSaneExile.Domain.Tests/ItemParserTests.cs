@@ -157,6 +157,56 @@ public class ItemParserTests
         Assert.True(item.States.HasFlag(ItemStates.Corrupted));
     }
 
+    [Fact]
+    public void Twice_corrupted_is_corrupted()
+    {
+        var text = "Item Class: Rings\nRarity: Rare\nGloom Loop\nGold Ring\n--------\nItem Level: 70\n--------\n+30 to Intelligence\n--------\nTwice Corrupted";
+        var item = ItemTextParser.Parse(text, Fixtures.DemoNow, "x").Item!;
+
+        Assert.True(item.States.HasFlag(ItemStates.Corrupted));
+        Assert.Single(item.Mods); // the state line is not read as a stat
+    }
+
+    [Fact]
+    public void An_advanced_copy_marks_the_enchant_corruption_added()
+    {
+        var item = Fixtures.Item("rare-helmet-corrupted-advanced");
+
+        Assert.True(item.States.HasFlag(ItemStates.Corrupted));
+        var corruption = Assert.Single(item.Mods, m => m.FromCorruption);
+        Assert.Equal(ModSource.Enchant, corruption.Source);
+        Assert.Equal(["Attack"], corruption.Tags);
+        var line = corruption.Lines.Single();
+        Assert.Equal("# to Accuracy Rating", line.Template);
+        Assert.Equal((74m, 50m, 100m), (line.Components[0].Value, line.Components[0].Min!.Value, line.Components[0].Max!.Value));
+        Assert.Equal(4, item.ModsFrom(ModSource.Explicit).Count());
+        Assert.Empty(item.UnparsedLines);
+    }
+
+    [Fact]
+    public void An_anointment_is_an_enchant_but_not_from_corruption()
+    {
+        var text = "Item Class: Amulets\nRarity: Magic\nSteady Gold Amulet\n--------\nItem Level: 71\n--------\n{ Enhancement }\nAllocates Hallowed — Unscalable Value\n--------\n"
+            + "{ Implicit Modifier }\n12(12-20)% increased Rarity of Items found\n--------\n{ Prefix Modifier \"Steady\" (Tier: 3) — Attack }\n+219(168-236) to Accuracy Rating\n--------\nCorrupted";
+        var item = ItemTextParser.Parse(text, Fixtures.DemoNow, "x").Item!;
+
+        var anoint = Assert.Single(item.ModsFrom(ModSource.Enchant));
+        Assert.False(anoint.FromCorruption);
+        Assert.DoesNotContain(item.Mods, m => m.FromCorruption || m.Source == ModSource.Unknown);
+    }
+
+    [Fact]
+    public void A_normal_copy_cannot_tell_a_corruption_enchant_from_an_anointment()
+    {
+        // Both end in "(enchant)" in a normal copy, so nothing is marked as added by corruption.
+        var text = "Item Class: Helmets\nRarity: Rare\nDusk Vigil\nGladiatorial Helm\n--------\nItem Level: 78\n--------\n+74 to Accuracy Rating (enchant)\n--------\n+79 to maximum Life\n--------\nCorrupted";
+        var item = ItemTextParser.Parse(text, Fixtures.DemoNow, "x").Item!;
+
+        var enchant = Assert.Single(item.ModsFrom(ModSource.Enchant));
+        Assert.Equal("# to Accuracy Rating", enchant.Lines.Single().Template);
+        Assert.DoesNotContain(item.Mods, m => m.FromCorruption);
+    }
+
     [Theory]
     [InlineData("+18% to Fire Resistance", "#% to Fire Resistance", 18)]
     [InlineData("-5% to Fire Resistance", "#% to Fire Resistance", -5)]

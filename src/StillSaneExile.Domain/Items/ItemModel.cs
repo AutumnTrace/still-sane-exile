@@ -96,6 +96,9 @@ public sealed record ModLine(
 
 /// <summary>An affix (or implicit, rune effect, enchant…) and the lines it produced. A hybrid affix
 /// is one group with several lines.</summary>
+/// <param name="FromCorruption">The game says corruption added it: an advanced copy heads it
+/// "{ Corruption Enhancement }". A normal copy ends corruption enchants and anointments alike in
+/// "(enchant)", so there it stays false.</param>
 public sealed record ModGroup(
     ModSource Source,
     AffixSide Side,
@@ -104,7 +107,8 @@ public sealed record ModGroup(
     IReadOnlyList<string> Tags,
     IReadOnlyList<ModLine> Lines,
     bool FromAdvancedCopy,
-    string? FamilyId = null);
+    string? FamilyId = null,
+    bool FromCorruption = false);
 
 public sealed record Requirements(int? Level, int? Strength, int? Dexterity, int? Intelligence);
 

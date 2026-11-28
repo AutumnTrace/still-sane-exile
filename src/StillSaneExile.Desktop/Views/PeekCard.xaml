@@ -72,7 +72,7 @@
             <Border BorderBrush="{StaticResource Unchecked}" BorderThickness="1.5" Margin="0.5" Visibility="{Binding Off, Converter={StaticResource Vis}}" AutomationProperties.Name="Not in search" />
           </Grid>
           <StackPanel Grid.Column="1" Margin="8,0,8,0" VerticalAlignment="Center">
-            <TextBlock Text="{Binding Text}">
+            <TextBlock>
               <TextBlock.Style>
                 <Style TargetType="TextBlock" BasedOn="{StaticResource StatText}">
                   <Style.Triggers>
@@ -93,6 +93,8 @@
                   </Style.Triggers>
                 </Style>
               </TextBlock.Style>
+              <Run Text="{Binding Text, Mode=OneWay}" /><InlineUIContainer BaselineAlignment="Center"><ContentControl Style="{StaticResource CorruptedTag}" Tag="active" Content="corrupted" FontSize="11.5" Padding="4,0,4,1" Margin="6,0,0,0"
+                                                                                                                         Visibility="{Binding FromCorruption, Converter={StaticResource Vis}}" /></InlineUIContainer>
             </TextBlock>
             <TextBlock Text="{Binding Hint}" FontSize="12.5" Foreground="{StaticResource Hint}" TextWrapping="Wrap" Visibility="{Binding HasHint, Converter={StaticResource Vis}}" />
           </StackPanel>
@@ -136,9 +138,9 @@
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
           </Grid.RowDefinitions>
-          <CheckBox IsChecked="{Binding IsOn}" VerticalContentAlignment="Center" AutomationProperties.Name="{Binding Text}">
+          <CheckBox IsChecked="{Binding IsOn}" VerticalContentAlignment="Center" AutomationProperties.Name="{Binding SpokenText}">
             <StackPanel Margin="-2,0,6,0">
-              <TextBlock Text="{Binding Text}">
+              <TextBlock>
                 <TextBlock.Style>
                   <Style TargetType="TextBlock" BasedOn="{StaticResource StatText}">
                     <Style.Triggers>
@@ -159,6 +161,8 @@
                     </Style.Triggers>
                   </Style>
                 </TextBlock.Style>
+                <Run Text="{Binding Text, Mode=OneWay}" /><InlineUIContainer BaselineAlignment="Center"><ContentControl Style="{StaticResource CorruptedTag}" Tag="active" Content="corrupted" FontSize="11.5" Padding="4,0,4,1" Margin="6,0,0,0"
+                                                                                                                           Visibility="{Binding FromCorruption, Converter={StaticResource Vis}}" /></InlineUIContainer>
               </TextBlock>
               <TextBlock Text="{Binding Hint}" FontSize="12.5" Foreground="{StaticResource Hint}" TextWrapping="Wrap" Visibility="{Binding IsAmbiguous, Converter={StaticResource Vis}}" />
             </StackPanel>
@@ -220,23 +224,37 @@
           <!-- Header strip: the name centred, the base under it, both in the rarity colour, as in game. -->
           <Border Style="{StaticResource GameStrip}" Padding="0,8,0,7">
             <Grid>
-              <StackPanel Margin="44,0">
-                <TextBlock x:Name="NameText" Text="{Binding Title}" Style="{StaticResource Heading}" FontSize="19" TextAlignment="Center" TextWrapping="Wrap" LineHeight="22"
-                           Foreground="{Binding Rarity, Converter={StaticResource RarityBrush}}" />
-                <TextBlock Text="{Binding HeaderBase}" Style="{StaticResource Heading}" FontWeight="Medium" FontSize="15" TextAlignment="Center" TextWrapping="Wrap"
-                           Foreground="{Binding Rarity, Converter={StaticResource RarityBrush}}" Visibility="{Binding HasHeaderBase, Converter={StaticResource Vis}}" />
-                <TextBlock Text="{Binding HeaderDetail}" FontSize="12.5" Foreground="{StaticResource TextDim}" TextAlignment="Center" TextWrapping="Wrap" Margin="0,1,0,0"
-                           Visibility="{Binding HasHeaderDetail, Converter={StaticResource Vis}}" />
-                <TextBlock Text="{Binding Note}" FontSize="12.5" Foreground="{StaticResource TextFaint}" TextAlignment="Center" TextWrapping="Wrap" Margin="0,2,0,0" Visibility="{Binding HasNote, Converter={StaticResource Vis}}" />
-              </StackPanel>
-              <Border Style="{StaticResource DemoBadge}" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="8,1,0,0" Visibility="{Binding IsDemo, Converter={StaticResource Vis}}">
-                <TextBlock Text="demo" FontSize="11.5" FontWeight="Bold" />
-              </Border>
+              <!-- Declared first so Tab reaches it first: it sits on the top line, the Corrupted tag below. -->
               <Button x:Name="CloseButton" Style="{StaticResource IconButton}" Width="26" Height="26" Margin="0,-2,7,0" HorizontalAlignment="Right" VerticalAlignment="Top"
                       ToolTip="Close" AutomationProperties.Name="Close the price card"
                       Command="{Binding CloseCommand, ElementName=Self}" Visibility="{Binding IsPinned, Converter={StaticResource Vis}}">
                 <Path Data="M 1,1 L 9,9 M 9,1 L 1,9" Width="10" Height="10" Stroke="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}" StrokeThickness="2" StrokeStartLineCap="Round" StrokeEndLineCap="Round" />
               </Button>
+              <StackPanel Margin="44,0">
+                <TextBlock x:Name="NameText" Text="{Binding Title}" Style="{StaticResource Heading}" FontSize="19" TextAlignment="Center" TextWrapping="Wrap" LineHeight="22"
+                           Foreground="{Binding Rarity, Converter={StaticResource RarityBrush}}" />
+                <TextBlock Text="{Binding HeaderBase}" Style="{StaticResource Heading}" FontWeight="Medium" FontSize="15" TextAlignment="Center" TextWrapping="Wrap"
+                           Foreground="{Binding Rarity, Converter={StaticResource RarityBrush}}" Visibility="{Binding HasHeaderBase, Converter={StaticResource Vis}}" />
+                <!-- "Item level 80", then on a corrupted item its Corrupted tag. Held (click-through) it only shows
+                     whether the search is for corrupted items only; pinned, a click turns that off and on. -->
+                <WrapPanel HorizontalAlignment="Center" Margin="0,1,0,0">
+                  <TextBlock Text="{Binding HeaderDetail}" FontSize="12.5" Foreground="{StaticResource TextDim}" TextAlignment="Center" TextWrapping="Wrap" VerticalAlignment="Center"
+                             Visibility="{Binding HasHeaderDetail, Converter={StaticResource Vis}}" />
+                  <Grid Margin="7,0,0,0" Visibility="{Binding Item.ShowsCorruptedTag, Converter={StaticResource Vis}, FallbackValue=Collapsed}">
+                    <ContentControl x:Name="CorruptedTag" Style="{StaticResource CorruptedTag}" Content="Corrupted"
+                                    Tag="{Binding Item.CorruptedOnly, Converter={StaticResource Active}, ConverterParameter=True}"
+                                    Visibility="{Binding IsPinned, Converter={StaticResource Vis}, ConverterParameter=invert}" />
+                    <Button x:Name="CorruptedButton" Style="{StaticResource CorruptedToggle}" FontSize="12.5" Padding="5,0,5,1" Content="Corrupted" Command="{Binding Item.ToggleCorruptedCommand}"
+                            Tag="{Binding Item.CorruptedOnly, Converter={StaticResource Active}, ConverterParameter=True}" ToolTip="{Binding Item.CorruptedTip}"
+                            AutomationProperties.Name="Search corrupted items only" AutomationProperties.HelpText="On: corrupted items only. Off: corrupted or not."
+                            Visibility="{Binding IsPinned, Converter={StaticResource Vis}}" />
+                  </Grid>
+                </WrapPanel>
+                <TextBlock Text="{Binding Note}" FontSize="12.5" Foreground="{StaticResource TextFaint}" TextAlignment="Center" TextWrapping="Wrap" Margin="0,2,0,0" Visibility="{Binding HasNote, Converter={StaticResource Vis}}" />
+              </StackPanel>
+              <Border Style="{StaticResource DemoBadge}" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="8,1,0,0" Visibility="{Binding IsDemo, Converter={StaticResource Vis}}">
+                <TextBlock Text="demo" FontSize="11.5" FontWeight="Bold" />
+              </Border>
             </Grid>
           </Border>
 

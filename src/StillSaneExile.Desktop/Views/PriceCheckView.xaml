@@ -35,21 +35,30 @@
         <!-- Item -->
         <Border Style="{StaticResource GameStrip}" Padding="0,11,0,10">
           <Grid>
+            <!-- Declared first so Tab reaches it first: it sits on the top line, the Corrupted tag below. -->
+            <Button Style="{StaticResource IconButton}" BorderBrush="{StaticResource Edge}" Margin="0,-2,8,0" HorizontalAlignment="Right" VerticalAlignment="Top" ToolTip="Close (Esc)" AutomationProperties.Name="Close the price check"
+                    Command="{Binding CloseCommand, ElementName=Self}" Visibility="{Binding CloseCommand, ElementName=Self, Converter={StaticResource Vis}}">
+              <Path Data="M 1,1 L 11,11 M 11,1 L 1,11" Width="12" Height="12" Stroke="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}" StrokeThickness="2.2" StrokeStartLineCap="Round" StrokeEndLineCap="Round" />
+            </Button>
             <StackPanel Margin="60,0">
               <TextBlock Text="{Binding Title}" Style="{StaticResource Heading}" FontSize="22" TextAlignment="Center" TextWrapping="Wrap" LineHeight="25"
                          Foreground="{Binding Rarity, Converter={StaticResource RarityBrush}}" />
               <TextBlock Text="{Binding HeaderBase}" Style="{StaticResource Heading}" FontWeight="Medium" FontSize="17" TextAlignment="Center" TextWrapping="Wrap"
                          Foreground="{Binding Rarity, Converter={StaticResource RarityBrush}}" Visibility="{Binding HasHeaderBase, Converter={StaticResource Vis}}" />
-              <TextBlock Text="{Binding HeaderDetail}" FontSize="13.5" Foreground="{StaticResource TextDim}" TextAlignment="Center" TextWrapping="Wrap" Margin="0,2,0,0"
-                         Visibility="{Binding HasHeaderDetail, Converter={StaticResource Vis}}" />
+              <!-- "Item level 80", then on a corrupted item its Corrupted tag: on, the search finds corrupted
+                   items only; clicked off, corrupted or not. -->
+              <WrapPanel HorizontalAlignment="Center" Margin="0,2,0,0">
+                <TextBlock Text="{Binding HeaderDetail}" FontSize="13.5" Foreground="{StaticResource TextDim}" TextAlignment="Center" TextWrapping="Wrap" VerticalAlignment="Center"
+                           Visibility="{Binding HasHeaderDetail, Converter={StaticResource Vis}}" />
+                <Button x:Name="CorruptedButton" Style="{StaticResource CorruptedToggle}" Content="Corrupted" Margin="8,0,0,0" Command="{Binding ToggleCorruptedCommand}"
+                        Tag="{Binding CorruptedOnly, Converter={StaticResource Active}, ConverterParameter=True}" ToolTip="{Binding CorruptedTip}"
+                        AutomationProperties.Name="Search corrupted items only" AutomationProperties.HelpText="On: corrupted items only. Off: corrupted or not."
+                        Visibility="{Binding ShowsCorruptedTag, Converter={StaticResource Vis}}" />
+              </WrapPanel>
             </StackPanel>
             <Border Style="{StaticResource DemoBadge}" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="10,0,0,0" Visibility="{Binding IsDemo, Converter={StaticResource Vis}}">
               <TextBlock Text="demo prices" FontSize="12" FontWeight="Bold" />
             </Border>
-            <Button Style="{StaticResource IconButton}" BorderBrush="{StaticResource Edge}" Margin="0,-2,8,0" HorizontalAlignment="Right" VerticalAlignment="Top" ToolTip="Close (Esc)" AutomationProperties.Name="Close the price check"
-                    Command="{Binding CloseCommand, ElementName=Self}" Visibility="{Binding CloseCommand, ElementName=Self, Converter={StaticResource Vis}}">
-              <Path Data="M 1,1 L 11,11 M 11,1 L 1,11" Width="12" Height="12" Stroke="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}" StrokeThickness="2.2" StrokeStartLineCap="Round" StrokeEndLineCap="Round" />
-            </Button>
           </Grid>
         </Border>
 
@@ -156,9 +165,10 @@
                       <ColumnDefinition Width="124" />
                       <ColumnDefinition Width="62" />
                     </Grid.ColumnDefinitions>
-                    <CheckBox IsChecked="{Binding IsOn}" MinHeight="34" VerticalContentAlignment="Center" AutomationProperties.Name="{Binding Text}">
+                    <CheckBox IsChecked="{Binding IsOn}" MinHeight="34" VerticalContentAlignment="Center" AutomationProperties.Name="{Binding SpokenText}">
                       <StackPanel Margin="0,2">
-                        <TextBlock Text="{Binding Text}" FontSize="16" TextWrapping="Wrap" LineHeight="20">
+                        <!-- The stat, and beside it a red "corrupted" tag when corruption added it. -->
+                        <TextBlock FontSize="16" TextWrapping="Wrap" LineHeight="20">
                           <TextBlock.Style>
                             <Style TargetType="TextBlock">
                               <Setter Property="Foreground" Value="{StaticResource StatOff}" />
@@ -180,6 +190,8 @@
                               </Style.Triggers>
                             </Style>
                           </TextBlock.Style>
+                          <Run Text="{Binding Text, Mode=OneWay}" /><InlineUIContainer BaselineAlignment="Center"><ContentControl Style="{StaticResource CorruptedTag}" Tag="active" Content="corrupted" Margin="8,0,0,0"
+                                                                                                                                     Visibility="{Binding FromCorruption, Converter={StaticResource Vis}}" /></InlineUIContainer>
                         </TextBlock>
                         <TextBlock Text="{Binding Hint}" FontSize="13" Foreground="{StaticResource TextFaint}" TextWrapping="Wrap" Margin="0,1,0,0" Visibility="{Binding HasHint, Converter={StaticResource Vis}}" />
                         <v:RollLine DataContext="{Binding Roll}" Margin="0,4,0,1" Visibility="{Binding Converter={StaticResource Vis}}" />
