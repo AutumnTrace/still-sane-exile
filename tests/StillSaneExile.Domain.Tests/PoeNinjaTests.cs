@@ -168,11 +168,12 @@ public class PoeNinjaTests
 
         var line = ItemPricer.Price(Unique("Mageblood", "Utility Belt"), Converter(book), "divine", [], League, T0 + TimeSpan.FromMinutes(5));
         Assert.Equal(PriceKind.UniqueBaseline, line.Kind);
-        Assert.Equal("≈ 180 div baseline · check rolls", line.Headline);
-        Assert.StartsWith("poe.ninja category baseline, 5 min ago · 40 listed.", line.Detail, StringComparison.Ordinal);
+        Assert.Equal("180 div", line.Headline);
+        Assert.Equal("poe.ninja · 5 min ago · 40 listed", line.Detail);
+        Assert.False(line.UncorruptedStandIn);
         Assert.Equal(T0, line.ObservedTo);
 
-        Assert.Equal("≈ 72,000 ex baseline · check rolls", ItemPricer.Price(Unique("Mageblood", "Utility Belt"), Converter(book), "exalted", [], League, T0).Headline);
+        Assert.Equal("72,000 ex", ItemPricer.Price(Unique("Mageblood", "Utility Belt"), Converter(book), "exalted", [], League, T0).Headline);
     }
 
     [Fact]
@@ -194,8 +195,10 @@ public class PoeNinjaTests
         var corrupted = ItemPricer.Identify(Unique("Mageblood", "Utility Belt", corrupted: true), book)!;
         Assert.Equal(UniqueVariant.Corrupted, corrupted.Variant);
         Assert.Equal(150m, book.Find(corrupted.Id, corrupted.Variant)!.Amount);
-        Assert.Equal("≈ 150 div baseline · check rolls", ItemPricer.Price(Unique("Mageblood", "Utility Belt", corrupted: true), converter, "divine", [], League, T0).Headline);
-        Assert.Equal("≈ 180 div baseline · check rolls", ItemPricer.Price(Unique("Mageblood", "Utility Belt"), converter, "divine", [], League, T0).Headline);
+        var corruptedLine = ItemPricer.Price(Unique("Mageblood", "Utility Belt", corrupted: true), converter, "divine", [], League, T0);
+        Assert.Equal("150 div", corruptedLine.Headline);
+        Assert.False(corruptedLine.UncorruptedStandIn); // it has its own line
+        Assert.Equal("180 div", ItemPricer.Price(Unique("Mageblood", "Utility Belt"), converter, "divine", [], League, T0).Headline);
     }
 
     [Fact]
@@ -205,8 +208,8 @@ public class PoeNinjaTests
 
         var line = ItemPricer.Price(Unique("Sanity's Last Loop", "Gold Ring", corrupted: true), Converter(book), "exalted", [], League, T0);
 
-        Assert.Equal("≈ 200 ex baseline · check rolls", line.Headline);
-        Assert.Contains("no separate price for corrupted ones", line.Detail, StringComparison.Ordinal);
+        Assert.Equal("200 ex", line.Headline);
+        Assert.True(line.UncorruptedStandIn);
     }
 
     [Fact]
@@ -230,9 +233,9 @@ public class PoeNinjaTests
 
         Assert.Equal(Freshness.Fresh, fresh.Freshness);
         Assert.Equal(Freshness.Stale, stale.Freshness);
-        Assert.Contains("2 h ago · 40 listed · stale.", stale.Detail, StringComparison.Ordinal);
+        Assert.Equal("poe.ninja · 2 h ago · 40 listed · may be out of date", stale.Detail);
         Assert.Equal(Freshness.RankingSuppressed, old.Freshness);
-        Assert.Contains("1 d ago · 40 listed · too old to rank.", old.Detail, StringComparison.Ordinal);
+        Assert.Equal("poe.ninja · 1 d ago · 40 listed · may be out of date", old.Detail);
     }
 
     [Fact]

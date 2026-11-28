@@ -16,7 +16,9 @@ public enum PriceKind
 /// <summary>The one price line the HUD and inspector show for an item. <see cref="ObservedTo"/> is when the
 /// price book's figure was last observed, for showing its age; null for prices the player wrote down.</summary>
 /// <param name="Amount">The price itself in <paramref name="Denomination"/>, for a baseline or a commodity: the label's colour step.</param>
-public sealed record PriceLine(PriceKind Kind, string Headline, string? Detail, Freshness? Freshness, bool Uncertain, EvidenceSummary? Evidence = null, DateTimeOffset? ObservedTo = null, decimal? Amount = null, string? Denomination = null);
+/// <param name="UncorruptedStandIn">A corrupted unique priced with the uncorrupted line, because the book has
+/// no corrupted one: the card has to say so.</param>
+public sealed record PriceLine(PriceKind Kind, string Headline, string? Detail, Freshness? Freshness, bool Uncertain, EvidenceSummary? Evidence = null, DateTimeOffset? ObservedTo = null, decimal? Amount = null, string? Denomination = null, bool UncorruptedStandIn = false);
 
 public static class ItemPricer
 {
@@ -115,13 +117,20 @@ public static class ItemPricer
 
         if (item.Rarity == ItemRarity.Unique)
         {
-            var caveat = item.States.HasFlag(ItemStates.Corrupted) && !UniqueVariant.IsCorrupted(identity.Variant)
-                ? "This copy is corrupted and there is no separate price for corrupted ones: this is the uncorrupted baseline."
-                : "Perfect or corrupted specimens can sell far from the baseline.";
+            // The price alone: the card's lead says it is a typical price, and the line under it that rolls
+            // change it. The detail is where the figure came from, in as few words as possible.
+            var standIn = item.States.HasFlag(ItemStates.Corrupted) && !UniqueVariant.IsCorrupted(identity.Variant);
+            var facts = new[]
+            {
+                from.TrimEnd(),
+                age,
+                quote?.Volume is { } listed ? $"{ValueFormat.Amount(listed)} listed" : null,
+                freshness is Freshness.Stale or Freshness.RankingSuppressed ? "may be out of date" : null,
+            };
             return new PriceLine(PriceKind.UniqueBaseline,
-                $"≈ {ValueFormat.Money(shown.Value, shown.Denomination)} baseline · check rolls",
-                $"{from}{kindLabel}, {age}{volume}{staleTag}. {caveat}",
-                freshness, true, ObservedTo: observedTo, Amount: shown.Value, Denomination: shown.Denomination);
+                ValueFormat.Money(shown.Value, shown.Denomination),
+                string.Join(" · ", facts.Where(f => !string.IsNullOrEmpty(f))),
+                freshness, true, ObservedTo: observedTo, Amount: shown.Value, Denomination: shown.Denomination, UncorruptedStandIn: standIn);
         }
 
         var stack = item.StackSize ?? 1;

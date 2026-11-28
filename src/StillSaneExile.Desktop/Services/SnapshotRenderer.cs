@@ -91,6 +91,12 @@ public static class SnapshotRenderer
             Save(peek, Path.Combine(dir, $"{name}.png"));
         }
 
+        // A unique priced by its baseline alone, as a live league shows one before Search: the practice ring
+        // with its synthetic baseline in place of its synthetic listings.
+        var baseline = Baseline(shell, shell.Inspect.Recent.First(r => r.Title == "Sanity's Last Loop"));
+        peek.DataContext = PeekViewModel.From(baseline, true, PeekViewModel.ReleaseHintFor(shell.Settings.PeekMode), shell.Settings.OpenLastKey.Label);
+        Save(peek, Path.Combine(dir, "peek-baseline.png"));
+
         // Pinned (the player moved onto it while holding the key): close button, live stats. Never
         // pinned through the window here, so it stays click-through and never activates.
         var crossbow = shell.Inspect.Recent.First(r => r.Title == "Doom Thirst");
@@ -119,8 +125,20 @@ public static class SnapshotRenderer
         priceCheck.DataContext = shell.Inspect.Recent.First(r => r.Title == "Doom Thirst");
         priceCheck.Show();
         Save(priceCheck, Path.Combine(dir, "price-check-window.png"));
+        priceCheck.DataContext = baseline;
+        Save(priceCheck, Path.Combine(dir, "price-check-baseline.png"));
         priceCheck.Close();
         main.Close();
+    }
+
+    /// <summary>A copy of <paramref name="item"/> whose price is its price book baseline, with no listings.</summary>
+    private static ItemViewModel Baseline(ShellViewModel shell, ItemViewModel item)
+    {
+        var session = shell.Session;
+        var copy = new ItemViewModel(item.Item, session);
+        copy.Matches = [];
+        copy.Answer = PriceAnswer.Baseline(copy.Price!, null, new Domain.Pricing.PriceText(session.Converter, session.DisplayCurrency, session.Now));
+        return copy;
     }
 
     /// <summary>"Collect stash pictures" switched on with three made-up pictures: its

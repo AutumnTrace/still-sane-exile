@@ -103,12 +103,13 @@ public class WorksheetSearchTests
     }
 
     [Fact]
-    public void Suggested_item_level_rounds_down_for_rares_and_is_exact_for_crafting_bases()
+    public void Suggested_item_level_rounds_down_for_rares_and_is_exact_for_crafting_bases_but_no_search_uses_it()
     {
         Assert.Equal(80, Crossbow().SuggestedItemLevel);
+        Assert.Null(Crossbow().MinItemLevel);
         var magic = WorksheetFactory.Create(ItemReader.Read(Fixtures.Item("magic-crossbow-normal"), Fixtures.Pack()));
         Assert.Equal(82, magic.SuggestedItemLevel);
-        Assert.Equal(82, magic.MinItemLevel);
+        Assert.Null(magic.MinItemLevel); // the app offers no item level choice for now, so none is searched unseen
     }
 
     [Fact]

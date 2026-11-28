@@ -140,13 +140,14 @@ public class PricingTests
     }
 
     [Fact]
-    public void Unique_gets_a_baseline_with_check_rolls()
+    public void Unique_gets_its_baseline_as_the_price_alone()
     {
         var book = Fixtures.DemoBook();
         var conv = new CurrencyConverter(book, StalenessPolicy.Hourly);
         var line = ItemPricer.Price(Fixtures.Item("unique-ring"), conv, "exalted", [], book.League, Fixtures.DemoNow);
         Assert.Equal(PriceKind.UniqueBaseline, line.Kind);
-        Assert.Equal("≈ 168 ex baseline · check rolls", line.Headline);
+        Assert.Equal("168 ex", line.Headline);
+        Assert.DoesNotContain("baseline", line.Detail, StringComparison.Ordinal);
     }
 
     [Fact]

@@ -72,8 +72,9 @@ public sealed class ComparisonWorksheet
     public bool? Corrupted { get; set; }
     public int? MinItemLevel { get; set; }
 
-    /// <summary>The item level the "item level or higher" choice uses: the item's own level for a
-    /// crafting base (normal, magic), rounded down to a multiple of 5 otherwise.</summary>
+    /// <summary>The item level an "item level or higher" choice would use: the item's own level for a
+    /// crafting base (normal, magic), rounded down to a multiple of 5 otherwise. The app offers no such
+    /// choice for now, so a search never filters on item level unless <see cref="MinItemLevel"/> is set.</summary>
     public int? SuggestedItemLevel { get; init; }
 
     /// <summary>Only listings that can be bought at once, without messaging the seller.</summary>
@@ -275,7 +276,6 @@ public static class WorksheetFactory
             BaseType = item.BaseType,
             Rarity = item.Rarity,
             Corrupted = item.States.HasFlag(ItemStates.Corrupted),
-            MinItemLevel = item.Rarity is ItemRarity.Normal or ItemRarity.Magic ? item.ItemLevel : null,
             SuggestedItemLevel = item.ItemLevel is not { } il ? null
                 : item.Rarity is ItemRarity.Normal or ItemRarity.Magic ? il
                 : il / 5 * 5,

@@ -1,0 +1,33 @@
+<UserControl x:Class="StillSaneExile.Desktop.Views.RollLine"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="clr-namespace:StillSaneExile.Desktop.ViewModels"
+             xmlns:v="clr-namespace:StillSaneExile.Desktop.Views"
+             mc:Ignorable="d"
+             d:DataContext="{d:DesignInstance Type=vm:RollView}"
+             Focusable="False" IsTabStop="False"
+             AutomationProperties.Name="{Binding Spoken}">
+  <!-- Under a stat: its tier as the game numbers it, then the tier's lowest number, the bar with the roll
+       marked, and the highest. The columns share their widths across a list (Grid.IsSharedSizeScope on the
+       list), so the bars of one item line up; past 200 pixels a bar grows no longer. -->
+  <Grid>
+    <Grid.ColumnDefinitions>
+      <ColumnDefinition Width="Auto" SharedSizeGroup="RollTier" />
+      <ColumnDefinition Width="Auto" SharedSizeGroup="RollLow" />
+      <ColumnDefinition Width="*" MaxWidth="200" />
+      <ColumnDefinition Width="Auto" SharedSizeGroup="RollHigh" />
+    </Grid.ColumnDefinitions>
+    <Border BorderBrush="{StaticResource EdgeStrong}" BorderThickness="1" Padding="4,0,4,1" Margin="0,0,7,0" MinWidth="26" VerticalAlignment="Center"
+            Visibility="{Binding HasTier, Converter={StaticResource Vis}}">
+      <TextBlock Text="{Binding Tier}" FontFamily="{StaticResource CapsFont}" FontSize="12" FontWeight="Bold" Foreground="{StaticResource TextSoft}" HorizontalAlignment="Center" />
+    </Border>
+    <TextBlock Grid.Column="1" Text="{Binding Low}" FontSize="12" Foreground="{StaticResource TextFaint}" TextAlignment="Right" VerticalAlignment="Center" Margin="0,0,6,0"
+               Visibility="{Binding HasBar, Converter={StaticResource Vis}}" />
+    <v:RollBar Grid.Column="2" Position="{Binding Position}" Scored="{Binding Scored}" MinWidth="48" VerticalAlignment="Center"
+               Visibility="{Binding HasBar, Converter={StaticResource Vis}}" />
+    <TextBlock Grid.Column="3" Text="{Binding High}" FontSize="12" Foreground="{StaticResource TextFaint}" VerticalAlignment="Center" Margin="6,0,0,0"
+               Visibility="{Binding HasBar, Converter={StaticResource Vis}}" />
+  </Grid>
+</UserControl>

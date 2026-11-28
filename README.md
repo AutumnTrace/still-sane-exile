@@ -6,7 +6,7 @@ Hold `Ctrl+C` over a Path of Exile 2 item to see what items like it sell for, an
 
 Windows 10/11 · x64 · Windowed or borderless · Game set to English (other languages get a plain "not supported yet" message)
 
-<img src="docs/screenshots/peek-advanced.png" width="384" alt="Demo card for Doom Thirst: items like it sell for about 1.8 to 2.6 divine, 29 for sale, searched with physical DPS of at least 319 and attack speed of at least 15">
+<img src="docs/screenshots/peek-advanced.png" width="360" alt="Demo card for Doom Thirst: items like it sell for about 1.8 to 2.6 divine, 29 for sale, the seven cheapest listings, searched with physical DPS of at least 319 and attack speed of at least 15; under each rolled stat its tier and a bar between the tier's lowest and highest number">
 
 Doom Thirst in the demo profile: items like it ask about 1.8–2.6 div, with 29 for sale. The search wanted physical DPS of at least 319 and attack speed of at least 15, 10% under its own rolls. The price is coloured like a loot filter label (white and red for a jackpot, red for Divines, orange to tan for Exalted money, dark for small change) and shows the game's own orbs instead of "div" and "ex".
 
@@ -16,13 +16,13 @@ You don't need the game running. Run `StillSaneExile-win-Setup.exe` from the [la
 
 On first start, pick **Practice with demo data**, then **Done — try a price check**. SSE opens Doom Thirst, a made-up crossbow.
 
-Doom Thirst has a T1 physical damage prefix. Its 175% roll is 56% of the way through that tier's 170–179%, four short of the best. The attack-speed roll reads 17%, a third of the way through its 16–19% range. Both bars sit under **How good are your rolls?**: each shows how close a roll is to the best number in its tier; tier 1 is the best a stat can be.
+Doom Thirst has a T1 physical damage prefix. Its 175% roll is 56% of the way through that tier's 170–179%, four short of the best. The attack-speed roll reads 17%, a third of the way through its 16–19% range. On the card and in the price check, each stat has a small line under it: the tier as the game numbers it (`T1`), then the tier's lowest number, a bar with your roll marked, and its highest (`170 ━━●━ 179`). **How good are your rolls?** on the price check page says the same in words. The tier badge is never coloured as good or bad: Path of Exile 2 counts its tiers the other way round from the first game, and the game doesn't say how many tiers a stat has.
 
-All of this is demo data: made-up tiers, ranges and listings. On a live item, an advanced copy (`Ctrl+Alt+C`) gives the game's own tiers and ranges, drawn as a position marker until a verified data pack confirms which end is better. In a live league, currency, other exchange items and uniques get poe.ninja's prices for that league, with their age (see [Live prices](#live-prices)). Rares have no price list: **Search** asks the official trade site for the cheapest listings like yours (see [Trade site search](#trade-site-search)), or you open the search there and write down the asks you find. A real-game test run is still to come.
+All of this is demo data: made-up tiers, ranges and listings. On a live item, an advanced copy (`Ctrl+Alt+C`) gives the game's own tiers and ranges, drawn as a marker on the bar until a verified data pack confirms which end is better; a normal copy has neither, and the card says *Ctrl+Alt+C for tiers*. In a live league, currency, other exchange items and uniques get poe.ninja's prices for that league, with their age (see [Live prices](#live-prices)). Rares have no price list: **Search** asks the official trade site for the cheapest listings like yours (see [Trade site search](#trade-site-search)), or you open the search there and write down the asks you find. A real-game test run is still to come.
 
 ## Choose what you're comparing
 
-[![The price check page for Doom Thirst: the price and its search in the middle, roll tiers and written-down prices on the right](docs/screenshots/inspect-advanced.png)](docs/screenshots/inspect-advanced.png)
+[![The price check page for Doom Thirst: the price and its search in the middle, each rolled stat with its tier and roll bar, how good the rolls are and written-down prices on the right](docs/screenshots/inspect-advanced.png)](docs/screenshots/inspect-advanced.png)
 
 Tick what a weapon like yours must have, set the numbers, and the price follows.
 
@@ -60,7 +60,11 @@ Every control in SSE works from the keyboard and has a name for screen readers, 
 
 Pick a live league in Settings and confirm it: SSE offers poe.ninja's leagues (one request for the list), or you type the name. From then on, SSE asks [poe.ninja](https://poe.ninja/poe2) for that league's prices a few seconds after it starts, then every hour: exchange prices for currency, fragments, essences, runes, soul cores, idols, uncut gems, lineage supports, omens, delirium, expedition and verisium, and unique item prices. That is about 20 requests per hour, one at a time and at least 5 seconds apart, following poe.ninja's cache headers. Each request names the league, the category and SSE's version, and nothing about you, your account or your items. The last few refreshes are kept in the data folder, so prices still show offline, with their age; they are marked stale after two missed hourly refreshes.
 
-The prices are poe.ninja's own estimates for the whole league. A unique's price is a baseline for that unique, not for your rolls. Switch **Live prices from poe.ninja** off in Settings and SSE asks poe.ninja for nothing. SSE makes two other kinds of request: the trade site search below, only when you press **Search**, and the update check against this repository's GitHub releases. Settings can switch each off.
+The prices are poe.ninja's own estimates for the whole league. A unique's price is a baseline for that unique, not for your rolls: the card shows the price alone, *Usually sells for about*, with *Your rolls can change it* under it, and the price check adds where the figure came from, how old it is and how many are listed.
+
+<img src="docs/screenshots/peek-baseline.png" width="360" alt="Demo card for Sanity's Last Loop: usually sells for about 1.4 divine, your rolls can change it; a normal copy, so the card says Ctrl+Alt+C for ranges">
+
+The demo's ring, priced by its made-up baseline as a live league prices a unique before you search. Switch **Live prices from poe.ninja** off in Settings and SSE asks poe.ninja for nothing. SSE makes two other kinds of request: the trade site search below, only when you press **Search**, and the update check against this repository's GitHub releases. Settings can switch each off.
 
 ## Trade site search
 
