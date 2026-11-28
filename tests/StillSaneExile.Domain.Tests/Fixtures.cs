@@ -31,9 +31,12 @@ internal static class Fixtures
         return result.Item!;
     }
 
+    /// <summary>The practice pack: the game's 0.5.5 stats for the practice items, with made-up weights.</summary>
+    public const string PackFile = "packs/practice-0.5.5.json";
+
     public static DataPack Pack()
     {
-        var result = DataPackLoader.Load(Text("packs/synthetic-demo.json"));
+        var result = DataPackLoader.Load(Text(PackFile));
         Assert.True(result.Pack is not null, result.Error);
         return result.Pack!;
     }

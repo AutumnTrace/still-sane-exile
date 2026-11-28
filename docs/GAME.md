@@ -124,6 +124,7 @@ Nothing here was checked in the game by SSE's own people. SSE's own claims about
 - 0.2.0: "Advanced and Expert item base types now have distinctive names." Expert Bombard Crossbow became **Siege Crossbow** (**C**, [0.2.0 notes][pn020]); the level-59 Bombard is now the Cannonade Crossbow (**L**). Names like "Expert Leather Boots" belong to 0.1 only.
 - 0.5.0 Verisium Runeforging makes new base types "Runeforged …" and "Runemastered …" (armour gets Runic Ward; low-level uniques get a better base). poe.ninja prices those uniques as separate lines. **C** ([0.5.0 notes][pn050])
 - Siege Crossbow (0.5.5): 29–115 physical, 5 % crit, 1.65 attacks per second, reload 0.75, Requires Level 79, 89 Str, 89 Dex (116/116 until 0.3.0), implicit "Grenade Skills Fire an additional Projectile". Gladiatorial Helm is an Armour/Evasion helmet (Armour 206, Evasion 187, Requires Level 80, 63 Str, 63 Dex). **C** ([poe2db][db-xbow], Path of Building bases)
+- **Attack speed shortens the reload too**: reload time = base ÷ (1 + increased attack speed), rounded to two places, so a Siege Crossbow with 17 % shows `Reload Time: 0.64 (augmented)`. Real copies agree: a Siege Crossbow at +25 % shows 0.60, a Gemini Crossbow (1.10) at +18 % shows 0.93 ([EE2][ee2] test items). Weapon properties round the same way: physical = round((base + added) × (1 + increased) × (1 + quality)), attacks per second to two places; a local `+#% to Critical Hit Chance` adds to the base's 5 %. **C** (Path of Building `Item.lua` and the copies)
 
 ## 2. Item text copy formats
 
@@ -334,22 +335,22 @@ Abyss came in 0.3.0 and is core since 0.4.0. "Desecrating an item adds an Unreve
 
 ### 4.2 Worked example: physical damage on a crossbow
 
-The local "#% increased Physical Damage" prefix (`LocalPhysicalDamagePercent`) on crossbows in 0.5.5, against SSE's synthetic demo pack (`fixtures/packs/synthetic-demo.json`, family `syn.phys_pct`):
+The local "#% increased Physical Damage" prefix (`LocalPhysicalDamagePercent`) on crossbows in 0.5.5, against SSE's practice pack (`fixtures/packs/practice-0.5.5.json`, family `crossbow.phys_pct`):
 
-| Tier | Name | Mod level | Range | poe2db weight | SSE pack level | SSE pack weight |
-|---|---|---|---|---|---|---|
-| 1 | Merciless | 82 | 170–179 | 25 | 82 | 250 |
-| 2 | Tyrannical | 75 | 155–169 | 50 | **73** | 500 |
-| 3 | Cruel | 60 | 135–154 | 100 | 60 | 1000 |
-| 4 | Bloodthirsty | 46 | 110–134 | 200 | 46 | 1000 |
-| 5 | Vicious | 33 | 85–109 | 400 | **35** | 1000 |
-| 6 | Wicked | 16 | 65–84 | 1000 | **23** | 1000 |
-| 7 | Serrated | 8 | 50–64 | 1000 | **11** | 1000 |
-| 8 | Heavy | 1 | 40–49 | 1000 | 1 | 1000 |
+| Tier | Name | Mod level | Range | poe2db weight | SSE pack weight (made up) |
+|---|---|---|---|---|---|
+| 1 | Merciless | 82 | 170–179 | 25 | 250 |
+| 2 | Tyrannical | 75 | 155–169 | 50 | 500 |
+| 3 | Cruel | 60 | 135–154 | 100 | 1000 |
+| 4 | Bloodthirsty | 46 | 110–134 | 200 | 1000 |
+| 5 | Vicious | 33 | 85–109 | 400 | 1000 |
+| 6 | Wicked | 16 | 65–84 | 1000 | 1000 |
+| 7 | Serrated | 8 | 50–64 | 1000 | 1000 |
+| 8 | Heavy | 1 | 40–49 | 1000 | 1000 |
 
 Sources: [poe2db crossbows][db-xbow] (levels, ranges, weights), Path of Building `ModItem.lua` (same levels and ranges). **C** for names, levels and ranges; weights are poe2db's estimates.
 
-So the demo pack's physical damage family has the game's real names, tier numbers and ranges, with four levels and every weight changed. The other crossbow families on poe2db, for comparison with the pack:
+Since 28 Nov 2026 the practice pack takes every family below from Path of Building's 0.5.5 export (names, levels, ranges, wording; [SOURCES.md](SOURCES.md) row 25); only its weights are made up. The other crossbow families on poe2db:
 
 | Family (crossbow, 0.5.5) | Side | Tiers | Best tier |
 |---|---|---|---|
@@ -364,6 +365,7 @@ So the demo pack's physical damage family has the game's real names, tier number
 | Gain # Life per enemy killed | suffix | 8 | of Legend, level 77, (69—84) |
 | + Strength, + Dexterity | suffix | 8 each | of the Titan / of the Phantom, level 74, +(31—33) |
 | Adds # to # Fire / Cold / Lightning Damage | prefix | 10 each | Carbonising / Crystalising / Vapourising, level 81 |
+| Loads an additional bolt / Loads 2 additional bolts | suffix | 2 | of Bursting, level 82, "Loads 2 additional bolts" (of Shelling, level 55, "Loads an additional bolt") |
 | % increased Reload Speed | — | not a crossbow explicit; only desecrated "of Kurgal" (17—25) % | — |
 
 ## 5. Uniques
@@ -426,7 +428,7 @@ So the demo pack's physical damage family has the game's real names, tier number
 
 ## 10. Where SSE differs from the game
 
-A snapshot of 28 Nov 2026, worst first. Fix the code or the data, then delete the line here. "Pack" is `fixtures/packs/synthetic-demo.json`.
+A snapshot of 28 Nov 2026, worst first. Fix the code or the data, then delete the line here. "Pack" is `fixtures/packs/practice-0.5.5.json` (until 28 Nov 2026 `synthetic-demo.json`).
 
 ### 10.1 Craft simulator (`src/StillSaneExile.Domain/Craft/CraftEngine.cs`)
 
@@ -434,10 +436,11 @@ Fixed on 28 Nov 2026: Vaal Orb outcomes, the Greater and Perfect minimum levels 
 
 ### 10.2 Demo data pack
 
-1. **Real names on made-up numbers.** Its header says "Affix names are placeholders", but nearly all are the game's names, many on other numbers: "Tempered" adds 20–27 to 34–45 (game 29–44 to 50–75), "of Fame" is 16–19 % attack speed (game 20–22 % and can't roll on crossbows), "of the Sniper" is accuracy (game: +5 to Level of all Projectile Skills). A reader can't tell real from invented (rule 7). The physical damage family is real names and ranges with altered levels and weights (§4.2).
-2. **Shapes the game doesn't have on crossbows:** accuracy as a suffix (prefix in game), "#% increased Critical Hit Chance" and "#% increased Critical Damage Bonus" (game: flat "+#% to …"), attack speed up to 24–26 % (ranged cap 17–19 %), projectile skill levels as a prefix (suffix in game, +2 to +5), reload speed as an explicit (desecrated only).
-3. **Essences:** Essence of Abrasion gives T3 of 4 (15–20 to 26–34) and Essence of Haste T3 "of Fame" 16–19 %; on a crossbow the game's are "Gleaming" (14–21 to 25–37, T5 of 9) and 11–13 % ("of Mastery").
-4. **Base:** "Expert Bombard Crossbow" with 41–76 physical and 1.6 attacks per second matches no patch: the name is 0.1-only (24–97, 1.65 then); today's equivalent is the Siege Crossbow (29–115, 1.65, reload 0.75).
+Fixed on 28 Nov 2026: the pack is now the game's 0.5.5 data from Path of Building's export (every crossbow family with its real side, names, tiers, levels, ranges and wording; the Siege Crossbow; the essences' real tiers), labelled "not checked in game" wherever a range from it is shown. Still open:
+
+1. **Weights are made up** (250, 500, then 1000): the game files hold none, and the published estimates may not be copied (§4.1). The craft simulator's badge says its odds are made up.
+2. **"Loads an additional bolt" / "Loads 2 additional bolts" are missing** from the crossbow pool: their two tiers are worded differently, and a pack family holds one wording for all its tiers. Needs the pack format to allow wording per tier.
+3. **Demo listings can show numbers no tier allows.** `DemoMarket` spreads each stat from 0.65 to 1.2 times the practice item's own roll, so a crossbow listing can show 20–21 % attack speed (the most a crossbow rolls is 19 %). They are labelled demo, but should stay inside what the game can roll.
 
 ### 10.3 Item parser (`src/StillSaneExile.Domain/Items/`)
 
@@ -448,10 +451,9 @@ Fixed on 28 Nov 2026: thousands separators, `Sanctified` and `Unidentified (Tier
 
 ### 10.4 Practice items (`fixtures/items/`)
 
-1. `rare-crossbow-advanced.txt`: base name from 0.1 with a 0.5 copy format; property numbers don't follow from any real base (a Siege Crossbow with these rolls shows about 175–508 physical, 1.93 attacks per second, reload 0.75); the rune line `+18% to Fire Resistance (rune)` is a Greater Desert Rune's *armour* effect (a crossbow gets `Adds 13 to 16 Fire Damage` and a `Fire Damage:` property line); the implicit has a tag (`— Attack`) and ` (implicit)`, which advanced copies have not had since 0.4.0; "Tempered" ranges, "of Fame" (17–19 % is "of Acclaim", Tier 1 on crossbows), "of Incision" (crit chance shape), "of the Sniper" (accuracy) as in 10.2. Right: Merciless Tier 1 170–179 and its tags, the `Requires:` line, section order.
-2. `rare-helmet-corrupted-advanced.txt`: Gladiatorial Helm is Armour/Evasion, level 80 (the copy has no Evasion line, `Requires: Level 65, 121 Str` is a body armour's, item level 78 is below the base's drop level); `Armour: 312 (augmented)` has no cause; "Hale" is +10–19 life, Tier 10 on helmets (70–84 is "Robust", Tier 5); "Reinforced" is 15–26 % armour (33–42 is not a tier). Right: the `{ Corruption Enhancement — Attack }` block and its 50–100 range, "of the Walrus" 26–30 % (Tier 4 of 8), "of Plunder" 6–10 % (Tier 3 of 3), `Corrupted`.
-3. `rare-boots-normal.txt`, `magic-crossbow-normal.txt`, `rare-crossbow-normal-hybrid.txt`: "Expert Leather Boots" and "Expert Bombard Crossbow" are not bases since 0.2.0; the property numbers don't follow from real bases. The stats themselves are real ranges.
-4. `unique-ring.txt`: Gold Ring is right (Requires Level 40, "(6—15)% increased Rarity of Items found" implicit); the unique is invented, as intended.
+Fixed on 28 Nov 2026: real 0.5.5 bases (Siege Crossbow, Dragonscale Boots, Gladiatorial Helm with its Evasion line, requirements and item level), property lines worked out from the base and the stats (§1.8; `PracticeItemTests`), the rune's weapon form (`Adds 26 to 32 Fire Damage (rune)` from two Greater Desert Runes, with its `Fire Damage:` line), the bare `{ Implicit Modifier }` header, and the game's tiers and ranges for every stat. The items, their names and rolls stay made up, as intended (the unique on the real Gold Ring too). Still open:
+
+1. **Not checked against real copies.** The tag words in the advanced headers (`— Defences, Armour, Evasion`, `— Attack, Critical`) and the untagged `"of Plunder"` follow Path of Building's modifier tags and the copies in §2.3; whether the game prints exactly these is not seen in a copy.
 
 ### 10.5 Live prices (`data/poe-ninja.json`)
 

@@ -20,7 +20,7 @@ public class RollViewTests
         var phys = Row(item, Phys).Roll!;
         Assert.Equal("T1", phys.Tier);
         Assert.True(phys.HasBar);
-        Assert.True(phys.Scored); // the demo pack says which end is better
+        Assert.True(phys.Scored); // the practice pack says which end is better
         Assert.Equal("170", phys.Low);
         Assert.Equal("179", phys.High);
         Assert.Equal(5.0 / 9, phys.Position, 3);
@@ -28,11 +28,11 @@ public class RollViewTests
         Assert.Equal($"{Phys}, Tier 1, rolls 170 to 179", Row(item, Phys).ToString());
 
         // Two numbers in one line: both ends show both.
-        var added = Row(item, "Adds 24 to 39 Physical Damage").Roll!;
+        var added = Row(item, "Adds 33 to 61 Physical Damage").Roll!;
         Assert.Equal("T2", added.Tier);
-        Assert.Equal("20/34", added.Low);
-        Assert.Equal("27/45", added.High);
-        Assert.Equal("Tier 2, rolls 20 to 27 and 34 to 45", added.Spoken);
+        Assert.Equal("29/50", added.Low);
+        Assert.Equal("44/75", added.High);
+        Assert.Equal("Tier 2, rolls 29 to 44 and 50 to 75", added.Spoken);
 
         Assert.Null(item.SearchRows.First(r => r.Row.Id == ComparisonWorksheet.PhysicalDpsId).Roll); // worked out, not rolled
         Assert.Null(item.AdvancedCopyHint);
@@ -81,9 +81,9 @@ public class RollViewTests
         var speed = card.Rows.First(r => r.Text == "17% increased Attack Speed");
         Assert.True(speed.On);
         Assert.Equal("≥ 15", speed.Right);
-        Assert.Equal("T3", speed.Roll!.Tier);
+        Assert.Equal("T1", speed.Roll!.Tier); // "of Acclaim" is the best a crossbow can roll
 
-        Assert.Equal("Rune", card.Rows.First(r => r.Text == "+18% to Fire Resistance").Right);
+        Assert.Equal("Rune", card.Rows.First(r => r.Text == "Adds 26 to 32 Fire Damage").Right);
         Assert.Null(card.Rows.First(r => r.Text.StartsWith("Physical DPS", StringComparison.Ordinal)).Roll);
     });
 }

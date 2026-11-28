@@ -195,9 +195,9 @@ public sealed class RollRowViewModel
         }
 
         (Note, NoteIsWarning) = NoteFor(l, scored, placed, advancedCopy);
-        if (l.RangeFromSyntheticPack)
+        if (l.RangeCaveat is { } caveat)
         {
-            Note += " Demo range, not game data.";
+            Note += " " + caveat;
         }
 
         var explanations = l.Status == LineStatus.Ambiguous
@@ -278,7 +278,7 @@ public sealed class RollRowViewModel
         var from = l.Status switch
         {
             LineStatus.FromAdvancedCopy => "range from the game",
-            LineStatus.Resolved => l.RangeFromSyntheticPack ? "range from demo data" : "range from data pack",
+            LineStatus.Resolved => l.RangeCaveat is null ? "range from data pack" : "range from an unverified data pack",
             LineStatus.Ambiguous => "more than one explanation",
             LineStatus.RangeMismatch => "range mismatch",
             LineStatus.NotInPack => "not in data pack",
@@ -413,7 +413,7 @@ public sealed partial class ItemViewModel : ObservableObject
     public bool IsUnique => Item.Rarity == ItemRarity.Unique;
     public string UniqueNameRow => $"Name: {Item.Name}";
 
-    /// <summary>"Expert Bombard Crossbow · Item level 82", "Stack of 7".</summary>
+    /// <summary>"Siege Crossbow · Item level 82", "Stack of 7".</summary>
     public string Subtitle => string.Join(" · ", new[]
     {
         Item.Name is null ? null : Item.BaseType,

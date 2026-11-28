@@ -85,17 +85,27 @@ public class TradeQueryTests
     [Fact]
     public void Practice_crossbow_searches_physical_dps_and_its_local_attack_speed()
     {
-        var search = Build(Practice("rare-crossbow-advanced")); // preset: physical DPS ≥ 319, attack speed ≥ 15
+        var search = Build(Practice("rare-crossbow-advanced")); // preset: physical DPS ≥ 682, attack speed ≥ 15
 
+        // The practice crossbow is made up, but its base is the game's: the link searches Siege Crossbows.
         Assert.Equal(
-            """{"query":{"status":{"option":"securable"},"stats":[{"type":"and","filters":[{"id":"explicit.stat_210067635","value":{"min":15}}]}],"filters":{"type_filters":{"filters":{"category":{"option":"weapon.crossbow"},"rarity":{"option":"rare"}}},"equipment_filters":{"filters":{"pdps":{"min":319}}},"misc_filters":{"filters":{"corrupted":{"option":"false"}}}}}}""",
+            """{"query":{"status":{"option":"securable"},"type":"Siege Crossbow","stats":[{"type":"and","filters":[{"id":"explicit.stat_210067635","value":{"min":15}}]}],"filters":{"type_filters":{"filters":{"category":{"option":"weapon.crossbow"},"rarity":{"option":"rare"}}},"equipment_filters":{"filters":{"pdps":{"min":682}}},"misc_filters":{"filters":{"corrupted":{"option":"false"}}}}}}""",
             search.Json);
         Assert.Equal("#% increased Attack Speed (Local)", TextInFile("explicit.stat_210067635"));
-
-        // The practice base is made up ("Expert …" bases are not on the site), so the link searches any
-        // rare crossbow and says so instead of sending a base the site would not know.
-        Assert.Equal(["Item base (Expert Bombard Crossbow)"], search.ByHand);
+        Assert.Empty(search.ByHand);
         Assert.Empty(search.Unmapped);
+    }
+
+    [Fact]
+    public void A_base_the_site_does_not_know_is_left_out_and_set_by_hand()
+    {
+        // "Expert …" bases belong to 0.1 (renamed in 0.2.0), so the site has none: the link searches any rare
+        // crossbow and says so instead of sending a base the site would not know.
+        var search = Build(Typed("Item Class: Crossbows\nRarity: Rare\nOld Thirst\nExpert Bombard Crossbow\n--------\nItem Level: 82\n--------\n17% increased Attack Speed"));
+
+        Assert.DoesNotContain("Bombard", search.Json, StringComparison.Ordinal);
+        Assert.Contains("\"category\":{\"option\":\"weapon.crossbow\"}", search.Json);
+        Assert.Equal(["Item base (Expert Bombard Crossbow)"], search.ByHand);
     }
 
     [Fact]
@@ -104,19 +114,20 @@ public class TradeQueryTests
         var s = Practice("rare-crossbow-advanced");
         Tick(s.W, RowKind.Explicit, ComparisonWorksheet.LocalPhysPercent);
         Tick(s.W, RowKind.Explicit, ComparisonWorksheet.LocalFlatPhys);
-        Tick(s.W, RowKind.Explicit, "#% increased Critical Hit Chance");
+        Tick(s.W, RowKind.Explicit, "#% to Critical Hit Chance");
         Tick(s.W, RowKind.Explicit, "# to Accuracy Rating");
-        Tick(s.W, RowKind.Rune, "#% to Fire Resistance");
+        Tick(s.W, RowKind.Rune, "Adds # to # Fire Damage");
         Assert.All(s.W.Rows, r => Assert.True(r.Supported, r.Label));
 
         var search = Build(s);
 
         Assert.Contains("""{"id":"explicit.stat_1509134228","value":{"min":157}}""", search.Json);
-        Assert.Contains("""{"id":"explicit.stat_587431675","value":{"min":27}}""", search.Json);
-        Assert.Contains("""{"id":"explicit.stat_691932474","value":{"min":176}}""", search.Json); // accuracy: local on a weapon
-        Assert.Contains("""{"id":"rune.stat_3372524247","value":{"min":16}}""", search.Json);
+        Assert.Contains("""{"id":"explicit.stat_518292764","value":{"min":3}}""", search.Json); // ⌊4.12 × 0.9⌋
+        Assert.Contains("""{"id":"explicit.stat_691932474","value":{"min":342}}""", search.Json); // accuracy: local on a weapon
+        Assert.Contains("""{"id":"rune.stat_709508406","value":{"min":26}}""", search.Json); // Adds 26 to 32: average 29
+        Assert.Equal("#% to Critical Hit Chance", TextInFile("explicit.stat_518292764"));
         Assert.Equal("# to Accuracy Rating (Local)", TextInFile("explicit.stat_691932474"));
-        Assert.Equal("#% to Fire Resistance", TextInFile("rune.stat_3372524247"));
+        Assert.Equal("Adds # to # Fire Damage", TextInFile("rune.stat_709508406"));
         Assert.Empty(search.Unmapped);
     }
 
@@ -124,12 +135,12 @@ public class TradeQueryTests
     public void Adds_x_to_y_is_searched_by_its_average_as_the_site_compares_it()
     {
         var s = Practice("rare-crossbow-advanced");
-        var flat = Tick(s.W, RowKind.Explicit, ComparisonWorksheet.LocalFlatPhys); // Adds 24 to 39: average 31.5
-        Assert.Equal(31.5m, flat.Actual);
+        var flat = Tick(s.W, RowKind.Explicit, ComparisonWorksheet.LocalFlatPhys); // Adds 33 to 61: average 47
+        Assert.Equal(47m, flat.Actual);
 
         var search = Build(s);
 
-        Assert.Contains("""{"id":"explicit.stat_1940865751","value":{"min":28}}""", search.Json); // ⌊31.5 × 0.9⌋
+        Assert.Contains("""{"id":"explicit.stat_1940865751","value":{"min":42}}""", search.Json); // ⌊47 × 0.9⌋
         Assert.Equal("Adds # to # Physical Damage", TextInFile("explicit.stat_1940865751"));
     }
 
@@ -219,10 +230,10 @@ public class TradeQueryTests
     [Fact]
     public void A_magic_base_is_found_inside_its_name_and_the_item_level_goes_in_only_when_set()
     {
-        var s = Practice("magic-crossbow-normal"); // "Merciless Expert Bombard Crossbow", item level 82
+        var s = Practice("magic-crossbow-normal"); // "Merciless Siege Crossbow", item level 82
         var search = Build(s);
 
-        Assert.Contains("\"type\":\"Bombard Crossbow\"", search.Json);
+        Assert.Contains("\"type\":\"Siege Crossbow\"", search.Json);
         Assert.Contains("\"rarity\":{\"option\":\"magic\"}", search.Json);
         Assert.DoesNotContain("ilvl", search.Json, StringComparison.Ordinal); // the app offers no item level choice for now
 
@@ -274,7 +285,7 @@ public class TradeQueryTests
     {
         var s = Practice("rare-crossbow-advanced");
         s.W.Row($"{RowKind.Explicit}:{ComparisonWorksheet.LocalAttackSpeed}")!.Group = FilterGroup.Optional;
-        Tick(s.W, RowKind.Explicit, "#% increased Critical Hit Chance").Group = FilterGroup.Optional;
+        Tick(s.W, RowKind.Explicit, "#% to Critical Hit Chance").Group = FilterGroup.Optional;
         s.W.Rows.Add(new WorksheetRow
         {
             Id = "Explicit:#% increased Attribute Requirements", Label = "10% increased Attribute Requirements", Kind = RowKind.Explicit,
@@ -284,7 +295,7 @@ public class TradeQueryTests
 
         var json = Build(s).Json;
 
-        Assert.Contains("""{"type":"count","value":{"min":1},"filters":[{"id":"explicit.stat_210067635","value":{"min":15}},{"id":"explicit.stat_587431675","value":{"min":27}}]}""", json);
+        Assert.Contains("""{"type":"count","value":{"min":1},"filters":[{"id":"explicit.stat_210067635","value":{"min":15}},{"id":"explicit.stat_518292764","value":{"min":3}}]}""", json);
         Assert.Contains("""{"type":"and","filters":[{"id":"explicit.stat_3639275092","value":{"max":11}}]}""", json);
     }
 
@@ -323,8 +334,8 @@ public class TradeQueryTests
 
         var search = TradeQuery.Build(s.W, s.Item, League, TradeData.Empty);
 
-        Assert.Contains("\"type\":\"Expert Bombard Crossbow\"", search.Json); // nothing to check it against
-        Assert.Contains("\"pdps\":{\"min\":319}", search.Json);
+        Assert.Contains("\"type\":\"Siege Crossbow\"", search.Json); // nothing to check it against
+        Assert.Contains("\"pdps\":{\"min\":682}", search.Json);
         Assert.Equal(["17% increased Attack Speed"], search.ByHand);
     }
 
@@ -345,7 +356,7 @@ public class TradeQueryTests
         Assert.Equal(search.Json, decoded);
         using var doc = JsonDocument.Parse(decoded);
         Assert.Equal("securable", doc.RootElement.GetProperty("query").GetProperty("status").GetProperty("option").GetString());
-        Assert.Equal(319, doc.RootElement.GetProperty("query").GetProperty("filters").GetProperty("equipment_filters").GetProperty("filters").GetProperty("pdps").GetProperty("min").GetDecimal());
+        Assert.Equal(682, doc.RootElement.GetProperty("query").GetProperty("filters").GetProperty("equipment_filters").GetProperty("filters").GetProperty("pdps").GetProperty("min").GetDecimal());
 
         var parsed = new Uri(url);
         Assert.Equal("www.pathofexile.com", parsed.Host);

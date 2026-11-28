@@ -5,7 +5,8 @@ using StillSaneExile.Domain.Items;
 namespace StillSaneExile.Domain.Data;
 
 /// <summary>A versioned bundle of base/modifier facts. Every pack states where its data came from and
-/// what it may be used for. A synthetic pack is test data and is labelled as such wherever it is used.
+/// what it may be used for. A synthetic pack is test data, and a pack of game data nobody has checked in the
+/// game is unverified; both are labelled as such wherever their ranges are shown (<see cref="RangeCaveat"/>).
 /// Bases and essences are optional: the craft simulator needs them, reading an item does not.</summary>
 public sealed record DataPack(
     int SchemaVersion,
@@ -23,6 +24,17 @@ public sealed record DataPack(
     public const int SupportedSchemaVersion = 1;
 
     public bool IsSynthetic => Provenance.Equals("synthetic", StringComparison.OrdinalIgnoreCase);
+
+    /// <summary>Someone checked the pack against the game and dated it. Game data exported from the game's files
+    /// stays unverified until then (AGENTS.md, rule 7).</summary>
+    public bool IsVerified => !IsSynthetic && !string.IsNullOrWhiteSpace(VerifiedDate);
+
+    /// <summary>What a range read from this pack must say about itself, or null for a verified pack.</summary>
+    public string? RangeCaveat =>
+        IsSynthetic ? "Demo range, not game data."
+        : IsVerified ? null
+        : CompatibleBuilds.Count > 0 ? $"Range from the game's {string.Join(", ", CompatibleBuilds)} data, not checked in game."
+        : "Range from game data, not checked in game.";
 }
 
 /// <summary>A family of modifiers that occupy the same slot (only one per item). Hybrid families have

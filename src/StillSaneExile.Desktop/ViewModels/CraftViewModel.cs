@@ -149,10 +149,11 @@ public sealed record GradeViewModel(OrbGrade Grade, string Label, string Tip, bo
 
 /// <summary>The craft simulator: a made-up item on the bench, orbs and omens to use on it, what is wanted
 /// and the odds of getting it, the stat pool and the history with what it cost. Practice only: it never
-/// touches the game. It runs on a data pack with weights and a base; only the demo's made-up pack has them,
-/// and the owner chose (28 Nov 2026) to offer it in every profile, labelled as made-up practice data: in a
-/// live league the costs come from the league's real prices. The one exception to "a live profile never
-/// sees made-up data" (AGENTS.md, rule 7).</summary>
+/// touches the game. It runs on a data pack with weights and a base; only the practice pack has them: the
+/// game's 0.5.5 stats for a Siege Crossbow, not checked in game, with made-up weights (the game files hold
+/// none). The owner chose (28 Nov 2026) to offer it in every profile, labelled as practice: in a live league
+/// the costs come from the league's real prices. Its made-up weights are the one exception to "a live
+/// profile never sees made-up data" (AGENTS.md, rule 7).</summary>
 public sealed partial class CraftViewModel : ObservableObject
 {
     private readonly ShellViewModel _shell;
@@ -180,7 +181,7 @@ public sealed partial class CraftViewModel : ObservableObject
     public ObservableCollection<OrbGroupViewModel> Groups { get; } = [];
     public ObservableCollection<OmenViewModel> Omens { get; } = [];
 
-    /// <summary>The demo's made-up pack is in use (the badge says so).</summary>
+    /// <summary>The practice pack is in use (the badge says what in it is made up).</summary>
     public bool HasData => _engine is not null;
 
     public bool NoData => !HasData;
@@ -313,12 +314,12 @@ public sealed partial class CraftViewModel : ObservableObject
 
     private DataPack? _practicePack;
 
-    /// <summary>The made-up pack the demo uses, read once for a live profile's bench; null if it can't be read.</summary>
+    /// <summary>The practice pack the demo uses, read once for a live profile's bench; null if it can't be read.</summary>
     private DataPack? PracticePack()
     {
         if (_practicePack is null)
         {
-            var file = System.IO.Path.Combine(_shell.Paths.Fixtures, "packs", "synthetic-demo.json");
+            var file = System.IO.Path.Combine(_shell.Paths.Fixtures, "packs", Session.PracticePackFile);
             _practicePack = System.IO.File.Exists(file) ? DataPackLoader.Load(System.IO.File.ReadAllText(file)).Pack : null;
         }
 
@@ -365,7 +366,7 @@ public sealed partial class CraftViewModel : ObservableObject
             }
 
             _wants = new Dictionary<string, int>(StringComparer.Ordinal);
-            foreach (var (family, tier) in new[] { ("syn.phys_pct", 2), ("syn.attack_speed", 3) })
+            foreach (var (family, tier) in new[] { ("crossbow.phys_pct", 2), ("crossbow.attack_speed", 3) })
             {
                 if (_engine.Families.Any(f => f.Id == family))
                 {

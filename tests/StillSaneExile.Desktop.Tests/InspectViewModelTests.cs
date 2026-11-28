@@ -44,7 +44,7 @@ public class InspectViewModelTests
     public void A_normal_copy_says_it_can_t_tell_whether_corruption_added_an_enchant() => Sta.Run(() =>
     {
         using var app = new TestApp();
-        const string Enchanted = "Item Class: Helmets\nRarity: Rare\nDusk Vigil\nGladiatorial Helm\n--------\nItem Level: 78\n--------\n+74 to Accuracy Rating (enchant)\n--------\n+79 to maximum Life";
+        const string Enchanted = "Item Class: Helmets\nRarity: Rare\nDusk Vigil\nGladiatorial Helm\n--------\nItem Level: 81\n--------\n+74 to Accuracy Rating (enchant)\n--------\n+79 to maximum Life";
 
         var corrupted = app.Shell.Inspect.AddFromText(Enchanted + "\n--------\nCorrupted", "hud")!;
         var clean = app.Shell.Inspect.AddFromText(Enchanted, "hud")!;
@@ -153,7 +153,7 @@ public class InspectViewModelTests
     private static string Query(string url) => Uri.UnescapeDataString(url[(url.IndexOf("?q=", StringComparison.Ordinal) + 3)..]);
 
     [Fact]
-    public void The_demo_links_its_search_in_standard_and_says_what_to_set_by_hand() => Sta.Run(() =>
+    public void The_demo_links_its_search_in_standard_with_the_practice_crossbows_own_base() => Sta.Run(() =>
     {
         using var app = new TestApp();
         Assert.False(app.Shell.Session.Trade.IsEmpty); // the shipped data file reached the app folder
@@ -162,11 +162,12 @@ public class InspectViewModelTests
 
         Assert.StartsWith("https://www.pathofexile.com/trade2/search/Standard?q=", item.TradeUrl);
         Assert.Contains("\"explicit.stat_210067635\"", Query(item.TradeUrl));
-        Assert.Contains("\"pdps\":{\"min\":319}", Query(item.TradeUrl));
+        Assert.Contains("\"pdps\":{\"min\":682}", Query(item.TradeUrl));
+        Assert.Contains("\"type\":\"Siege Crossbow\"", Query(item.TradeUrl)); // the practice item is made up, its base is the game's
         Assert.Contains("Standard", item.TradeTooltip);
         Assert.Contains("made up", item.TradeTooltip);
-        Assert.Equal("Set by hand: Item base (Expert Bombard Crossbow)", item.ByHand);
-        Assert.True(item.HasByHand);
+        Assert.Null(item.ByHand); // the link carries everything ticked
+        Assert.False(item.HasByHand);
 
         // "Copy search" carries the same link, then the filters as text, for the same league.
         Assert.StartsWith($"Trade site link: {item.TradeUrl}", item.Instructions);

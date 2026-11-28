@@ -24,6 +24,8 @@ public enum LineStatus
 /// affix whose numbers the game merged into one line.</summary>
 public sealed record Explanation(string Description, IReadOnlyList<(string FamilyId, int Tier)> Parts, bool IsMerge);
 
+/// <param name="RangeCaveat">When the range came from a pack that isn't verified, what the line must say about it
+/// (<see cref="DataPack.RangeCaveat"/>); null for the game's own range or a verified pack.</param>
 public sealed record LineReading(
     ModGroup Group,
     ModLine Line,
@@ -33,7 +35,7 @@ public sealed record LineReading(
     int? Tier,
     int? TierCount,
     string? AffixName,
-    bool RangeFromSyntheticPack,
+    string? RangeCaveat,
     IReadOnlyList<Explanation> Candidates,
     string? Note)
 {
@@ -98,7 +100,7 @@ public static class ItemReader
         }
 
         return new LineReading(group, line, LineStatus.FromAdvancedCopy, components, components.Select(RollQuality.Assess).ToList(),
-            group.Tier, family?.Tiers.Count, group.AffixName, RangeFromSyntheticPack: false, [], note);
+            group.Tier, family?.Tiers.Count, group.AffixName, RangeCaveat: null, [], note);
     }
 
     private static ModFamily? FindFamily(DataPack pack, ItemSnapshot item, ModGroup group, ModLine line)
@@ -118,7 +120,7 @@ public static class ItemReader
     private static LineReading ReadNormal(ItemSnapshot item, ModGroup group, ModLine line, DataPack? pack, HashSet<string> explicitTemplates)
     {
         LineReading Plain(LineStatus status, string? note) =>
-            new(group, line, status, line.Components, line.Components.Select(RollQuality.Assess).ToList(), null, null, null, false, [], note);
+            new(group, line, status, line.Components, line.Components.Select(RollQuality.Assess).ToList(), null, null, null, null, [], note);
 
         if (pack is null)
         {
@@ -216,7 +218,7 @@ public static class ItemReader
         if (candidates.Count > 1 || merges.Count > 0)
         {
             return new LineReading(group, line, LineStatus.Ambiguous, line.Components, line.Components.Select(RollQuality.Assess).ToList(),
-                null, null, null, false, candidates, "More than one affix explains this line. Use an advanced copy (Ctrl+Alt+C) to split it.");
+                null, null, null, null, candidates, "More than one affix explains this line. Use an advanced copy (Ctrl+Alt+C) to split it.");
         }
 
         var (family, tier) = singles[0];
@@ -231,7 +233,7 @@ public static class ItemReader
             .ToList();
 
         return new LineReading(group, line, LineStatus.Resolved, resolved, resolved.Select(RollQuality.Assess).ToList(),
-            tier.Tier, family.Tiers.Count, tier.Name, pack.IsSynthetic, candidates,
+            tier.Tier, family.Tiers.Count, tier.Name, pack.RangeCaveat, candidates,
             family.IsHybrid ? "Resolved as a hybrid affix: its other line shares this tier." : null);
     }
 

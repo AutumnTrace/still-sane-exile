@@ -14,7 +14,7 @@ public class ItemParserTests
         Assert.Equal("Crossbows", item.ItemClass);
         Assert.Equal(ItemRarity.Rare, item.Rarity);
         Assert.Equal("Doom Thirst", item.Name);
-        Assert.Equal("Expert Bombard Crossbow", item.BaseType);
+        Assert.Equal("Siege Crossbow", item.BaseType);
         Assert.Equal(82, item.ItemLevel);
         Assert.Equal(79, item.Requirements.Level);
         Assert.Equal(89, item.Requirements.Strength);
@@ -39,9 +39,9 @@ public class ItemParserTests
         var line = item.Mods.Single(m => m.AffixName == "Tempered").Lines.Single();
 
         Assert.Equal("Adds # to # Physical Damage", line.Template);
-        Assert.Equal([24m, 39m], line.Components.Select(x => x.Value));
-        Assert.Equal([20m, 34m], line.Components.Select(x => x.Min!.Value));
-        Assert.Equal([27m, 45m], line.Components.Select(x => x.Max!.Value));
+        Assert.Equal([33m, 61m], line.Components.Select(x => x.Value));
+        Assert.Equal([29m, 50m], line.Components.Select(x => x.Min!.Value));
+        Assert.Equal([44m, 75m], line.Components.Select(x => x.Max!.Value));
     }
 
     [Fact]
@@ -50,9 +50,10 @@ public class ItemParserTests
         var item = Fixtures.Item("rare-crossbow-advanced");
 
         Assert.Single(item.ModsFrom(ModSource.Implicit));
-        var rune = Assert.Single(item.ModsFrom(ModSource.Rune));
-        Assert.Equal("#% to Fire Resistance", rune.Lines.Single().Template);
-        Assert.Equal(18m, rune.Lines.Single().Components.Single().Value);
+        var rune = Assert.Single(item.ModsFrom(ModSource.Rune)); // two Greater Desert Runes, as a weapon has them
+        Assert.Equal("Adds # to # Fire Damage", rune.Lines.Single().Template);
+        Assert.Equal([26m, 32m], rune.Lines.Single().Components.Select(c => c.Value));
+        Assert.Equal("26-32", item.Properties["Fire Damage"]);
         Assert.Equal(5, item.ModsFrom(ModSource.Explicit).Count());
     }
 
@@ -62,11 +63,13 @@ public class ItemParserTests
         var item = Fixtures.Item("rare-crossbow-normal-hybrid");
 
         Assert.Equal(CopyKind.Normal, item.Copy);
-        Assert.Equal(98m, item.Weapon!.PhysicalMin);
-        Assert.Equal(210m, item.Weapon.PhysicalMax);
-        Assert.Equal(1.65m, item.Weapon.AttacksPerSecond);
-        // (98 + 210) / 2 × 1.65 — displayed numbers already include local mods and quality.
-        Assert.Equal(254.1m, WeaponMath.PhysicalDps(item.Weapon));
+        Assert.Equal(85m, item.Weapon!.PhysicalMin);
+        Assert.Equal(336m, item.Weapon.PhysicalMax);
+        Assert.Equal(1.95m, item.Weapon.AttacksPerSecond);
+        Assert.Equal(8.47m, item.Weapon.CriticalHitChance);
+        Assert.Equal(0.64m, item.Weapon.ReloadTime);
+        // (85 + 336) / 2 × 1.95 — displayed numbers already include local mods and quality.
+        Assert.Equal(410.475m, WeaponMath.PhysicalDps(item.Weapon));
     }
 
     [Fact]
@@ -199,7 +202,7 @@ public class ItemParserTests
     public void A_normal_copy_cannot_tell_a_corruption_enchant_from_an_anointment()
     {
         // Both end in "(enchant)" in a normal copy, so nothing is marked as added by corruption.
-        var text = "Item Class: Helmets\nRarity: Rare\nDusk Vigil\nGladiatorial Helm\n--------\nItem Level: 78\n--------\n+74 to Accuracy Rating (enchant)\n--------\n+79 to maximum Life\n--------\nCorrupted";
+        var text = "Item Class: Helmets\nRarity: Rare\nDusk Vigil\nGladiatorial Helm\n--------\nItem Level: 81\n--------\n+74 to Accuracy Rating (enchant)\n--------\n+79 to maximum Life\n--------\nCorrupted";
         var item = ItemTextParser.Parse(text, Fixtures.DemoNow, "x").Item!;
 
         var enchant = Assert.Single(item.ModsFrom(ModSource.Enchant));

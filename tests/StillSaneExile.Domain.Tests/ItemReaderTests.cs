@@ -27,10 +27,16 @@ public class ItemReaderTests
     [Fact]
     public void Item_level_excludes_tiers_the_item_cannot_have()
     {
-        // ilvl 81: the level-82 tier (170–179) is out, so 192% cannot be a lone pure roll.
+        // ilvl 81: "Merciless" (170–179, level 82) is out, so 192% is never Merciless + "Squire's" (15–19).
         var reading = ItemReader.Read(Fixtures.Item("rare-crossbow-normal-hybrid"), Fixtures.Pack());
         var phys = Line(reading, "#% increased Physical Damage");
         Assert.DoesNotContain(phys.Candidates, c => !c.IsMerge);
+        Assert.DoesNotContain(phys.Candidates, c => c.Parts.Contains(("crossbow.phys_pct", 1)));
+
+        // The same line at item level 82 can be that pair.
+        var text = Fixtures.Text("items/rare-crossbow-normal-hybrid.txt").Replace("Item Level: 81", "Item Level: 82", StringComparison.Ordinal);
+        var at82 = Line(ItemReader.Read(ItemTextParser.Parse(text, Fixtures.DemoNow, "x").Item!, Fixtures.Pack()), "#% increased Physical Damage");
+        Assert.Contains(at82.Candidates, c => c.Parts.Contains(("crossbow.phys_pct", 1)));
     }
 
     [Fact]
@@ -38,14 +44,35 @@ public class ItemReaderTests
     {
         var reading = ItemReader.Read(Fixtures.Item("rare-crossbow-normal-hybrid"), Fixtures.Pack());
 
-        var speed = Line(reading, "#% increased Attack Speed");
+        var speed = Line(reading, "#% increased Attack Speed"); // 18%: only "of Acclaim" (17–19) fits
         Assert.Equal(LineStatus.Resolved, speed.Status);
-        Assert.Equal(2, speed.Tier);
-        Assert.True(speed.RangeFromSyntheticPack);
+        Assert.Equal(1, speed.Tier);
+        Assert.Equal("T1 of 5", speed.TierLabel); // ranged weapons stop at "of Acclaim"
+        Assert.Equal("Range from the game's 0.5.5 data, not checked in game.", speed.RangeCaveat);
         var roll = speed.Rolls.Single();
         Assert.Equal(RollStatus.Scored, roll.Status);
-        Assert.Equal(20m, roll.Min);
-        Assert.Equal(23m, roll.Max);
+        Assert.Equal(17m, roll.Min);
+        Assert.Equal(19m, roll.Max);
+    }
+
+    [Fact]
+    public void The_practice_pack_is_unverified_game_data_and_says_so()
+    {
+        var pack = Fixtures.Pack();
+        Assert.False(pack.IsSynthetic);
+        Assert.False(pack.IsVerified); // nobody has checked it in the game yet
+        Assert.Equal(["0.5.5"], pack.CompatibleBuilds);
+
+        // The physical damage family as the game has it in 0.5.5 (docs/GAME.md, 4.2).
+        var phys = pack.Families.Single(f => f.Id == "crossbow.phys_pct");
+        Assert.Equal(["Merciless", "Tyrannical", "Cruel", "Bloodthirsty", "Vicious", "Wicked", "Serrated", "Heavy"], phys.Tiers.Select(t => t.Name));
+        Assert.Equal([82, 75, 60, 46, 33, 16, 8, 1], phys.Tiers.Select(t => t.Level));
+        Assert.Equal((170m, 179m), phys.Tiers[0].Range(0));
+
+        // What each kind of pack must say next to a range read from it.
+        Assert.Equal("Demo range, not game data.", (pack with { Provenance = "synthetic" }).RangeCaveat);
+        Assert.Null((pack with { VerifiedDate = "2026-12-12" }).RangeCaveat);
+        Assert.Equal("Range from game data, not checked in game.", (pack with { CompatibleBuilds = [] }).RangeCaveat);
     }
 
     [Fact]

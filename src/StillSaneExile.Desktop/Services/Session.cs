@@ -165,14 +165,18 @@ public sealed class Session
         return book is { IsSynthetic: false } && string.Equals(book.League, league, StringComparison.Ordinal) ? book : null;
     }
 
+    /// <summary>The practice pack under fixtures/packs: the game's 0.5.5 stats for the practice items, not checked in
+    /// game, with made-up weights for the craft simulator.</summary>
+    public const string PracticePackFile = "practice-0.5.5.json";
+
     /// <summary>The demo profile's session, whatever profile is active (onboarding shows a demo sample).</summary>
     public static Session Demo(Store store, Settings settings, AppPaths paths)
     {
         var book = PriceBook.FromJson(File.ReadAllText(Path.Combine(paths.Fixtures, "demo", "pricebook.json")));
-        var load = DataPackLoader.Load(File.ReadAllText(Path.Combine(paths.Fixtures, "packs", "synthetic-demo.json")));
+        var load = DataPackLoader.Load(File.ReadAllText(Path.Combine(paths.Fixtures, "packs", PracticePackFile)));
         PriceBookGuard.EnsureAllowed(ProfileKind.Demo, Settings.DemoLeague, book);
         return new Session(store, ProfileKind.Demo, book.League, settings.DisplayCurrency(ProfileKind.Demo), settings.ListingDenomination(ProfileKind.Demo), book,
-            load.Pack, load.Pack is null ? $"Pack failed to load: {load.Error}" : "Synthetic demo pack (not game data)",
+            load.Pack, load.Pack is null ? $"Pack failed to load: {load.Error}" : load.Pack.Title,
             new DemoTimeProvider(DemoTimeProvider.Start), LoadSeeded(paths), TradeDataFile.Load(paths), LoadPracticeTexts(paths), colours: settings.PriceColours);
     }
 

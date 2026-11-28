@@ -27,10 +27,10 @@ public class MarketSearchTests
     [Fact]
     public void Selected_rows_must_be_present_and_reach_the_bound()
     {
-        var w = Crossbow(); // preset: physical DPS ≥ 319 and attack speed ≥ 15
-        Assert.True(MarketSearch.Matches(w, L("a", 2, "divine", 330, 16)));
-        Assert.False(MarketSearch.Matches(w, L("b", 2, "divine", 300, 16)));
-        Assert.False(MarketSearch.Matches(w, L("c", 2, "divine", 330)));
+        var w = Crossbow(); // preset: physical DPS ≥ 682 and attack speed ≥ 15
+        Assert.True(MarketSearch.Matches(w, L("a", 2, "divine", 720, 16)));
+        Assert.False(MarketSearch.Matches(w, L("b", 2, "divine", 650, 16)));
+        Assert.False(MarketSearch.Matches(w, L("c", 2, "divine", 720)));
     }
 
     [Fact]
@@ -38,14 +38,14 @@ public class MarketSearchTests
     {
         var w = Crossbow();
         w.Row(AttackSpeedId)!.Selected = false;
-        Assert.True(MarketSearch.Matches(w, L("a", 2, "divine", 330)));
-        Assert.False(MarketSearch.Matches(w, L("b", 2, "divine", 330, buyNow: false)));
+        Assert.True(MarketSearch.Matches(w, L("a", 2, "divine", 720)));
+        Assert.False(MarketSearch.Matches(w, L("b", 2, "divine", 720, buyNow: false)));
 
         w.BuyNowOnly = false;
         w.MinItemLevel = w.SuggestedItemLevel;
         Assert.Equal(80, w.MinItemLevel);
-        Assert.True(MarketSearch.Matches(w, L("c", 2, "divine", 330, buyNow: false)));
-        Assert.False(MarketSearch.Matches(w, L("d", 2, "divine", 330, level: 78)));
+        Assert.True(MarketSearch.Matches(w, L("c", 2, "divine", 720, buyNow: false)));
+        Assert.False(MarketSearch.Matches(w, L("d", 2, "divine", 720, level: 78)));
     }
 
     [Fact]
@@ -57,10 +57,10 @@ public class MarketSearchTests
         Assert.True(w.BuyNowOnly);
         List<Listing> listings =
         [
-            L("unsure", 1, "divine", 330, 16, buyNow: false),
-            L("a", 2, "divine", 330, 16),
-            L("b", 3, "divine", 330, 16),
-            L("c", 4, "divine", 330, 16),
+            L("unsure", 1, "divine", 720, 16, buyNow: false),
+            L("a", 2, "divine", 720, 16),
+            L("b", 3, "divine", 720, 16),
+            L("c", 4, "divine", 720, 16),
         ];
 
         var r = MarketSearch.Run(w, listings, Converter(), "divine", Fixtures.DemoNow);
@@ -78,7 +78,7 @@ public class MarketSearchTests
     public void Results_are_sorted_cheapest_first_in_the_display_currency()
     {
         var w = Crossbow();
-        var r = MarketSearch.Run(w, [L("a", 2, "divine", 330, 16), L("b", 150, "exalted", 330, 16), L("c", 1, "divine", 330, 16)], Converter(), "divine", Fixtures.DemoNow);
+        var r = MarketSearch.Run(w, [L("a", 2, "divine", 720, 16), L("b", 150, "exalted", 720, 16), L("c", 1, "divine", 720, 16)], Converter(), "divine", Fixtures.DemoNow);
         Assert.Equal(["c", "b", "a"], r.Matches.Select(m => m.Listing.Id));
         Assert.Equal(1.25m, Math.Round(r.Matches[1].Value, 6));
         Assert.Equal(SearchConfidence.Rough, r.Confidence);
@@ -92,7 +92,7 @@ public class MarketSearchTests
     [InlineData(8, SearchConfidence.Good)]
     public void Confidence_follows_how_many_are_for_sale(int count, SearchConfidence expected)
     {
-        var listings = Enumerable.Range(1, count).Select(i => L($"l{i}", i, "divine", 330, 16));
+        var listings = Enumerable.Range(1, count).Select(i => L($"l{i}", i, "divine", 720, 16));
         var r = MarketSearch.Run(Crossbow(), listings, Converter(), "divine", Fixtures.DemoNow);
         Assert.Equal(expected, r.Confidence);
         Assert.Equal(count, r.Count);
@@ -101,7 +101,7 @@ public class MarketSearchTests
     [Fact]
     public void Too_few_shows_the_cheapest_and_none_shows_no_band()
     {
-        var two = MarketSearch.Run(Crossbow(), [L("a", 3, "divine", 330, 16), L("b", 2, "divine", 330, 16)], Converter(), "divine", Fixtures.DemoNow);
+        var two = MarketSearch.Run(Crossbow(), [L("a", 3, "divine", 720, 16), L("b", 2, "divine", 720, 16)], Converter(), "divine", Fixtures.DemoNow);
         Assert.Equal((2m, 2m), (two.Low!.Value, two.High!.Value));
 
         var none = MarketSearch.Run(Crossbow(), [], Converter(), "divine", Fixtures.DemoNow);
@@ -113,8 +113,8 @@ public class MarketSearchTests
     public void Demo_market_is_deterministic_and_loosening_the_search_finds_more()
     {
         var w = Crossbow();
-        var a = DemoMarket.For(w, "Rare|Expert Bombard Crossbow|Doom Thirst", 300, 82, 120, Fixtures.DemoNow);
-        var b = DemoMarket.For(w, "Rare|Expert Bombard Crossbow|Doom Thirst", 300, 82, 120, Fixtures.DemoNow);
+        var a = DemoMarket.For(w, "Rare|Siege Crossbow|Doom Thirst", 300, 82, 120, Fixtures.DemoNow);
+        var b = DemoMarket.For(w, "Rare|Siege Crossbow|Doom Thirst", 300, 82, 120, Fixtures.DemoNow);
         Assert.Equal(a.Select(l => (l.Amount, l.Currency, l.Stats.Count)), b.Select(l => (l.Amount, l.Currency, l.Stats.Count)));
         Assert.Equal(DemoMarket.DefaultCount, a.Count);
 
@@ -128,7 +128,7 @@ public class MarketSearchTests
     public void Demo_market_prices_the_practice_crossbow_near_its_anchor()
     {
         var w = Crossbow();
-        var listings = DemoMarket.For(w, "Rare|Expert Bombard Crossbow|Doom Thirst", 300, 82, 120, Fixtures.DemoNow);
+        var listings = DemoMarket.For(w, "Rare|Siege Crossbow|Doom Thirst", 300, 82, 120, Fixtures.DemoNow);
         var r = MarketSearch.Run(w, listings, Converter(), "divine", Fixtures.DemoNow);
         Assert.Equal(SearchConfidence.Good, r.Confidence);
         Assert.InRange(r.Low!.Value, 1.2m, 3m);
