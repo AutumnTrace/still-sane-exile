@@ -41,7 +41,9 @@
       </Style.Triggers>
     </Style>
 
-    <!-- A row as the price searched with it, and on a pinned card the unique's name, which can't be unticked. -->
+    <!-- A row as the price searched with it, and on a pinned card the unique's name, which can't be unticked.
+         Under a stat, its tier and roll bar; on the right, the number searched for, or where an unticked
+         stat comes from (a rune, an implicit). -->
     <DataTemplate DataType="{x:Type vm:PeekRowViewModel}">
       <Border Padding="6,3">
         <Border.Style>
@@ -59,6 +61,10 @@
             <ColumnDefinition Width="*" />
             <ColumnDefinition Width="Auto" />
           </Grid.ColumnDefinitions>
+          <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+          </Grid.RowDefinitions>
           <Grid Width="15" Height="15" VerticalAlignment="Center" HorizontalAlignment="Left">
             <Border Background="{StaticResource Accent}" Visibility="{Binding On, Converter={StaticResource Vis}}" AutomationProperties.Name="In search">
               <Path Data="M 3.3,7.6 L 6,10.3 L 11.6,4.6" Stroke="{StaticResource OnAccent}" StrokeThickness="2" />
@@ -102,6 +108,8 @@
               </Style>
             </TextBlock.Style>
           </TextBlock>
+          <!-- Under the whole row, so every bar of the card is as long whatever sits on the right. -->
+          <v:RollLine Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="2" DataContext="{Binding Roll}" Margin="8,3,0,1" Visibility="{Binding Converter={StaticResource Vis}}" />
         </Grid>
       </Border>
     </DataTemplate>
@@ -124,6 +132,10 @@
             <ColumnDefinition Width="*" />
             <ColumnDefinition Width="Auto" />
           </Grid.ColumnDefinitions>
+          <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+          </Grid.RowDefinitions>
           <CheckBox IsChecked="{Binding IsOn}" VerticalContentAlignment="Center" AutomationProperties.Name="{Binding Text}">
             <StackPanel Margin="-2,0,6,0">
               <TextBlock Text="{Binding Text}">
@@ -156,8 +168,10 @@
             <TextBlock Text="{Binding BoundLabel}" MinWidth="38" TextAlignment="Center" FontFamily="{StaticResource CapsFont}" FontSize="13.5" FontWeight="ExtraBold" Foreground="{StaticResource Accent}" VerticalAlignment="Center" Margin="1,0" />
             <Button Style="{StaticResource CardStep}" Content="+" Command="{Binding IncreaseCommand}" ToolTip="Raise" AutomationProperties.Name="{Binding RaiseName}" />
           </StackPanel>
-          <TextBlock Grid.Column="1" Text="{Binding TierOrBlank}" FontFamily="{StaticResource CapsFont}" FontSize="13.5" FontWeight="ExtraBold" Foreground="{StaticResource TextFaint}" VerticalAlignment="Center"
+          <TextBlock Grid.Column="1" Text="{Binding Kind}" FontFamily="{StaticResource CapsFont}" FontSize="13.5" FontWeight="ExtraBold" Foreground="{StaticResource TextFaint}" VerticalAlignment="Center"
                      Visibility="{Binding IsOn, Converter={StaticResource Vis}, ConverterParameter=invert}" />
+          <!-- Lined up with the stat's text, under the whole row as on the held card. -->
+          <v:RollLine Grid.Row="1" Grid.ColumnSpan="2" DataContext="{Binding Roll}" Margin="25,3,0,1" Visibility="{Binding Converter={StaticResource Vis}}" />
         </Grid>
       </Border>
     </DataTemplate>
@@ -281,14 +295,19 @@
 
           <StackPanel Visibility="{Binding HasRows, Converter={StaticResource Vis}}">
             <Border Height="1" Background="{StaticResource Edge}" Margin="14,0" />
-            <StackPanel x:Name="SearchedWith" Orientation="Horizontal" Margin="14,7,14,3">
-              <TextBlock Text="Searched with" Style="{StaticResource CardHead}" />
-              <Border Style="{StaticResource AccentPill}" Margin="8,0,0,0">
-                <TextBlock FontSize="14"><Run Text="{Binding OnCount, Mode=OneWay}" /><Run Text=" / " /><Run Text="{Binding Total, Mode=OneWay}" /></TextBlock>
-              </Border>
-            </StackPanel>
-            <ItemsControl x:Name="RowsList" ItemsSource="{Binding Rows}" Margin="8,0,8,4" Focusable="False" Visibility="{Binding ShowsStaticRows, Converter={StaticResource Vis}}" />
-            <ItemsControl x:Name="LiveRowsList" ItemsSource="{Binding LiveRows}" Margin="8,0,8,4" Focusable="False" AutomationProperties.Name="Stats in the search"
+            <DockPanel Margin="14,7,14,3">
+              <!-- A normal copy says nothing of tiers: the game's advanced copy does. -->
+              <TextBlock DockPanel.Dock="Right" Text="{Binding Item.AdvancedCopyHint}" FontSize="12.5" Foreground="{StaticResource TextFaint}" VerticalAlignment="Center" Margin="8,0,0,0"
+                         Visibility="{Binding Item.HasAdvancedCopyHint, Converter={StaticResource Vis}, FallbackValue=Collapsed}" />
+              <StackPanel x:Name="SearchedWith" Orientation="Horizontal">
+                <TextBlock Text="Searched with" Style="{StaticResource CardHead}" />
+                <Border Style="{StaticResource AccentPill}" Margin="8,0,0,0">
+                  <TextBlock FontSize="14"><Run Text="{Binding OnCount, Mode=OneWay}" /><Run Text=" / " /><Run Text="{Binding Total, Mode=OneWay}" /></TextBlock>
+                </Border>
+              </StackPanel>
+            </DockPanel>
+            <ItemsControl x:Name="RowsList" ItemsSource="{Binding Rows}" Margin="8,0,8,4" Focusable="False" Grid.IsSharedSizeScope="True" Visibility="{Binding ShowsStaticRows, Converter={StaticResource Vis}}" />
+            <ItemsControl x:Name="LiveRowsList" ItemsSource="{Binding LiveRows}" Margin="8,0,8,4" Focusable="False" Grid.IsSharedSizeScope="True" AutomationProperties.Name="Stats in the search"
                           Visibility="{Binding ShowsLiveRows, Converter={StaticResource Vis}}" />
           </StackPanel>
 

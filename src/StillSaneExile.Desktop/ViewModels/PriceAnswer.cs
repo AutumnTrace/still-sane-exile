@@ -148,14 +148,17 @@ public sealed record PriceAnswer(string Lead, string Big, string? Line, string N
             note, line.Freshness is not (Freshness.Fresh or null), null, note) { Tier = price.Tier(total) };
     }
 
-    /// <summary>A price book baseline (e.g. a unique) when there are no listings to search. The card says
-    /// how old the figure is, and when it may be out of date.</summary>
+    /// <summary>A price book baseline (e.g. a unique) when there are no listings to search. The label holds
+    /// the price alone; the note says what can move it, and the line under it where the figure came from,
+    /// how old it is, and when it may be out of date.</summary>
     public static PriceAnswer Baseline(PriceLine line, DateTimeOffset? now = null, PriceText? price = null)
     {
-        var age = line.ObservedTo is { } at && now is { } n ? $" · {ValueFormat.Age(n - at)}" : "";
-        var stale = line.Freshness is Freshness.Stale or Freshness.RankingSuppressed ? " · may be out of date" : "";
-        return new("This usually sells for about", line.Headline, null, line.Detail ?? "Rolls can change the price.", true, null,
-            $"Typical price · rolls can change it{age}{stale}")
+        var age = line.ObservedTo is { } at && now is { } n ? ValueFormat.Age(n - at) : null;
+        var stale = line.Freshness is Freshness.Stale or Freshness.RankingSuppressed ? "may be out of date" : null;
+        var (note, peek) = line.UncorruptedStandIn
+            ? ("Price of an uncorrupted one: corruption can change it.", "Uncorrupted price")
+            : ("Your rolls can change it.", "Your rolls can change it");
+        return new("Usually sells for about", line.Headline, line.Detail, note, line.UncorruptedStandIn || stale is not null, null, Join(peek, age, stale))
         {
             Tier = price is not null && line.Amount is { } amount && line.Denomination is { } d ? price.Tier(amount, d) : null,
         };

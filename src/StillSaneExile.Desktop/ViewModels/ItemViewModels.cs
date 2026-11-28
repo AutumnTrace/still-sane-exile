@@ -30,11 +30,18 @@ public sealed partial class SearchRowViewModel : ObservableObject
     {
         Row = row;
         Reading = reading;
+        Roll = RollView.From(reading);
         _changed = changed;
     }
 
     public WorksheetRow Row { get; }
     public LineReading? Reading { get; }
+
+    /// <summary>The stat's tier and where its roll sits in the tier's range, under its text; null when
+    /// neither is known (a normal copy without a data pack, a derived number).</summary>
+    public RollView? Roll { get; }
+
+    public bool HasRoll => Roll is not null;
 
     public string Text => Row.Kind == RowKind.Derived && Row.Actual is { } a ? $"{Row.Label} {RollQuality.Num(a)}" : Row.Label;
 
@@ -55,18 +62,17 @@ public sealed partial class SearchRowViewModel : ObservableObject
     public string RaiseName => $"Raise the {(IsAtMost ? "maximum" : "minimum")} for {Text}";
 
     /// <summary>The row as a screen reader says it (WPF reads a list row through ToString).</summary>
-    public override string ToString() => Text;
+    public override string ToString() => Roll is { } r ? $"{Text}, {r.Spoken}" : Text;
 
-    public string Tier => Reading?.Tier is { } t ? $"T{t}" : Row.Kind switch
+    /// <summary>Where a stat comes from when that is not an ordinary affix: "Rune", "Implicit", "Enchant",
+    /// else nothing. The tier sits under the stat, with its roll.</summary>
+    public string Kind => Row.Kind switch
     {
         RowKind.Rune => "Rune",
         RowKind.Implicit => "Implicit",
         RowKind.Enchant => "Enchant",
-        _ => "—",
+        _ => "",
     };
-
-    /// <summary>What the peek card shows on the right of an unticked row: the tier, or nothing.</summary>
-    public string TierOrBlank => Tier == "—" ? "" : Tier;
 
     public string? Hint =>
         IsAmbiguous ? AmbiguousHint
@@ -317,7 +323,7 @@ public sealed class ComparableViewModel(Comparable c, string display, bool seede
 
 /// <summary>Everything the price check shows for one item snapshot. The Inspect page and the in-game
 /// price check window bind to the same object, so a change in one shows in the other.</summary>
-/// <remarks>Changing the search (a tick, a number, strictness, buy-now, item level) never searches: it marks
+/// <remarks>Changing the search (a tick, a number, strictness, buy-now) never searches: it marks
 /// the result shown as old ("Search to update") until the player clicks Search. The demo's practice items
 /// get their first result at once, from synthetic listings; a live item gets nothing from the trade site
 /// until Search is clicked, so opening a card (a key press) never makes a request.</remarks>
@@ -595,23 +601,14 @@ public sealed partial class ItemViewModel : ObservableObject
         }
     }
 
-    public bool HasItemLevel => Worksheet.SuggestedItemLevel is not null;
+    /// <summary>On the card, when a normal copy left every stat without a tier or range: the game's advanced
+    /// copy prints them. Null when there is nothing to add.</summary>
+    public string? AdvancedCopyHint =>
+        Item.Copy == CopyKind.Normal && SearchRows.Any(r => r.Reading is { Line.Components.Count: > 0 }) && !SearchRows.Any(r => r.HasRoll)
+            ? IsUnique ? "Ctrl+Alt+C for ranges" : "Ctrl+Alt+C for tiers"
+            : null;
 
-    public string ItemLevelLabel => $"Item level {Worksheet.SuggestedItemLevel} or higher";
-
-    public bool UseItemLevel
-    {
-        get => Worksheet.MinItemLevel is not null;
-        set
-        {
-            if (UseItemLevel != value)
-            {
-                Worksheet.MinItemLevel = value ? Worksheet.SuggestedItemLevel : null;
-                OnPropertyChanged();
-                OnSearchChanged();
-            }
-        }
-    }
+    public bool HasAdvancedCopyHint => AdvancedCopyHint is not null;
 
     public void RefreshPrice()
     {
@@ -785,7 +782,6 @@ public sealed partial class ItemViewModel : ObservableObject
         }
 
         OnPropertyChanged(nameof(BuyNowOnly));
-        OnPropertyChanged(nameof(UseItemLevel));
         OnSearchChanged();
         var searched = old._resultRows.Select(r => r.Row.Id).ToHashSet(StringComparer.Ordinal);
         ApplyPage(page, key, SearchRows.Where(r => searched.Contains(r.Row.Id)).ToList());
@@ -892,7 +888,6 @@ public sealed partial class ItemViewModel : ObservableObject
         }
 
         OnPropertyChanged(nameof(BuyNowOnly));
-        OnPropertyChanged(nameof(UseItemLevel));
         OnSearchChanged();
     }
 

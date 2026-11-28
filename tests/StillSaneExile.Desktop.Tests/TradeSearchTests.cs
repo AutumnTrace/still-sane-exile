@@ -163,7 +163,6 @@ public class TradeSearchTests
         item.SearchRows.First(r => !r.IsOn).IsOn = true;
         item.SearchRows.First(r => r.IsOn).IncreaseCommand.Execute(null);
         item.BuyNowOnly = false;
-        item.UseItemLevel = true;
         item.SetStrictnessCommand.Execute("20");
         item.ResetCommand.Execute(null);
         Sta.Drain();

@@ -51,9 +51,13 @@ public class LivePricesTests
         Assert.Single(new PriceBookArchive(app.Paths.Prices).Files(League));
 
         var unique = app.Shell.Inspect.AddFromText(Mageblood, "test")!;
-        Assert.Equal("≈ 180 div baseline · check rolls", unique.Answer.Big);
-        Assert.StartsWith("poe.ninja category baseline, just now · 40 listed.", unique.Answer.Note, StringComparison.Ordinal);
-        Assert.Equal("Typical price · rolls can change it · just now", unique.Answer.PeekNote);
+        // The label holds the price alone; what moves it and where it came from sit under it, in short.
+        Assert.Equal("Usually sells for about", unique.Answer.Lead);
+        Assert.Equal("180 div", unique.Answer.Big);
+        Assert.Equal("Your rolls can change it.", unique.Answer.Note);
+        Assert.False(unique.Answer.NoteIsWarning);
+        Assert.Equal("poe.ninja · just now · 40 listed", unique.Answer.Line);
+        Assert.Equal("Your rolls can change it · just now", unique.Answer.PeekNote);
 
         var divine = app.Shell.Inspect.AddFromText(Divine, "test")!;
         Assert.Equal("1 div", divine.Answer.Big);
@@ -238,7 +242,7 @@ public class LivePricesTests
         Assert.True(prices.NextRefresh >= DateTimeOffset.UtcNow + TimeSpan.FromMinutes(19));
 
         var unique = app.Shell.Inspect.AddFromText(Mageblood, "test")!;
-        Assert.Contains("3 h ago · 40 listed · stale.", unique.Answer.Note, StringComparison.Ordinal);
+        Assert.Equal("poe.ninja · 3 h ago · 40 listed · may be out of date", unique.Answer.Line);
         Assert.EndsWith("· 3 h ago · may be out of date", unique.Answer.PeekNote, StringComparison.Ordinal);
     });
 

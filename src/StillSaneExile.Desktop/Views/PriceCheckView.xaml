@@ -135,7 +135,7 @@
             </Grid>
           </Border>
 
-          <ItemsControl ItemsSource="{Binding SearchRows}" Margin="10,0" Focusable="False" AutomationProperties.Name="Stats in the search">
+          <ItemsControl ItemsSource="{Binding SearchRows}" Margin="10,0" Focusable="False" Grid.IsSharedSizeScope="True" AutomationProperties.Name="Stats in the search">
             <ItemsControl.ItemTemplate>
               <DataTemplate DataType="{x:Type vm:SearchRowViewModel}">
                 <Border Padding="8,4">
@@ -181,6 +181,7 @@
                           </TextBlock.Style>
                         </TextBlock>
                         <TextBlock Text="{Binding Hint}" FontSize="13" Foreground="{StaticResource TextFaint}" TextWrapping="Wrap" Margin="0,1,0,0" Visibility="{Binding HasHint, Converter={StaticResource Vis}}" />
+                        <v:RollLine DataContext="{Binding Roll}" Margin="0,4,0,1" Visibility="{Binding Converter={StaticResource Vis}}" />
                       </StackPanel>
                     </CheckBox>
                     <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
@@ -215,17 +216,14 @@
                       </TextBox>
                       <Button Style="{StaticResource StepButton}" Content="+" Command="{Binding IncreaseCommand}" ToolTip="Raise" AutomationProperties.Name="{Binding RaiseName}" />
                     </StackPanel>
-                    <TextBlock Grid.Column="2" Text="{Binding Tier}" FontFamily="{StaticResource CapsFont}" FontSize="14" FontWeight="Bold" Foreground="{StaticResource TextFaint}" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                    <TextBlock Grid.Column="2" Text="{Binding Kind}" FontFamily="{StaticResource CapsFont}" FontSize="14" FontWeight="Bold" Foreground="{StaticResource TextFaint}" HorizontalAlignment="Center" VerticalAlignment="Center" />
                   </Grid>
                 </Border>
               </DataTemplate>
             </ItemsControl.ItemTemplate>
           </ItemsControl>
 
-          <WrapPanel Margin="18,8,18,8">
-            <CheckBox IsChecked="{Binding BuyNowOnly}" Content="Buy-now listings only" MinHeight="32" Margin="0,0,20,0" />
-            <CheckBox IsChecked="{Binding UseItemLevel}" Content="{Binding ItemLevelLabel}" MinHeight="32" Visibility="{Binding HasItemLevel, Converter={StaticResource Vis}}" />
-          </WrapPanel>
+          <CheckBox IsChecked="{Binding BuyNowOnly}" Content="Buy-now listings only" MinHeight="32" Margin="18,8,18,8" HorizontalAlignment="Left" />
 
           <!-- Search: changing the search above never searches by itself. -->
           <DockPanel Margin="18,2,18,8" Visibility="{Binding CanSearch, Converter={StaticResource Vis}}">

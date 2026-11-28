@@ -5,16 +5,18 @@ using StillSaneExile.Domain.Items;
 
 namespace StillSaneExile.Desktop.ViewModels;
 
-/// <summary>One line of "Searched with": ticked stats show the number searched for, unticked ones their tier.</summary>
+/// <summary>One line of "Searched with": ticked stats show the number searched for on the right, a rune or
+/// implicit says so there; under the stat, its tier and where its roll sits in the tier's range.</summary>
 /// <param name="IsProperty">A number worked out from the item (physical DPS) or the unique's name: drawn like
 /// the game's properties, not in a stat's blue.</param>
-public sealed record PeekRowViewModel(bool On, string Text, string Right, string? Hint, bool IsProperty = false)
+public sealed record PeekRowViewModel(bool On, string Text, string Right, string? Hint, bool IsProperty = false, RollView? Roll = null)
 {
     public bool Off => !On;
     public bool HasHint => Hint is not null;
+    public bool HasRoll => Roll is not null;
 
     /// <summary>The row as a screen reader says it (WPF reads a list row through ToString).</summary>
-    public override string ToString() => $"{Text}, {(On ? "searched" : "not searched")}{(Right.Length > 0 ? $", {Right}" : "")}";
+    public override string ToString() => string.Join(", ", new[] { Text, On ? "searched" : "not searched", Right, Roll?.Spoken }.Where(s => !string.IsNullOrEmpty(s)));
 }
 
 /// <summary>The quick peek card: the item, what it is worth, the cheapest listings and exactly which stats
@@ -117,8 +119,8 @@ public sealed partial class PeekViewModel : ObservableObject
         {
             var ordered = item.SearchRows.Where(r => r.IsOn).Concat(item.SearchRows.Where(r => !r.IsOn)).Take(MaxRows).ToList();
             rows.AddRange(ordered.Select(r => r.IsOn
-                ? new PeekRowViewModel(true, r.Text, r.BoundLabel, r.IsAmbiguous ? r.Hint : null, r.IsProperty)
-                : new PeekRowViewModel(false, r.Text, r.TierOrBlank, r.IsAmbiguous ? r.Hint : null, r.IsProperty)));
+                ? new PeekRowViewModel(true, r.Text, r.BoundLabel, r.IsAmbiguous ? r.Hint : null, r.IsProperty, r.Roll)
+                : new PeekRowViewModel(false, r.Text, r.Kind, r.IsAmbiguous ? r.Hint : null, r.IsProperty, r.Roll)));
             live.AddRange(ordered);
         }
 

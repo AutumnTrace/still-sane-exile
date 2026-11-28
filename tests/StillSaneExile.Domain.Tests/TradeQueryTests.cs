@@ -217,13 +217,17 @@ public class TradeQueryTests
     }
 
     [Fact]
-    public void A_magic_base_is_found_inside_its_name_and_the_item_level_goes_in()
+    public void A_magic_base_is_found_inside_its_name_and_the_item_level_goes_in_only_when_set()
     {
-        var search = Build(Practice("magic-crossbow-normal")); // "Merciless Expert Bombard Crossbow", item level 82
+        var s = Practice("magic-crossbow-normal"); // "Merciless Expert Bombard Crossbow", item level 82
+        var search = Build(s);
 
         Assert.Contains("\"type\":\"Bombard Crossbow\"", search.Json);
         Assert.Contains("\"rarity\":{\"option\":\"magic\"}", search.Json);
-        Assert.Contains("\"ilvl\":{\"min\":82}", search.Json);
+        Assert.DoesNotContain("ilvl", search.Json, StringComparison.Ordinal); // the app offers no item level choice for now
+
+        s.W.MinItemLevel = s.W.SuggestedItemLevel;
+        Assert.Contains("\"ilvl\":{\"min\":82}", Build(s).Json);
     }
 
     [Fact]

@@ -222,7 +222,7 @@ public sealed partial class SettingsViewModel : ObservableObject
         new(3, "How many are for sale", "More for sale means a better price guess."),
         new(4, "The cheapest listings", "What the cheapest items like yours ask, and how long ago they were listed. Only instant buyout asks set the price."),
         new(5, "Stats in the search", "How many of your stats were used to find similar items."),
-        new(6, "Ticked = searched", "Ticked stats show the number searched for. Empty boxes were left out. Stats are in the game’s blue."),
+        new(6, "Ticked = searched", "Ticked stats show the number searched for. Empty boxes were left out. Under a stat, its tier and where it rolled between its lowest and highest."),
         ToggleMode
             ? new(7, "Press again to hide", "The card stays until you press the key again.")
             : new(7, "Move onto it to keep it", "Still holding the key, move the mouse onto the card: it stays open, you can tick or untick stats on it, and Search updates the price and the listings. Let go without moving and it hides."),

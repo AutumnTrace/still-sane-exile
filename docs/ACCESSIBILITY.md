@@ -43,6 +43,8 @@ The numbers of an unticked stat are drawn at 55 % opacity, about 5.2:1, because 
 
 Keyboard focus is a 2 px ring in the text colour over a button's or a box's border, and around a tick box: a change of border colour alone was too faint on gold.
 
+The roll bar under a stat is drawn with the empty tick box's colour for its rail (3:1 or more on every surface the card uses), the bar colour for its fill and the text colour for the marker, which stands taller than the rail so it reads on the fill too. Its lowest and highest numbers are in TextFaint. Screen readers hear the line as words, "Tier 8, rolls 170 to 179", and a stat's row reads its text, then that line.
+
 ## Text size
 
 WPF does not follow Windows' text size (Settings → Accessibility → Text size) by itself, because SSE sets its font sizes explicitly. SSE reads the setting (`HKCU\Software\Microsoft\Accessibility\TextScaleFactor`, 100 to 225 %) at start and whenever Windows reports a changed setting, and scales the main window and the price check over the game by it, like a browser's zoom. Display scaling (DPI) applies on top, as before.
