@@ -95,6 +95,8 @@ When behaviour changes, update the doc that describes it in the same change:
 - `README.md`: what players see, the keys table, "Is it allowed?".
 - `docs/CAPTURE-AND-PRIVACY.md`: every Windows mechanism, everything stored, every network request.
 - `docs/SOURCES.md`: providers, their terms, and real-versus-fixture coverage.
+- [docs/GAME.md](docs/GAME.md): how Path of Exile 2 works, with sources. Read it before asking the owner
+  anything about the game, and add what you look up.
 - `docs/PROVIDER-ETIQUETTE.md`, `docs/GUIDE.md`, `docs/WEALTH-CSV.md`, `docs/ACCESSIBILITY.md`,
   `docs/CAPTURE-SPIKE.md`, `docs/RELEASING.md`: their own areas.
 - `docs/ROADMAP.md`: tick an item only when its issue is done, and say what is still unverified.
