@@ -50,7 +50,7 @@ My wealth is switched off for now while it is rethought (its page says so; holdi
 ## 5 · Craft
 
 - [ ] Crafting planner for one weapon family with success and failure branches (#22)
-- [x] Craft simulator for practice: every orb, essence and omen on one crossbow base, odds of the stats you want, the stat pool, history with costs, orbs picked up like in game. Demo only: its stats, tiers and weights are made up, and what each orb does is not checked in game (#22 still needs a verified data pack, #6)
+- [x] Craft simulator for practice: every orb, essence and omen on one crossbow base, odds of the stats you want, the stat pool, history with costs, orbs picked up like in game. Its stats, tiers and weights are made up, in every profile (the owner's call), and what each orb does is not checked in game; a live league prices the clicks at its poe.ninja prices (#22 still needs a verified data pack, #6)
 
 ## Release
 

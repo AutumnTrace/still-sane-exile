@@ -33,6 +33,8 @@ against these, and a reviewer will reject anything that bends them:
    cover only the practice items in `fixtures/`; a live profile never sees them (`PriceBookGuard`), and
    nothing carries across leagues. Game facts that have not been checked in the game (route packs, key
    defaults, data packs) are labelled unverified in the data and the UI. When unsure, leave it out.
+   One exception, the owner's decision of 28 Nov 2026: the craft simulator runs on the made-up pack in
+   every profile, labelled "practice · made-up stats" on the page, because no real stat data exists yet.
 8. **Overlays never steal focus.** The HUD card is click-through while the key is held and stays
    `WS_EX_NOACTIVATE` even when pinned (activating it makes a fullscreen game drop out). Only the F3 price
    check window takes focus, and it hands it back to the game when it closes.

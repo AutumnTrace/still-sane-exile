@@ -150,7 +150,9 @@ public sealed record GradeViewModel(OrbGrade Grade, string Label, string Tip, bo
 /// <summary>The craft simulator: a made-up item on the bench, orbs and omens to use on it, what is wanted
 /// and the odds of getting it, the stat pool and the history with what it cost. Practice only: it never
 /// touches the game. It runs on a data pack with weights and a base; only the demo's made-up pack has them,
-/// so a live profile gets an explanation instead (a live profile never sees made-up data).</summary>
+/// and the owner chose (28 Nov 2026) to offer it in every profile, labelled as made-up practice data: in a
+/// live league the costs come from the league's real prices. The one exception to "a live profile never
+/// sees made-up data" (AGENTS.md, rule 7).</summary>
 public sealed partial class CraftViewModel : ObservableObject
 {
     private readonly ShellViewModel _shell;
@@ -183,7 +185,7 @@ public sealed partial class CraftViewModel : ObservableObject
 
     public bool NoData => !HasData;
 
-    public string NoDataText => "The simulator needs stat data for a base: its tiers and how often each rolls. Only the demo has some yet, and it is made up. Switch to Practice with demo data in Settings, League and prices, to try it.";
+    public string NoDataText => "The simulator's stat data could not be loaded, so there is nothing to craft. Reinstalling SSE puts it back.";
 
     public string BaseName => _engine?.Base.Name ?? "";
 
@@ -301,6 +303,20 @@ public sealed partial class CraftViewModel : ObservableObject
     /// <summary>A new session (profile, league, currency or prices changed): the bench starts over on its data.</summary>
     public void Load() => Load(random: null);
 
+    private DataPack? _practicePack;
+
+    /// <summary>The made-up pack the demo uses, read once for a live profile's bench; null if it can't be read.</summary>
+    private DataPack? PracticePack()
+    {
+        if (_practicePack is null)
+        {
+            var file = System.IO.Path.Combine(_shell.Paths.Fixtures, "packs", "synthetic-demo.json");
+            _practicePack = System.IO.File.Exists(file) ? DataPackLoader.Load(System.IO.File.ReadAllText(file)).Pack : null;
+        }
+
+        return _practicePack;
+    }
+
     /// <summary>The bench from scratch with <paramref name="random"/>, so a craft can be repeated (tests,
     /// snapshots).</summary>
     public void Restart(Random random)
@@ -313,8 +329,8 @@ public sealed partial class CraftViewModel : ObservableObject
     {
         var previous = _session;
         _session = _shell.Session;
-        var pack = _session.IsDemo ? _session.Pack : null; // a live profile never sees the demo's made-up data
-        if (_engine is not null && pack is not null && previous is { IsDemo: true } && previous.Pack?.Id == pack.Id)
+        var pack = _session.IsDemo ? _session.Pack : PracticePack();
+        if (_engine is not null && pack is not null && previous?.Kind == _session.Kind && _engine.Pack.Id == pack.Id)
         {
             Refresh(); // same data: the item on the bench stays, its costs follow the new prices
             return;
