@@ -12,7 +12,7 @@ public class PriceColoursTests
     {
         using var app = new TestApp();
         var item = app.Shell.Inspect.AddFromText(app.ItemText(Crossbow), "test")!;
-        Assert.Equal("1.8–2.5 div", item.Answer.Big);
+        Assert.Equal("1.8–2.4 div", item.Answer.Big);
         Assert.Equal(ValueTier.A, item.Answer.Tier); // red: 1 to 10 div
         var colours = app.Shell.SettingsPage.Colours;
         Assert.False(colours.ApplyCommand.CanExecute(null)); // nothing changed yet

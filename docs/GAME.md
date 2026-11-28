@@ -436,11 +436,10 @@ Fixed on 28 Nov 2026: Vaal Orb outcomes, the Greater and Perfect minimum levels 
 
 ### 10.2 Demo data pack
 
-Fixed on 28 Nov 2026: the pack is now the game's 0.5.5 data from Path of Building's export (every crossbow family with its real side, names, tiers, levels, ranges and wording; the Siege Crossbow; the essences' real tiers), labelled "not checked in game" wherever a range from it is shown. Still open:
+Fixed on 28 Nov 2026: demo listings stop at the most a stat can roll on the base (`DemoMarket.Ceilings`); the pack is now the game's 0.5.5 data from Path of Building's export (every crossbow family with its real side, names, tiers, levels, ranges and wording; the Siege Crossbow; the essences' real tiers), labelled "not checked in game" wherever a range from it is shown. Still open:
 
 1. **Weights are made up** (250, 500, then 1000): the game files hold none, and the published estimates may not be copied (§4.1). The craft simulator's badge says its odds are made up.
 2. **"Loads an additional bolt" / "Loads 2 additional bolts" are missing** from the crossbow pool: their two tiers are worded differently, and a pack family holds one wording for all its tiers. Needs the pack format to allow wording per tier.
-3. **Demo listings can show numbers no tier allows.** `DemoMarket` spreads each stat from 0.65 to 1.2 times the practice item's own roll, so a crossbow listing can show 20–21 % attack speed (the most a crossbow rolls is 19 %). They are labelled demo, but should stay inside what the game can roll.
 
 ### 10.3 Item parser (`src/StillSaneExile.Domain/Items/`)
 

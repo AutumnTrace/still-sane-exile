@@ -106,7 +106,8 @@ public sealed class Session
 
         var key = ComparisonSet.KeyFor(item);
         var perDivine = Converter.Convert(1m, "divine", "exalted", Now);
-        return DemoMarket.For(worksheet, key, DemoAnchor(item, key), item.ItemLevel, perDivine.Ok ? perDivine.Value : null, Now);
+        return DemoMarket.For(worksheet, key, DemoAnchor(item, key), item.ItemLevel, perDivine.Ok ? perDivine.Value : null, Now,
+            ceilings: DemoMarket.Ceilings(Pack, item.ItemClass, worksheet.Rows));
     }
 
     /// <summary>What items like this one ask in the demo, in Exalted Orbs: the seeded demo asks for this

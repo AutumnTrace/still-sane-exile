@@ -1,3 +1,4 @@
+using StillSaneExile.Domain.Data;
 using StillSaneExile.Domain.Items;
 
 namespace StillSaneExile.Domain.Trade;
@@ -12,6 +13,8 @@ public static class DemoMarket
     /// <param name="seedKey">Stable text that identifies the item (its comparison-set key).</param>
     /// <param name="anchorExalted">What a listing exactly as good as this item asks, in Exalted Orbs.</param>
     /// <param name="exaltedPerDivine">When given, listings worth one Divine Orb or more are priced in Divine.</param>
+    /// <param name="ceilings">The most each stat (row id) can show on this base (<see cref="Ceilings"/>): no listing
+    /// goes past it, so none shows a roll the game can't have. The item's own number is always allowed.</param>
     public static IReadOnlyList<Listing> For(
         ComparisonWorksheet w,
         string seedKey,
@@ -19,7 +22,8 @@ public static class DemoMarket
         int? itemLevel,
         decimal? exaltedPerDivine,
         DateTimeOffset now,
-        int count = DefaultCount)
+        int count = DefaultCount,
+        IReadOnlyDictionary<string, decimal>? ceilings = null)
     {
         var rng = new Lcg(Fnv1a(seedKey));
         var plain = w.Rows.Where(r => r.Actual is > 0 && r.Kind != RowKind.Derived).ToList();
@@ -48,6 +52,11 @@ public static class DemoMarket
                 var lower = r.Direction == StatDirection.LowerIsBetter;
                 var factor = lower ? 0.85 + spread * 0.5 : unique ? 0.8 + spread * 0.3 : 0.65 + spread * 0.55;
                 var value = Round((double)r.Actual!.Value * factor, r.Actual.Value);
+                if (!lower && ceilings is not null && ceilings.TryGetValue(r.Id, out var most))
+                {
+                    value = Math.Min(value, Math.Max(most, r.Actual.Value));
+                }
+
                 var ratio = value <= 0 ? 0 : lower ? (double)(r.Actual.Value / value) : (double)(value / r.Actual.Value);
                 stats[r.Id] = value;
                 ratios[r.Template] = ratio;
@@ -81,6 +90,49 @@ public static class DemoMarket
         }
 
         return listings;
+    }
+
+    /// <summary>The most each row's stat can show on an item of <paramref name="itemClass"/>: the best tier's top
+    /// number of every family that prints that line, added up, since a normal copy merges such lines (the
+    /// pure and the hybrid physical damage %). A line of two numbers counts their average, as the search does.
+    /// Rows the pack doesn't know get no ceiling.</summary>
+    public static IReadOnlyDictionary<string, decimal> Ceilings(DataPack? pack, string itemClass, IEnumerable<WorksheetRow> rows)
+    {
+        var ceilings = new Dictionary<string, decimal>(StringComparer.Ordinal);
+        if (pack is null)
+        {
+            return ceilings;
+        }
+
+        foreach (var row in rows.Where(r => r.Kind != RowKind.Derived))
+        {
+            decimal total = 0;
+            var found = false;
+            foreach (var family in pack.Families.Where(f => f.AppliesTo(itemClass) && f.Tiers.Count > 0))
+            {
+                var index = family.Lines.ToList().FindIndex(l => l.Template == row.Template);
+                if (index < 0)
+                {
+                    continue;
+                }
+
+                var best = family.TierOneIsBest ? family.Tiers.MinBy(t => t.Tier)! : family.Tiers.MaxBy(t => t.Tier)!;
+                var offset = family.ComponentOffset(index);
+                var tops = Enumerable.Range(offset, family.Lines[index].Components).Where(i => i < best.Ranges.Count).Select(i => best.Range(i).Hi).ToList();
+                if (tops.Count > 0)
+                {
+                    total += tops.Average();
+                    found = true;
+                }
+            }
+
+            if (found)
+            {
+                ceilings[row.Id] = total;
+            }
+        }
+
+        return ceilings;
     }
 
     private static decimal Round(double value, decimal like) =>

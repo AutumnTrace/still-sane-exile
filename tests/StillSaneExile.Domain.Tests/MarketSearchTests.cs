@@ -134,4 +134,19 @@ public class MarketSearchTests
         Assert.InRange(r.Low!.Value, 1.2m, 3m);
         Assert.InRange(r.High!.Value, 1.6m, 4m);
     }
+
+    [Fact]
+    public void Demo_listings_never_show_a_roll_the_game_cannot_have()
+    {
+        var w = Crossbow();
+        var ceilings = DemoMarket.Ceilings(Fixtures.Pack(), "Crossbows", w.Rows);
+        Assert.Equal(19m, ceilings[AttackSpeedId]); // "of Acclaim", the best attack speed a crossbow rolls
+
+        var listings = DemoMarket.For(w, "Rare|Siege Crossbow|Doom Thirst", 300, 82, 120, Fixtures.DemoNow, ceilings: ceilings);
+
+        Assert.All(listings, l => Assert.True(!l.Stats.TryGetValue(AttackSpeedId, out var v) || v <= 19m, $"{l.Id}: {v}% attack speed"));
+        Assert.All(w.Rows.Where(r => ceilings.ContainsKey(r.Id)), r =>
+            Assert.All(listings, l => Assert.True(!l.Stats.TryGetValue(r.Id, out var v) || v <= Math.Max(ceilings[r.Id], r.Actual ?? 0), $"{r.Id}: {v}")));
+        Assert.Empty(DemoMarket.Ceilings(null, "Crossbows", w.Rows));
+    }
 }
