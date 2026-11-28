@@ -6,7 +6,7 @@ Hold `Ctrl+C` over a Path of Exile 2 item to see what items like it sell for, an
 
 Windows 10/11 · x64 · Windowed or borderless · Game set to English (other languages get a plain "not supported yet" message)
 
-<img src="docs/screenshots/peek-advanced.png" width="360" alt="Demo card for Doom Thirst: items like it sell for about 1.8 to 2.6 divine, 29 for sale, the seven cheapest listings, searched with physical DPS of at least 319 and attack speed of at least 15; under each rolled stat its tier and a bar between the tier's lowest and highest number">
+<img src="docs/screenshots/peek-advanced.png" width="384" alt="Demo card for Doom Thirst: items like it sell for about 1.8 to 2.6 divine, 29 for sale, the seven cheapest listings, searched with physical DPS of at least 319 and attack speed of at least 15; under each rolled stat its tier and a bar between the tier's lowest and highest number">
 
 Doom Thirst in the demo profile: items like it ask about 1.8–2.6 div, with 29 for sale. The search wanted physical DPS of at least 319 and attack speed of at least 15, 10% under its own rolls. The price is coloured like a loot filter label (white and red for a jackpot, red for Divines, orange to tan for Exalted money, dark for small change) and shows the game's own orbs instead of "div" and "ex".
 
@@ -69,7 +69,7 @@ Pick a live league in Settings and confirm it: SSE offers poe.ninja's leagues (o
 
 The prices are poe.ninja's own estimates for the whole league. A unique's price is a baseline for that unique, not for your rolls: the card shows the price alone, *Usually sells for about*, with *Your rolls can change it* under it, and the price check adds where the figure came from, how old it is and how many are listed.
 
-<img src="docs/screenshots/peek-baseline.png" width="360" alt="Demo card for Sanity's Last Loop: usually sells for about 1.4 divine, your rolls can change it; a normal copy, so the card says Ctrl+Alt+C for ranges">
+<img src="docs/screenshots/peek-baseline.png" width="384" alt="Demo card for Sanity's Last Loop: usually sells for about 1.4 divine, your rolls can change it; a normal copy, so the card says Ctrl+Alt+C for ranges">
 
 The demo's ring, priced by its made-up baseline as a live league prices a unique before you search. Switch **Live prices from poe.ninja** off in Settings and SSE asks poe.ninja for nothing. SSE makes two other kinds of request: the trade site search below, only when you press **Search**, and the update check against this repository's GitHub releases. Settings can switch each off.
 
